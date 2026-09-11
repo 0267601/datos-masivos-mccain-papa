@@ -70,14 +70,29 @@ def construir_params(producto_id, anio, mes):
     }
 
 
-def descargar_pagina(producto_id, anio, mes, timeout=90):
-    """Descargamos el HTML de un mes para una variedad."""
-    response = requests.get(URL_CONSULTA,
-                            params=construir_params(producto_id, anio, mes),
-                            timeout=timeout)
-    response.encoding = "utf-8"      # el sitio sirve utf-8; fijarlo evita mojibake
-    response.raise_for_status()
-    return response.text
+def descargar_pagina(producto_id, anio, mes, timeout=90, intentos=4, espera=3):
+    """Descargamos el HTML de un mes para una variedad.
+
+    El SNIIM devuelve 503 de forma intermitente cuando lo consultamos seguido.
+    Sin reintentos, una sola falla tumba la corrida completa, asi que
+    reintentamos con espera creciente antes de rendirnos.
+    """
+    for intento in range(1, intentos + 1):
+        try:
+            response = requests.get(URL_CONSULTA,
+                                    params=construir_params(producto_id, anio, mes),
+                                    timeout=timeout)
+            response.encoding = "utf-8"   # el sitio sirve utf-8; fijarlo evita mojibake
+            response.raise_for_status()
+            return response.text
+
+        except requests.RequestException as error:
+            if intento == intentos:
+                raise RuntimeError(
+                    f"SNIIM falló {intentos} veces para "
+                    f"producto {producto_id}, {anio}-{mes:02d}: {error}"
+                ) from error
+            time.sleep(espera * intento)   # 3 s, luego 6 s, luego 9 s
 
 
 def extraer_precios_mes(producto_id, anio, mes, variedad=None):
@@ -131,7 +146,7 @@ def limpiar(df):
     return df.dropna(subset=["fecha"]).reset_index(drop=True)
 
 
-def descargar_periodo(producto_ids, anios, pausa=0.3, verbose=True):
+def descargar_periodo(producto_ids, anios, pausa=1.0, verbose=True):
     """Recorremos variedades y meses, y devolvemos (DataFrame, metricas).
 
     En metricas documentamos cada particion y marcamos las que tocaron el

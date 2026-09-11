@@ -1,0 +1,6 @@
+pandas>=2,<3
+requests>=2.31,<3
+beautifulsoup4>=4.12,<5
+matplotlib>=3.7,<4
+pyarrow>=14,<22
+jupyter>=1,<2
