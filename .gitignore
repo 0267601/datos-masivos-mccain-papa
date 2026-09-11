@@ -1,0 +1,24 @@
+# Ambientes
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Credenciales - nunca subir
+.env
+*.key
+*.pem
+secrets.json
+
+# Datos grandes generados (se regeneran con los extractores)
+data/crudo/
+data/*.parquet
+*.zip
+
+# Sistema
+.DS_Store
+Thumbs.db
