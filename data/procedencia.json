@@ -1,0 +1,31 @@
+{
+  "proyecto": "Datos Masivos 2026 — McCain: papa industrial en México",
+  "fecha_extraccion": "2026-09-11",
+  "fuentes": {
+    "SIAP": {
+      "institucion": "Servicio de Información Agroalimentaria y Pesquera (SADER)",
+      "url": "https://nube.agricultura.gob.mx/datosAbiertos/Agricola.php",
+      "metodo": "descarga automatizada de CSV",
+      "filtro": "Nomcultivo == 'papa'",
+      "anios": [
+        2013,
+        2025
+      ],
+      "filas": 3171,
+      "mb_descargados": 72.3
+    },
+    "SNIIM": {
+      "institucion": "Sistema Nacional de Información e Integración de Mercados (SE)",
+      "url": "http://www.economia-sniim.gob.mx",
+      "metodo": "scraping con requests + BeautifulSoup",
+      "filtro": "variedades de papa ['Alpha', 'Galeana', 'Gema', 'Marciana', 'Rouset', 'San Jose']",
+      "anios": [
+        2025
+      ],
+      "particion": "mensual, para evitar el truncamiento a 1000 registros",
+      "filas": 11010,
+      "particiones_truncadas": 0
+    }
+  },
+  "credenciales_requeridas": false
+}
