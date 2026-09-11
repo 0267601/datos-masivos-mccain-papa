@@ -22,3 +22,6 @@ data/*.parquet
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Script auxiliar de publicacion, no es parte del entregable
+publicar.sh

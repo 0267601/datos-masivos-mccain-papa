@@ -1,16 +1,20 @@
 """
 Extractor de precios de papa — SNIIM (Secretaria de Economia)
 
-Obtenemos esta fuente mediante scraping con requests y BeautifulSoup.
+Obtenemos esta fuente con requests + BeautifulSoup.
 
-El problema de escala que resolvemos aqui:
-    SNIIM corta cada consulta a 1000 registros y NO avisa que trunco.
-    Es el mismo problema que encontramos con el limite de una API, asi que
-    lo resolvemos igual: particionamos la consulta por periodo. Pedimos un
+Pipeline:
+    WEB -> requests -> HTML -> BeautifulSoup -> registros -> pandas -> CSV
+
+El problema de escala que resolvemos:
+    SNIIM corta cada consulta a 1000 registros y no avisa que trunco. Igual que
+    con el limite de una API, particionamos la consulta por periodo: pedimos un
     mes a la vez y marcamos cada particion que toque el limite.
 
-Pipeline que seguimos:
-    URL -> HTML -> BeautifulSoup -> registros -> DataFrame -> CSV
+Estructura del HTML que aprovechamos:
+    <table id="tblResultados">
+        <tr><td class="Datos2">03/03/2025</td> ... 8 celdas ... </tr>
+Las 792 filas de datos usan la misma clase, asi que el selector es estable.
 """
 
 import calendar
@@ -25,8 +29,8 @@ URL_CONSULTA = (
     "PreciosDeMercado/Agricolas/ResultadosConsultaFechaFrutasYHortalizas.aspx"
 )
 
-# Tomamos los ProductoId del catalogo del SNIIM. Nos interesan porque
-# separan la papa por variedad, cosa que SIAP no hace.
+# ProductoId del catalogo del SNIIM. Nos interesa porque separa la papa por
+# variedad, cosa que SIAP no hace.
 VARIEDADES_PAPA = {
     740: "Alpha",
     748: "Galeana",
@@ -36,17 +40,24 @@ VARIEDADES_PAPA = {
     767: "San Jose",
 }
 
-LIMITE_REGISTROS = 1000
+LIMITE = 1000                      # tope de registros por consulta del SNIIM
+TABLA_RESULTADOS = "table#tblResultados"
+CELDAS_DATOS = "td.Datos2"
+CAMPOS = ["fecha", "presentacion", "origen", "destino",
+          "precio_min", "precio_max", "precio_frec", "obs"]
 
-COLUMNAS = ["fecha", "presentacion", "origen", "destino",
-            "precio_min", "precio_max", "precio_frec", "obs"]
+
+def texto_seguro(elemento):
+    """Devolvemos el texto de un elemento, o None si no existe."""
+    if elemento is None:
+        return None
+    return elemento.text.strip()
 
 
-def descargar_html(producto_id, anio, mes, timeout=90):
-    """Descargamos el HTML de un mes para una variedad."""
+def construir_params(producto_id, anio, mes):
+    """Armamos los parametros de la consulta para un mes completo."""
     ultimo_dia = calendar.monthrange(anio, mes)[1]
-
-    params = {
+    return {
         "fechaInicio": f"01/{mes:02d}/{anio}",
         "fechaFinal": f"{ultimo_dia}/{mes:02d}/{anio}",
         "ProductoId": producto_id,
@@ -55,61 +66,55 @@ def descargar_html(producto_id, anio, mes, timeout=90):
         "DestinoId": -1,
         "Destino": "Todos",
         "PreciosPorId": 2,
-        "RegistrosPorPagina": LIMITE_REGISTROS,
+        "RegistrosPorPagina": LIMITE,
     }
 
-    respuesta = requests.get(URL_CONSULTA, params=params, timeout=timeout)
-    respuesta.raise_for_status()
 
-    # Fijamos la codificacion a proposito: si la dejamos que la adivine,
-    # los acentos se rompen y "Mexico" llega mal escrito.
-    respuesta.encoding = "utf-8"
+def descargar_pagina(producto_id, anio, mes, timeout=90):
+    """Descargamos el HTML de un mes para una variedad."""
+    response = requests.get(URL_CONSULTA,
+                            params=construir_params(producto_id, anio, mes),
+                            timeout=timeout)
+    response.encoding = "utf-8"      # el sitio sirve utf-8; fijarlo evita mojibake
+    response.raise_for_status()
+    return response.text
 
-    return respuesta.text
 
+def extraer_precios_mes(producto_id, anio, mes, variedad=None):
+    """Extraemos los registros de un mes como lista de diccionarios.
 
-def extraer_registros(html, variedad):
-    """Convertimos el HTML del SNIIM en una lista de diccionarios."""
+    Equivale a extraer_libros_pagina() de la practica de scraping: una
+    funcion que recibe una pagina y devuelve registros listos para pandas.
+    """
+    if variedad is None:
+        variedad = VARIEDADES_PAPA.get(producto_id, str(producto_id))
+
+    html = descargar_pagina(producto_id, anio, mes)
     soup = BeautifulSoup(html, "html.parser")
 
-    # Buscamos la tabla de datos: es la unica cuyo encabezado dice "Fecha".
-    # No podemos tomar la mas grande porque la pagina trae tablas de diseno.
-    tabla = None
-    for candidata in soup.find_all("table"):
-        encabezado = candidata.find("tr")
-        if encabezado and "Fecha" in encabezado.get_text():
-            tabla = candidata
-            break
-
+    tabla = soup.select_one(TABLA_RESULTADOS)
     if tabla is None:
-        return []
+        return [], len(html)
 
-    registros = []
+    resultados = []
 
-    # Saltamos las dos primeras filas porque son encabezado.
-    for fila in tabla.find_all("tr")[2:]:
-        celdas = [c.get_text(strip=True) for c in fila.find_all("td")]
+    for fila in tabla.select("tr"):
+        celdas = fila.select(CELDAS_DATOS)
 
-        if len(celdas) < 7 or not celdas[0]:
+        # Saltamos encabezados y filas incompletas.
+        if len(celdas) != len(CAMPOS):
             continue
 
-        registros.append({
-            "fecha": celdas[0],
-            "presentacion": celdas[1],
-            "origen": celdas[2],
-            "destino": celdas[3],
-            "precio_min": celdas[4],
-            "precio_max": celdas[5],
-            "precio_frec": celdas[6],
-            "obs": celdas[7] if len(celdas) > 7 else "",
-            "variedad": variedad,
-        })
+        registro = {campo: texto_seguro(celda)
+                    for campo, celda in zip(CAMPOS, celdas)}
+        registro["variedad"] = variedad
+        resultados.append(registro)
 
-    return registros
+    return resultados, len(html)
 
 
 def limpiar(df):
-    """Asignamos los tipos correctos y derivamos dos columnas que usamos despues."""
+    """Asignamos tipos y derivamos las dos columnas que usamos despues."""
     df = df.copy()
 
     df["fecha"] = pd.to_datetime(df["fecha"], format="%d/%m/%Y", errors="coerce")
@@ -126,14 +131,13 @@ def limpiar(df):
     return df.dropna(subset=["fecha"]).reset_index(drop=True)
 
 
-def descargar_periodo(producto_ids, anios, pausa=0.5, verbose=True):
-    """Descargamos varias variedades y anios, un mes a la vez.
+def descargar_periodo(producto_ids, anios, pausa=0.3, verbose=True):
+    """Recorremos variedades y meses, y devolvemos (DataFrame, metricas).
 
-    Devolvemos (DataFrame, metricas). En metricas documentamos cada particion
-    y marcamos las que tocaron el limite de 1000 registros, para saber si
-    tendriamos que partir todavia mas fino.
+    En metricas documentamos cada particion y marcamos las que tocaron el
+    limite, para saber si tendriamos que partir todavia mas fino.
     """
-    registros = []
+    resultados = []
     metricas = []
 
     for producto_id in producto_ids:
@@ -142,25 +146,23 @@ def descargar_periodo(producto_ids, anios, pausa=0.5, verbose=True):
         for anio in anios:
             for mes in range(1, 13):
 
-                html = descargar_html(producto_id, anio, mes)
-                del_mes = extraer_registros(html, variedad)
-                registros.extend(del_mes)
+                del_mes, bytes_html = extraer_precios_mes(producto_id, anio, mes, variedad)
+                resultados.extend(del_mes)
 
                 metricas.append({
                     "variedad": variedad,
                     "anio": anio,
                     "mes": mes,
                     "filas": len(del_mes),
-                    "html_mb": len(html) / 1024**2,
-                    "truncado": len(del_mes) >= LIMITE_REGISTROS - 2,
+                    "html_mb": bytes_html / 1024**2,
+                    "truncado": len(del_mes) >= LIMITE - 2,
                 })
 
                 if verbose:
                     print(f"{variedad:9s} {anio}-{mes:02d} | {len(del_mes):5,} filas")
 
-                # Esperamos entre peticiones para no saturar el servidor.
-                time.sleep(pausa)
+                time.sleep(pausa)      # cortesia con el servidor
 
-    df = limpiar(pd.DataFrame(registros, columns=COLUMNAS + ["variedad"]))
+    df = limpiar(pd.DataFrame(resultados, columns=CAMPOS + ["variedad"]))
 
     return df, pd.DataFrame(metricas)
