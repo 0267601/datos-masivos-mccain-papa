@@ -25,3 +25,7 @@ Thumbs.db
 
 # Script auxiliar de publicacion, no es parte del entregable
 publicar.sh
+
+# Copia de referencia y script de verificacion, no son parte del entregable
+.referencia/
+verificar.sh
