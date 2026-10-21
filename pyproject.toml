@@ -1,0 +1,28 @@
+[project]
+name = "datos-masivos-mccain-papa"
+version = "0.2.0"
+description = "Pipeline de datos de papa industrial en México (SIAP + SNIIM) — Datos Masivos 2026"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Diego Zamora González" },
+    { name = "Diego Pérez Palafox" },
+]
+dependencies = [
+    "pandas>=2,<3",
+    "requests>=2.31,<3",
+    "beautifulsoup4>=4.12,<5",
+    "matplotlib>=3.7,<4",
+    "pyarrow>=14,<27",
+    "pyspark>=3.5,<5",
+    "pyyaml>=6,<7",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9", "jupyter>=1,<2"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]
