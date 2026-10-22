@@ -41,3 +41,10 @@ fuentes para que el pipeline los tenga que resolver:
 
 Diferencias con la descarga real: el SIAP real trae todos los cultivos (~6 MB por año)
 y aquí solo papa; el HTML real trae además las tablas de diseño del portal.
+
+## `conapo/`
+
+Copia de los dos CSV de *Las metrópolis de México 2020* (CONAPO), tal como los publica
+datos.gob.mx: `municipios_poblacion.csv` (421 municipios) y `metropolis_caracteristicas.csv`
+(92 metrópolis). datos.gob.mx respondió 403 a Databricks; si la descarga falla,
+`download_data` usa esta copia y lo anota en el manifiesto.
