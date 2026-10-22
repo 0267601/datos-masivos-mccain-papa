@@ -103,3 +103,22 @@ Cada etapa sobrescribe su capa, así que correrlo varias veces no duplica datos.
   derecha del notebook) agregamos `beautifulsoup4` en *Dependencies* y damos **Apply**.
 - **`SCHEMA_NOT_FOUND` o permisos.** En Free Edition el catálogo es `workspace`; si el
   workspace usa otro, cambiamos `CATALOGO` en la sección 1 del notebook.
+
+## Índice de inversión (`04_indice_databricks.ipynb`)
+
+1. En el Git folder, **Pull** para traer la rama con el índice (ver sección 5).
+2. Abrir `notebooks/04_indice_databricks.ipynb`, **Connect → Serverless** y **Run all**.
+   La primera vez tarda unos 15 minutos porque baja el DENUE (~300 MB) al Volume; las
+   siguientes toman lo descargado de la caché.
+3. Las tres gráficas aparecen en la sección 6. El top 10 queda en la sección 8 como tabla;
+   para verlo como gráfica de Databricks: **+ → Visualization → Bar**, X = `metropoli`,
+   Y = `indice`, sin ordenar el eje X.
+
+Si Databricks no alcanza INEGI o Comtrade: en local correr
+`python -m src.ingestion.download_data --fuente indice`, comprimir `data/raw` como
+`raw_indice.zip`, subirlo a **Catalog → workspace → mccain_papa → datalake → Upload to this
+volume** y volver a dar **Run all**.
+
+Tablas que registra en `workspace.mccain_papa`: `indice_inversion`, `serie_metropolis`,
+`cadenas_metropolis`, `metropolis`, `importaciones`, `importaciones_anuales` y
+`denue_establecimientos`.

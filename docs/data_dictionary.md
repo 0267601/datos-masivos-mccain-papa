@@ -81,3 +81,68 @@ Cruce de las dos tablas anteriores. Solo años presentes en ambas fuentes. 23 fi
 | `data/raw/manifiesto.json` | url, parámetros, bytes, sha256, fecha y estado por archivo |
 | `data/interim/siap_papa/` | SIAP con encabezados unificados y solo papa; todo como texto |
 | `data/interim/sniim_precios/` | Registros parseados del HTML; todo como texto |
+
+---
+
+# Tablas del índice de inversión
+
+## `denue_establecimientos` — negocios del sector 72
+
+Origen: DENUE de INEGI, sector 72. Particionada por `version`. Una fila por establecimiento y
+versión; llave (`version`, `id`).
+
+| Variable | Tipo | Descripción | Observaciones |
+|---|---|---|---|
+| version | string | Versión del DENUE | Partición: 2015_02, 2019_11, 2022_11, 2026_05 |
+| fecha_corte | date | Fecha de la versión | De la configuración |
+| id | string | Identificador del establecimiento | |
+| nom_estab | string | Nombre del establecimiento | |
+| nombre_act | string | Clase de actividad | En 2015 se llama "Nombre de clase de la actividad" |
+| categoria | string | comida_rapida, autoservicio, a_la_carta, bares, hoteles, otros | Derivada del nombre de la actividad |
+| cadena | string | Cadena detectada (McDonald's, KFC…) | Nula si no es cadena |
+| per_ocu / personal_min | string / int | Estrato de personal ocupado y su límite inferior | "11 a 30 personas" → 11 |
+| cve_mun5 | string | Clave de municipio a 5 dígitos | Llave con CONAPO |
+| latitud, longitud | double | Coordenadas | |
+
+## `metropolis` y `metropolis_municipios` — catálogo CONAPO 2020
+
+| Variable | Tipo | Descripción |
+|---|---|---|
+| clave_metropoli | string | Clave de la zona metropolitana (92) |
+| tipo_metropoli | string | Zona metropolitana, metrópoli municipal o zona conurbada |
+| metropoli | string | Nombre |
+| cve_mun5 | string | Municipio que la forma (solo en `metropolis_municipios`) |
+| poblacion_2020 | long | Población 2020 |
+| pib, pib_per_capita | double | Producto interno bruto y por habitante (solo en `metropolis`) |
+
+## `importaciones` — papa congelada importada por mes y país
+
+Origen: UN Comtrade, HS 200410. Llave (`periodo`, `pais_codigo`).
+
+| Variable | Tipo | Descripción | Unidad |
+|---|---|---|---|
+| periodo | string | Mes | YYYYMM |
+| anio, mes | int | Año y mes | |
+| pais_codigo, pais | int, string | País de origen | Código M49; 0 = Mundo (total) |
+| valor_usd | double | Valor importado | US$ |
+| kg | double | Peso neto | kg |
+| usd_kg | double | Precio por kilo | US$/kg |
+| es_total | boolean | Fila del total "Mundo" | Se excluye al sumar países |
+
+`importaciones_anuales` resume por año y país, con `participacion` (% del valor del año).
+
+## `indice_inversion` — una fila por zona metropolitana
+
+| Variable | Tipo | Descripción |
+|---|---|---|
+| ranking | int | Posición (1 = mejor) |
+| indice | double | Promedio ponderado de los puntajes, 0–100 |
+| puntaje_crecimiento, puntaje_cadenas, puntaje_turismo, puntaje_mercado | double | Percentil de cada componente, 0–100 |
+| crecimiento_anual | double | Tasa anual compuesta de restaurantes objetivo, % |
+| cadenas_netas_100k | double | Aperturas netas de cadenas por 100 mil habitantes |
+| hoteles_100k | double | Hoteles por 100 mil habitantes |
+| objetivo_inicial, objetivo_final | long | Restaurantes objetivo en cada versión |
+| restaurantes_100k | double | Restaurantes objetivo por 100 mil habitantes, versión final |
+
+`serie_metropolis` trae los conteos por metrópoli y versión (las cuatro), y
+`cadenas_metropolis` las sucursales por cadena.

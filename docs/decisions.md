@@ -241,3 +241,90 @@ Escribir la muestra en otra carpeta; solo advertir en el log.
 ## Consecuencias
 Si `data/raw/` ya tiene una descarga real, `--muestra` termina con código 1 sin tocar nada.
 Para reemplazarla hay que pedirlo explícitamente con `--muestra --forzar`.
+
+---
+
+## Decisión
+Cambiar la pregunta de "dónde se vende la papa mexicana" a "en qué zonas metropolitanas
+invertir para vender más papas a la francesa".
+
+## Razón
+McCain no compra papa en México: importa papa congelada de variedades industriales. El E1 lo
+confirmó (la Russet es 99.6% importada). Saber qué estados venden por contrato no lleva a una
+decisión de McCain; saber dónde crece la demanda sí.
+
+## Alternativas consideradas
+Seguir con la canalización y agregar más años; buscar productores para sustituir importación,
+que McCain no tiene en planes.
+
+## Consecuencias
+Sumamos DENUE, CONAPO y Comtrade. El pipeline del E1 se queda como está y corre por separado
+(`--fuente e1`); el índice corre con `--fuente indice`.
+
+---
+
+## Decisión
+Clasificar los restaurantes por el nombre de la actividad y no por el código SCIAN.
+
+## Razón
+El DENUE 2015 usa SCIAN 2013 y desde 2019 usa SCIAN 2018. El nombre de las clases que nos
+importan ("pizzas, hamburguesas, hot dogs…", "autoservicio", "a la carta") se conserva entre
+versiones; los códigos no necesariamente.
+
+## Alternativas consideradas
+Una tabla de equivalencias SCIAN 2013 → 2018.
+
+## Consecuencias
+Las palabras clave están en `config/config.example.yaml` (`denue.categorias`). Si INEGI
+cambia el nombre de una clase, se ajusta ahí sin tocar código.
+
+---
+
+## Decisión
+Calcular el crecimiento entre noviembre 2019 y mayo 2026, aunque bajamos también 2015 y 2022.
+
+## Razón
+2019 y 2026 tienen la misma clasificación (SCIAN 2018) y el mismo formato, así que la
+diferencia es crecimiento y no cambio de método. 2015 y 2022 quedan en `serie_metropolis`
+para ver la tendencia y el efecto de la pandemia.
+
+## Alternativas consideradas
+2015 contra 2026 (más años, pero mezcla dos clasificaciones).
+
+## Consecuencias
+`indice.version_inicial` y `indice.version_final` en la configuración; se pueden cambiar.
+
+---
+
+## Decisión
+Convertir cada componente en percentil y promediar con el mismo peso.
+
+## Razón
+Los componentes tienen escalas muy distintas (miles de restaurantes contra tasas de 3%). Con
+percentiles, cada uno va de 0 a 100 y un valor extremo (la Ciudad de México en tamaño) no
+aplasta a los demás. Pesos iguales porque no tenemos datos de ventas para estimarlos.
+
+## Alternativas consideradas
+Estandarizar con z-score (sensible a extremos); pesos elegidos a mano.
+
+## Consecuencias
+El índice ordena, no mide cuánto más conviene una ciudad que otra. Los pesos están en la
+configuración (`indice.pesos`) para que el usuario los ajuste.
+
+---
+
+## Decisión
+Usar UN Comtrade para las importaciones, en lugar de Data México.
+
+## Razón
+La API de datos de Data México respondió 502 en todas nuestras pruebas. Comtrade tiene una
+API pública sin llave, trae valor y kilos (con eso sacamos precio por kilo) y separa por país
+de origen.
+
+## Alternativas consideradas
+Data México; el SIAVI de la Secretaría de Economía (sin API).
+
+## Consecuencias
+La API pública acepta un periodo por consulta: pedimos mes por mes (132 consultas) con pausa y
+reintentos, igual que el particionado del SNIIM. Comtrade no separa por ciudad, así que la
+competencia queda a nivel nacional.
