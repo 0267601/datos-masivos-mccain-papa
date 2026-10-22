@@ -123,3 +123,36 @@ def test_canalizacion_participaciones_suman_100(spark, siap_processed, sniim_pro
     por_estado = {r["estado"]: r for r in canal}
     assert por_estado["Sonora"]["cotizaciones"] == 0
     assert por_estado["Sonora"]["canalizacion"] > 0
+
+
+# --- Databricks -------------------------------------------------------------
+
+def test_parsear_archivo_funciona_sin_spark():
+    """La funcion de la UDF debe ser autosuficiente: en serverless corre sola en el worker."""
+    from tests.conftest import FILAS_ALPHA, html_sniim
+
+    filas = sniim.parsear_archivo("dbfs:/Volumes/x/raw/sniim/alpha/sniim_740_2025-03.html",
+                                  html_sniim(FILAS_ALPHA))
+    assert len(filas) == 3
+    assert filas[0]["producto_id"] == "740" and filas[0]["archivo"] == "sniim_740_2025-03.html"
+    assert sniim.parsear_archivo("ruta/que/no/coincide.html", "<html></html>") == []
+
+
+def test_las_capas_se_pueden_mover_al_data_lake(tmp_path):
+    """Con DATOS_MASIVOS_DATA las capas viven fuera del repo (el Volume en Databricks)."""
+    import os
+    import subprocess
+    import sys
+
+    entorno = {**os.environ, "DATOS_MASIVOS_DATA": str(tmp_path / "datalake"),
+               "DATABRICKS_RUNTIME_VERSION": "client.1"}
+    salida = subprocess.run(
+        [sys.executable, "-c",
+         "from src.utils import rutas; print(rutas.RAW); print(rutas.EN_DATABRICKS); "
+         "print(rutas.LOGS)"],
+        capture_output=True, text=True, check=True, env=entorno,
+    ).stdout.split()
+
+    assert salida[0] == str(tmp_path / "datalake" / "raw")
+    assert salida[1] == "True"
+    assert salida[2].startswith("/tmp")

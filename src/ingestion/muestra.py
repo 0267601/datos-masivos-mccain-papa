@@ -24,10 +24,10 @@ import html
 import pandas as pd
 
 from src.ingestion.sniim_extractor import VARIEDADES_PAPA
-from src.utils.rutas import DATA, RAW
+from src.utils.rutas import DATA_REPO, RAW
 
-COPIA_SIAP = DATA / "siap_papa_2013_2025.csv"
-COPIA_SNIIM = DATA / "sniim_papa_2025.csv"
+COPIA_SIAP = DATA_REPO / "siap_papa_2013_2025.csv"
+COPIA_SNIIM = DATA_REPO / "sniim_papa_2025.csv"
 
 # Meses del SNIIM que dejamos en la muestra: el anio completo pesa mas sin
 # aportar nada nuevo a las pruebas del pipeline.

@@ -12,7 +12,8 @@ Ejecucion desde la terminal, en la raiz del repositorio:
 
 Que hacemos aqui y por que:
 
-1. Guardamos una copia cruda, sin modificar, en data/raw/:
+1. Guardamos una copia cruda, sin modificar, en la capa raw (data/raw/ en local,
+   el Volume del data lake en Databricks):
        data/raw/siap/siap_cierre_<anio>.csv                  (CSV completo, latin-1)
        data/raw/sniim/<variedad>/sniim_<id>_<anio>-<mes>.html (HTML de la consulta)
    No filtramos ni limpiamos nada: eso le toca a src/processing/. Si una
@@ -47,7 +48,7 @@ from datetime import date, datetime
 from src.ingestion import siap_extractor, sniim_extractor
 from src.utils.config import cargar_config
 from src.utils.registro import configurar_registro
-from src.utils.rutas import RAIZ, RAW, asegurar_carpetas
+from src.utils.rutas import RAW, asegurar_carpetas
 
 MANIFIESTO = RAW / "manifiesto.json"
 
@@ -74,7 +75,14 @@ def escribir_atomico(ruta, contenido):
     ruta.parent.mkdir(parents=True, exist_ok=True)
     temporal = ruta.with_suffix(ruta.suffix + ".parcial")
     temporal.write_bytes(contenido)
-    temporal.replace(ruta)
+    try:
+        temporal.replace(ruta)
+    except OSError:
+        # Algunos sistemas de archivos montados (como un Volume de Databricks)
+        # no permiten renombrar encima de un archivo existente. Escribimos
+        # directo y borramos el temporal.
+        ruta.write_bytes(contenido)
+        temporal.unlink(missing_ok=True)
 
 
 def leer_manifiesto():
@@ -91,7 +99,12 @@ def guardar_manifiesto(manifiesto):
 
 
 def ruta_relativa(ruta):
-    return ruta.relative_to(RAIZ).as_posix()
+    """Clave del manifiesto: la ruta dentro de la capa raw (siap/..., sniim/...).
+
+    La tomamos relativa a raw y no al repositorio porque en Databricks la capa
+    raw vive en un Volume, fuera de la carpeta del repo.
+    """
+    return ruta.relative_to(RAW).as_posix()
 
 
 # --- SIAP -----------------------------------------------------------------------
@@ -263,7 +276,7 @@ def copiar_muestra(forzar=False):
         MANIFIESTO.unlink(missing_ok=True)
 
     conteo = construir_muestra()
-    log.info(f"Muestra escrita en data/raw/: {conteo['siap']} CSV SIAP, "
+    log.info(f"Muestra escrita en {RAW}: {conteo['siap']} CSV SIAP, "
              f"{conteo['sniim']} HTML SNIIM")
     return conteo
 
