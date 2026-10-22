@@ -154,3 +154,25 @@ def test_muestra_reconstruye_formato_crudo(tmp_path, monkeypatch):
     # Y el HTML se parsea igual que una pagina real del SNIIM.
     pagina = next((tmp_path / "sniim" / "alpha").glob("*.html")).read_text("utf-8")
     assert len(sniim_extractor.parsear_html(pagina, "Alpha")) > 0
+
+
+def test_muestra_no_sobrescribe_una_descarga_real(raw_temporal, monkeypatch):
+    llamadas = []
+    monkeypatch.setattr("src.ingestion.muestra.construir_muestra",
+                        lambda: llamadas.append(1) or {"siap": 13, "sniim": 15})
+    download_data.guardar_manifiesto({"archivos": {"siap/x.csv": {"estado": "ok"}}})
+
+    assert download_data.main(["--muestra"]) == 1
+    assert llamadas == []                                   # no tocamos data/raw
+
+    assert download_data.main(["--muestra", "--forzar"]) == 0
+    assert llamadas == [1]
+    assert not (raw_temporal / "manifiesto.json").exists()  # ya no corresponde
+
+
+def test_muestra_detecta_csv_real_sin_manifiesto(raw_temporal):
+    carpeta = raw_temporal / "siap"
+    carpeta.mkdir()
+    (carpeta / "siap_cierre_2013.csv").write_bytes(b"x" * (2 * 1024**2))
+
+    assert download_data.hay_descarga_real() is True
