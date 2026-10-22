@@ -11,11 +11,11 @@
 | siap | nulos en sup_sembrada_ha | OK | 0.0 | 0 de 3,171 (max 1%) |
 | siap | nulos en rendimiento_ton_ha | OK | 0.0 | 0 de 3,171 (max 5%) |
 | siap | nulos en precio_medio_rural | OK | 0.0 | 0 de 3,171 (max 5%) |
-| sniim | nulos en fecha | OK | 0.0 | 0 de 2,683 (max 0%) |
-| sniim | nulos en precio_frec | OK | 0.0 | 0 de 2,683 (max 0%) |
-| sniim | nulos en precio_min | OK | 0.0 | 0 de 2,683 (max 1%) |
-| sniim | nulos en precio_max | OK | 0.0 | 0 de 2,683 (max 1%) |
-| sniim | nulos en origen | OK | 0.0 | 0 de 2,683 (max 0%) |
+| sniim | nulos en fecha | OK | 0.0 | 0 de 11,010 (max 0%) |
+| sniim | nulos en precio_frec | OK | 0.0 | 0 de 11,010 (max 0%) |
+| sniim | nulos en precio_min | OK | 0.0 | 0 de 11,010 (max 1%) |
+| sniim | nulos en precio_max | OK | 0.0 | 0 de 11,010 (max 1%) |
+| sniim | nulos en origen | OK | 0.0 | 0 de 11,010 (max 0%) |
 | siap | duplicados en la llave | OK | 0.0 | llave ['anio', 'estado', 'ddr', 'cader', 'municipio', 'ciclo', 'modalidad'] |
 | sniim | duplicados en la llave | OK | 0.0 | llave ['fecha', 'variedad', 'origen', 'destino', 'presentacion'] |
 | canalizacion | duplicados en la llave | OK | 0.0 | llave ['anio', 'estado_llave'] |
@@ -24,15 +24,15 @@
 | siap | rango de rendimiento_ton_ha | OK | 0.0 | valores fuera de [0, 120] |
 | siap | sup_cosechada_ha <= sup_sembrada_ha | OK | 0.0 | filas donde sup_cosechada_ha > sup_sembrada_ha |
 | siap | produccion = cosechada x rendimiento | OK | 0.0 | 0 de 3166 filas fuera de +-5% |
-| sniim | rango de precio_frec | OK | 0.0 | valores fuera de [1, 100] |
+| sniim | rango de precio_frec | AVISO | 1.0 | valores fuera de [1, 100] |
 | sniim | precio_min <= precio_frec | OK | 0.0 | filas donde precio_min > precio_frec |
 | sniim | precio_frec <= precio_max | OK | 0.0 | filas donde precio_frec > precio_max |
 | siap | anios esperados | OK | 13.0 | 2013-2025 sin huecos |
 | sniim | anios esperados | OK | 1.0 | 2025-2025 sin huecos |
 | sniim | fechas consistentes | OK | 0.0 | 0 en el futuro, 0 en la particion equivocada |
-| sniim | cobertura mensual por variedad | OK | 0.0 | de 3 meses: todas completas |
+| sniim | cobertura mensual por variedad | OK | 0.0 | de 12 meses: todas completas |
 | siap x sniim | origenes SNIIM con produccion en SIAP | AVISO | 2.0 | sin produccion en SIAP: ['Nayarit', 'Yucatán'] |
 | canalizacion | participaciones suman 100% | OK | 0.0 | anios con suma distinta de 100: ninguno |
 | siap | volumen por anio | OK | 0.0 | rango esperado [150, 400]; fuera: ninguno |
-| sniim | volumen minimo | OK | 2683.0 | minimo esperado 1,000 |
-| sniim raw | particiones truncadas | AVISO | nan | sin manifiesto (datos de muestra): no se puede revisar |
+| sniim | volumen minimo | OK | 11010.0 | minimo esperado 1,000 |
+| sniim raw | particiones truncadas o con error | OK | 0.0 | 0 truncadas, 0 con error de descarga |

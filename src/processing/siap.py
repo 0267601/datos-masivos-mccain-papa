@@ -114,7 +114,7 @@ def construir_interim(spark, rutas_crudas, cultivo="papa"):
     """Juntamos todos los anios crudos y nos quedamos con el cultivo."""
     if not rutas_crudas:
         raise FileNotFoundError(
-            "No hay CSV crudos de SIAP en data/raw/siap/. "
+            "No hay CSV crudos de SIAP en la capa raw (raw/siap/). "
             "Primero: python -m src.ingestion.download_data"
         )
 

@@ -8,9 +8,12 @@ Ejecucion desde la terminal, en la raiz del repositorio:
     python -m src.ingestion.download_data --forzar         # ignora la cache
     python -m src.ingestion.download_data --muestra        # sin internet (copias del E1)
 
+--muestra se niega a sobrescribir una descarga real (ver copiar_muestra).
+
 Que hacemos aqui y por que:
 
-1. Guardamos una copia cruda, sin modificar, en data/raw/:
+1. Guardamos una copia cruda, sin modificar, en la capa raw (data/raw/ en local,
+   el Volume del data lake en Databricks):
        data/raw/siap/siap_cierre_<anio>.csv                  (CSV completo, latin-1)
        data/raw/sniim/<variedad>/sniim_<id>_<anio>-<mes>.html (HTML de la consulta)
    No filtramos ni limpiamos nada: eso le toca a src/processing/. Si una
@@ -45,7 +48,7 @@ from datetime import date, datetime
 from src.ingestion import siap_extractor, sniim_extractor
 from src.utils.config import cargar_config
 from src.utils.registro import configurar_registro
-from src.utils.rutas import RAIZ, RAW, asegurar_carpetas
+from src.utils.rutas import RAW, asegurar_carpetas
 
 MANIFIESTO = RAW / "manifiesto.json"
 
@@ -72,7 +75,14 @@ def escribir_atomico(ruta, contenido):
     ruta.parent.mkdir(parents=True, exist_ok=True)
     temporal = ruta.with_suffix(ruta.suffix + ".parcial")
     temporal.write_bytes(contenido)
-    temporal.replace(ruta)
+    try:
+        temporal.replace(ruta)
+    except OSError:
+        # Algunos sistemas de archivos montados (como un Volume de Databricks)
+        # no permiten renombrar encima de un archivo existente. Escribimos
+        # directo y borramos el temporal.
+        ruta.write_bytes(contenido)
+        temporal.unlink(missing_ok=True)
 
 
 def leer_manifiesto():
@@ -89,7 +99,12 @@ def guardar_manifiesto(manifiesto):
 
 
 def ruta_relativa(ruta):
-    return ruta.relative_to(RAIZ).as_posix()
+    """Clave del manifiesto: la ruta dentro de la capa raw (siap/..., sniim/...).
+
+    La tomamos relativa a raw y no al repositorio porque en Databricks la capa
+    raw vive en un Volume, fuera de la carpeta del repo.
+    """
+    return ruta.relative_to(RAW).as_posix()
 
 
 # --- SIAP -----------------------------------------------------------------------
@@ -222,16 +237,46 @@ def descargar_sniim(config, manifiesto, forzar=False):
 
 # --- Muestra sin internet -------------------------------------------------------
 
-def copiar_muestra():
+def hay_descarga_real():
+    """Revisamos si data/raw/ ya tiene una descarga real de las fuentes.
+
+    Dos senales, porque cualquiera de las dos puede faltar:
+    - el manifiesto tiene al menos un archivo descargado con exito;
+    - algun CSV del SIAP pesa mas de 1 MB (el real trae todos los cultivos,
+      unos 6 MB; el de la muestra solo trae papa, unos 30 KB).
+    """
+    manifiesto = leer_manifiesto()
+    if any(m.get("estado") == "ok" for m in manifiesto["archivos"].values()):
+        return True
+    return any(ruta.stat().st_size > 1024**2
+               for ruta in (RAW / "siap").glob("siap_cierre_*.csv"))
+
+
+def copiar_muestra(forzar=False):
     """Reconstruimos data/raw/ desde las copias del E1 para correr sin red.
 
     Nos sirve para evaluar y para las pruebas cuando los portales estan caidos.
     Ver src/ingestion/muestra.py.
+
+    Si data/raw/ ya tiene una descarga real, nos negamos: la muestra
+    sobrescribiria la copia cruda, que es justo lo que debemos conservar sin
+    modificar. Con forzar=True la sobrescribimos y borramos el manifiesto,
+    porque ya no describiria los archivos que quedan.
     """
     from src.ingestion.muestra import construir_muestra
 
+    if hay_descarga_real():
+        if not forzar:
+            log.error("data/raw/ ya tiene una descarga real: no la sobrescribimos con "
+                      "la muestra. Para usar la que ya esta, corre el pipeline sin "
+                      "--muestra. Para reemplazarla de todos modos: --muestra --forzar")
+            return None
+        log.warning("Sobrescribimos la descarga real con la muestra (--forzar). "
+                    "Borramos el manifiesto porque ya no corresponde.")
+        MANIFIESTO.unlink(missing_ok=True)
+
     conteo = construir_muestra()
-    log.info(f"Muestra escrita en data/raw/: {conteo['siap']} CSV SIAP, "
+    log.info(f"Muestra escrita en {RAW}: {conteo['siap']} CSV SIAP, "
              f"{conteo['sniim']} HTML SNIIM")
     return conteo
 
@@ -242,7 +287,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Descarga de datos crudos SIAP y SNIIM")
     parser.add_argument("--fuente", choices=["siap", "sniim", "todas"], default="todas")
     parser.add_argument("--forzar", action="store_true",
-                        help="descargamos aunque el archivo ya exista")
+                        help="descargamos aunque el archivo ya exista; con --muestra, "
+                             "permite sobrescribir una descarga real")
     parser.add_argument("--muestra", action="store_true",
                         help="reconstruimos data/raw desde las copias del E1, sin internet")
     args = parser.parse_args(argv)
@@ -250,8 +296,7 @@ def main(argv=None):
     asegurar_carpetas()
 
     if args.muestra:
-        copiar_muestra()
-        return 0
+        return 0 if copiar_muestra(forzar=args.forzar) else 1
 
     config = cargar_config()
     manifiesto = leer_manifiesto()

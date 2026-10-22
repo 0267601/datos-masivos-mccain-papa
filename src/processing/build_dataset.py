@@ -27,7 +27,7 @@ from src.processing import canalizacion, siap, sniim
 from src.utils.config import cargar_config
 from src.utils.registro import configurar_registro
 from src.utils.rutas import INTERIM, PROCESSED, RAW, asegurar_carpetas
-from src.utils.spark import crear_spark
+from src.utils.spark import cerrar_spark, crear_spark
 
 log = configurar_registro("processing")
 
@@ -137,8 +137,8 @@ def main():
     (PROCESSED / "resumen_build.json").write_text(
         json.dumps(resumen, indent=2, ensure_ascii=False), encoding="utf-8"
     )
-    log.info(f"Dataset construido en {segundos} s -> data/processed/")
-    spark.stop()
+    log.info(f"Dataset construido en {segundos} s -> {PROCESSED}")
+    cerrar_spark(spark)
     return 0
 
 
