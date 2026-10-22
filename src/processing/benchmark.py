@@ -45,7 +45,7 @@ from pyspark.sql import functions as F
 
 from src.utils.registro import configurar_registro
 from src.utils.rutas import FIGURAS, INTERIM, PROCESSED, RAIZ, TABLAS, asegurar_carpetas
-from src.utils.spark import crear_spark
+from src.utils.spark import cerrar_spark, crear_spark, intentar_cache
 
 log = configurar_registro("benchmark")
 
@@ -145,6 +145,17 @@ def medir_spark(funcion):
     return {"segundos": statistics.median(tiempos), "resultado": resultado}
 
 
+def plan_fisico(df):
+    """Devolvemos el texto de explain(); funciona local y en Databricks."""
+    import contextlib
+    import io
+
+    salida = io.StringIO()
+    with contextlib.redirect_stdout(salida):
+        df.explain(mode="formatted")
+    return salida.getvalue()
+
+
 # --- Pruebas ----------------------------------------------------------------------
 
 def prueba_lectura(vol):
@@ -202,8 +213,7 @@ def prueba_particionado(spark, vol):
     for variante, ruta in [("sin particionar", vol["parquet_dir"]),
                            ("particionado por mes", vol["parquet_mes"])]:
         consulta = spark.read.parquet(str(ruta)).filter(F.col("mes") == 1)
-        plan = consulta._jdf.queryExecution().executedPlan().toString()
-        poda = "PartitionFilters: [isnotnull(mes" in plan
+        poda = "PartitionFilters: [isnotnull(mes" in plan_fisico(consulta)
         m = medir_spark(consulta.count)
         conteos[variante] = m["resultado"]
         salida.append({
@@ -291,7 +301,7 @@ def main(argv=None):
 
     spark = crear_spark("DatosMasivos-Benchmark")
     base = spark.read.parquet(str(ruta_base)).select(*COLUMNAS)
-    base.cache()
+    base = intentar_cache(base)
     log.info(f"Base: {base.count():,} cotizaciones | factores {args.factores}")
 
     filas = []
@@ -321,7 +331,7 @@ def main(argv=None):
                  f"| {f.resultado}")
     log.info("Resultados -> reports/tables/desempeno.csv, reports/figures/desempeno_volumen.svg")
 
-    spark.stop()
+    cerrar_spark(spark)
     shutil.rmtree(CARPETA, ignore_errors=True)      # los volumenes replicados pesan; no los dejamos
     return 0
 

@@ -1,6 +1,7 @@
 # Datos Masivos 2026 — McCain: ¿dónde se vende la papa industrial en México?
 
 Entregable 2 — Pipeline reproducible: adquisición, procesamiento, validación y desempeño.
+Corre desde la terminal y en **Databricks**, con el data lake en Unity Catalog.
 
 ## Integrantes
 
@@ -56,6 +57,9 @@ SIAP (CSV por año)          SNIIM (HTML por variedad y mes)
                 Dataset preparado
 ```
 
+Las capas `raw/`, `interim/` y `processed/` viven en `data/` cuando corremos en local, y en el
+Volume `workspace.mccain_papa.datalake` cuando corremos en Databricks (ver abajo).
+
 | Fuente | Origen | Obtención | Periodo | Formato crudo |
 |---|---|---|---|---|
 | SIAP — Cierre de la Producción Agrícola | SADER | Descarga automatizada | 2013–2025, anual | CSV latin-1, todos los cultivos |
@@ -67,7 +71,10 @@ Ninguna fuente pide credenciales.
 
 - Python 3.10 o superior
 - Java 17 o superior (lo necesita Spark). Verificar con `java -version`.
-  En macOS: `brew install openjdk@17`. En Colab ya viene instalado.
+  En macOS: `brew install openjdk@17` o, con Anaconda, `conda install -c conda-forge openjdk=17`
+  y `export JAVA_HOME="$CONDA_PREFIX/lib/jvm"`. En Colab ya viene instalado.
+- `pyarrow` 19 o superior: versiones anteriores no leen los Parquet que escribe
+  Spark 4 (`Repetition level histogram size mismatch`). `requirements.txt` ya lo pide.
 
 ## Instalación
 
@@ -110,6 +117,15 @@ pytest                                       # pruebas
 
 Cada comando regresa código de salida 1 si algo falla, así que se pueden encadenar con `&&`.
 
+`--muestra` no sobrescribe una descarga real: si `data/raw/` ya tiene archivos
+descargados, termina con código 1 sin tocar nada (`--muestra --forzar` la reemplaza).
+
+Para ver el índice de canalización en Excel o Numbers:
+
+```bash
+python -c "import pandas as pd; pd.read_parquet('data/processed/canalizacion').sort_values(['anio','ranking']).to_csv('reports/tables/canalizacion.csv', index=False)"
+```
+
 Los años, variedades, pausas y umbrales de validación están en
 `config/config.example.yaml`. Para cambiarlos localmente, copiarlo a `config/config.yaml`
 (ignorado por git).
@@ -120,24 +136,67 @@ Los años, variedades, pausas y umbrales de validación están en
 El notebook `notebooks/02_cleaning.ipynb` corre el mismo pipeline paso a paso y muestra
 los planes de Spark (partition pruning, predicate pushdown, broadcast y shuffle).
 
+## Ejecución en Databricks (data lake)
+
+El mismo pipeline corre en Databricks sin copiar código: abrimos este repositorio como
+**Git folder** y corremos `notebooks/03_databricks.ipynb` en cómputo serverless. Las capas
+quedan en un Volume de Unity Catalog y la capa final, como tablas Delta:
+
+```
+workspace.mccain_papa
+├── datalake (Volume)   raw/ · interim/ · processed/ · reports/
+├── siap_produccion     tabla Delta
+├── sniim_precios       tabla Delta
+└── canalizacion        tabla Delta
+```
+
+Pasos:
+
+1. **Workspace → Create → Git folder** con la URL
+   `https://github.com/0267601/datos-masivos-mccain-papa.git`.
+2. Abrir `notebooks/03_databricks.ipynb`, **Connect → Serverless** y **Run all**.
+
+El paso a paso, qué hacer si Databricks no alcanza los portales del gobierno y cómo consultar
+las tablas está en [`docs/databricks.md`](docs/databricks.md).
+
 ## Resultados principales
 
-**Pipeline.** Con la muestra, el pipeline completo tarda unos 25 segundos:
+**Pipeline.** Con la descarga real (21 de octubre de 2026):
 
 | Capa | SIAP | SNIIM |
 |---|---|---|
-| raw | 13 CSV | 15 HTML |
-| interim | 3,171 filas | 2,683 filas |
-| processed | 3,171 filas, 0 duplicados, 0 nulos en llaves | 2,683 filas, 0 duplicados, 0 nulos en llaves |
+| raw | 13 CSV, 72.3 MB (todos los cultivos) | 72 HTML, 8.4 MB, 0 truncados |
+| interim | 3,171 filas de papa | 11,010 cotizaciones |
+| processed | 3,171 filas, 0 duplicados, 0 nulos en llaves | 11,010 filas, 0 duplicados, 0 nulos en llaves |
 
-**Validación.** 36 reglas: 34 OK, 2 AVISO, 0 FALLA. Ver [`docs/validation.md`](docs/validation.md).
+La descarga tarda unos 4 minutos (pausa de cortesía entre peticiones); procesar y
+validar, unos 20 segundos. Con `--muestra` (SNIIM solo enero–marzo, 2,683 filas) el
+pipeline completo corre en unos 25 segundos.
+
+**Validación.** 36 reglas: 34 OK, 2 AVISO, 0 FALLA. Los avisos son una cotización de
+$0.43/kg (error de captura del SNIIM) y dos estados que cotizan sin producir (Nayarit y
+Yucatán). Ver [`docs/validation.md`](docs/validation.md).
+
+**Índice de canalización 2025.**
+
+| Estado | % producción nacional | % cotizaciones mayoristas | Canalización |
+|---|---|---|---|
+| Sonora | 30.8 | 2.6 | **+28.1** |
+| Sinaloa | 27.1 | 24.0 | +3.1 |
+| Nuevo León | 5.0 | 2.3 | +2.7 |
+| … | | | |
+| Coahuila | 0.5 | 11.2 | −10.7 |
+| Puebla | 7.1 | 21.7 | −14.6 |
+
+Positivo: el estado produce más de lo que aparece en el mercado spot (vende por
+contrato). Negativo: aparece más de lo que produce (redistribuye).
 
 **Desempeño.** Con un millón de filas, pandas lee Parquet 3.7 veces más rápido que CSV y
 el archivo pesa 11 veces menos; a nuestro volumen pandas le gana a Spark por el costo fijo
 de arranque de Spark. Ver [`docs/desempeno.md`](docs/desempeno.md).
 
-**Hallazgo (se mantiene del E1).** Sonora produce cerca del 31% de la papa del país y casi
-no aparece en el mercado mayorista: su papa sale por contrato. La Russet, la variedad
+**Hallazgo (se mantiene del E1).** Sonora produce cerca del 31% de la papa del país y solo
+aparece en el 2.6% de las cotizaciones mayoristas: su papa sale por contrato. La Russet, la variedad
 industrial, es 99.6% importada. Ver [`docs/hallazgos.md`](docs/hallazgos.md).
 
 ## Estructura del repositorio
@@ -164,10 +223,12 @@ datos-masivos-mccain-papa/
 │   ├── decisions.md
 │   ├── validation.md
 │   ├── desempeno.md
+│   ├── databricks.md              cómo correrlo en Databricks
 │   └── hallazgos.md
 ├── notebooks/
 │   ├── entregable_1.ipynb         entregable 1: extractores paso a paso
-│   └── 02_cleaning.ipynb          entregable 2: pipeline y planes de Spark
+│   ├── 02_cleaning.ipynb          entregable 2: pipeline y planes de Spark
+│   └── 03_databricks.ipynb        entregable 2 en Databricks: data lake y tablas Delta
 ├── src/
 │   ├── ingestion/                 siap_extractor, sniim_extractor, download_data, muestra
 │   ├── processing/                siap, sniim, canalizacion, build_dataset, benchmark

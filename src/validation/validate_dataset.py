@@ -25,7 +25,7 @@ from src.ingestion.download_data import MANIFIESTO
 from src.utils.config import cargar_config
 from src.utils.registro import configurar_registro
 from src.utils.rutas import PROCESSED, TABLAS, asegurar_carpetas
-from src.utils.spark import crear_spark
+from src.utils.spark import cerrar_spark, crear_spark, intentar_cache
 from src.validation import reglas as r
 
 log = configurar_registro("validation")
@@ -136,8 +136,8 @@ def main():
     canal = spark.read.parquet(str(rutas["canalizacion"]))
 
     # Leemos una vez y reusamos: las reglas hacen muchos count().
-    siap.cache()
-    sniim.cache()
+    siap = intentar_cache(siap)
+    sniim = intentar_cache(sniim)
 
     manifiesto = None
     if MANIFIESTO.exists():
@@ -153,8 +153,8 @@ def main():
         nivel(f"{fila.estado:5s} | {fila.tabla:12s} | {fila.regla:40s} | {fila.detalle}")
 
     conteo = resultados.estado.value_counts().to_dict()
-    log.info(f"Reglas: {len(resultados)} | {conteo} -> reports/tables/validacion.csv")
-    spark.stop()
+    log.info(f"Reglas: {len(resultados)} | {conteo} -> {TABLAS / 'validacion.csv'}")
+    cerrar_spark(spark)
 
     return 1 if conteo.get("FALLA", 0) else 0
 

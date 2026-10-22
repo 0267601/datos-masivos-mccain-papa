@@ -3,10 +3,13 @@ Procesamiento de SNIIM con PySpark: raw -> interim -> processed.
 
 raw -> interim
     Los crudos son HTML (uno por variedad y mes). En lugar de parsearlos uno
-    por uno en un ciclo de Python, los leemos con wholeTextFiles y repartimos
-    el parseo con BeautifulSoup entre las particiones (flatMap). Con 72
-    archivos da igual; con varios anios y variedades, el parseo deja de ser un
-    cuello de botella porque corre en paralelo.
+    por uno en un ciclo de Python, los leemos completos con
+    spark.read.text(wholetext=True) y repartimos el parseo con BeautifulSoup
+    entre las particiones con una UDF. Con 72 archivos da igual; con varios
+    anios y variedades, el parseo deja de ser un cuello de botella porque
+    corre en paralelo.
+    No usamos wholeTextFiles (API de RDD): Databricks serverless no expone
+    RDDs, y con la API de DataFrame el mismo codigo corre local y alla.
     En interim dejamos los registros tal como vienen en la tabla: todo texto,
     mas la variedad, el ProductoId y el archivo de origen (trazabilidad).
 
@@ -18,17 +21,27 @@ interim -> processed
     (partition pruning).
 
 Pipeline:
-    HTML -> wholeTextFiles -> flatMap(BeautifulSoup) -> Parquet interim
+    HTML -> read.text(wholetext) -> UDF(BeautifulSoup) -> explode -> Parquet interim
          -> tipos/limpieza/variables -> Parquet processed (anio=/mes=)
 """
 
 import re
+import sys
 
-from pyspark.sql import Row
+from pyspark import cloudpickle
 from pyspark.sql import functions as F
+from pyspark.sql import types as T
 
-from src.ingestion.sniim_extractor import CAMPOS
+from src.ingestion import sniim_extractor
+from src.ingestion.sniim_extractor import CAMPOS, parsear_html
 from src.processing.siap import estandarizar_estado, llave_estado
+
+# La UDF corre en los workers. En local comparten la carpeta del repo, pero en
+# Databricks serverless no: ahi "import src" falla. Le pedimos a cloudpickle
+# que mande este modulo y el del extractor completos (por valor) junto con la
+# UDF, en lugar de solo su nombre. Asi el worker solo necesita BeautifulSoup.
+cloudpickle.register_pickle_by_value(sys.modules[__name__])
+cloudpickle.register_pickle_by_value(sniim_extractor)
 
 LLAVE_SNIIM = ["fecha", "variedad", "origen", "destino", "presentacion"]
 
@@ -37,18 +50,16 @@ PATRON_ARCHIVO = re.compile(r"/([^/]+)/sniim_(\d+)_(\d{4})-(\d{2})\.html$")
 
 ESQUEMA_INTERIM = CAMPOS + ["variedad_carpeta", "producto_id", "archivo"]
 
+# Lo que devuelve la UDF por archivo: una lista de registros, todo texto.
+TIPO_REGISTROS = T.ArrayType(T.StructType(
+    [T.StructField(c, T.StringType()) for c in ESQUEMA_INTERIM]
+))
 
-def parsear_archivo(ruta_y_html):
-    """Recibimos (ruta, html) y devolvemos sus registros como Rows.
 
-    Importamos dentro de la funcion para que cada executor cargue
-    BeautifulSoup por su cuenta.
-    """
-    from src.ingestion.sniim_extractor import parsear_html
-
-    ruta, html = ruta_y_html
-    coincidencia = PATRON_ARCHIVO.search(ruta)
-    if coincidencia is None:
+def parsear_archivo(ruta, html):
+    """Recibimos la ruta y el HTML de un archivo y devolvemos sus registros."""
+    coincidencia = PATRON_ARCHIVO.search(ruta or "")
+    if coincidencia is None or html is None:
         return []
 
     carpeta, producto_id, _, _ = coincidencia.groups()
@@ -57,9 +68,12 @@ def parsear_archivo(ruta_y_html):
     filas = []
     for registro in parsear_html(html, variedad=carpeta):
         registro.pop("variedad")
-        filas.append(Row(**registro, variedad_carpeta=carpeta,
-                         producto_id=producto_id, archivo=nombre))
+        filas.append({**registro, "variedad_carpeta": carpeta,
+                      "producto_id": producto_id, "archivo": nombre})
     return filas
+
+
+parsear_udf = F.udf(parsear_archivo, TIPO_REGISTROS)
 
 
 def construir_interim(spark, carpeta_cruda, variedades):
@@ -69,16 +83,30 @@ def construir_interim(spark, carpeta_cruda, variedades):
     a partir del ProductoId, no de la carpeta ("san_jose").
     """
     patron = str(carpeta_cruda / "*" / "*.html")
-    archivos = spark.sparkContext.wholeTextFiles(patron)
+    sin_datos = FileNotFoundError(
+        f"No hay HTML crudos de SNIIM en {carpeta_cruda}. "
+        "Primero: python -m src.ingestion.download_data"
+    )
 
-    filas = archivos.flatMap(parsear_archivo)
-    if filas.isEmpty():
-        raise FileNotFoundError(
-            "No hay HTML crudos de SNIIM en data/raw/sniim/. "
-            "Primero: python -m src.ingestion.download_data"
-        )
+    if not list(carpeta_cruda.glob("*/*.html")):
+        raise sin_datos
 
-    df = spark.createDataFrame(filas).select(*ESQUEMA_INTERIM)
+    archivos = (
+        spark.read
+        # wholetext como argumento y no con .option(): con .option("wholetext", True)
+        # Spark Connect (Databricks serverless) lo ignora y lee renglon por renglon.
+        .text(patron, wholetext=True)               # un renglon por archivo
+        .select(F.col("_metadata.file_path").alias("ruta"),
+                F.col("value").alias("html"))
+    )
+
+    df = (
+        archivos
+        .select(F.explode(parsear_udf("ruta", "html")).alias("r"))
+        .select("r.*")
+    )
+    if df.isEmpty():
+        raise sin_datos
 
     nombres = F.create_map(*[x for pid, nombre in variedades.items()
                              for x in (F.lit(str(pid)), F.lit(nombre))])
