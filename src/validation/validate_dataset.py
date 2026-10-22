@@ -5,8 +5,10 @@ Ejecucion desde la raiz del repositorio (despues de build_dataset):
 
     python -m src.validation.validate_dataset
 
-Corremos las reglas de src/validation/reglas.py sobre data/processed/ y
-escribimos el resultado en:
+Corremos las reglas de src/validation/reglas.py (entrega 1: SIAP y SNIIM) y
+de src/validation/reglas_indice.py (indice de inversion: DENUE, CONAPO,
+Comtrade) sobre data/processed/. Validamos solo los grupos que ya existen, asi
+podemos correr cada parte por separado. Escribimos el resultado en:
 
     reports/tables/validacion.csv   una fila por regla
     reports/tables/validacion.md    la misma tabla en markdown, para docs/validation.md
@@ -27,6 +29,7 @@ from src.utils.registro import configurar_registro
 from src.utils.rutas import PROCESSED, TABLAS, asegurar_carpetas
 from src.utils.spark import cerrar_spark, crear_spark, intentar_cache
 from src.validation import reglas as r
+from src.validation import reglas_indice as ri
 
 log = configurar_registro("validation")
 
@@ -120,30 +123,60 @@ def a_markdown(tabla):
     return "\n".join(lineas) + "\n"
 
 
+def reglas_entrega1(spark, config):
+    """Reglas de SIAP, SNIIM y canalizacion (si existen)."""
+    rutas = {n: PROCESSED / n for n in ["siap_produccion", "sniim_precios", "canalizacion"]}
+    if not all(p.exists() for p in rutas.values()):
+        log.warning("Sin tablas de SIAP/SNIIM: saltamos sus reglas")
+        return []
+
+    # Leemos una vez y reusamos: las reglas hacen muchos count().
+    siap = intentar_cache(spark.read.parquet(str(rutas["siap_produccion"])))
+    sniim = intentar_cache(spark.read.parquet(str(rutas["sniim_precios"])))
+    canal = spark.read.parquet(str(rutas["canalizacion"]))
+
+    manifiesto = None
+    if MANIFIESTO.exists():
+        manifiesto = json.loads(MANIFIESTO.read_text(encoding="utf-8"))
+    return correr_reglas(siap, sniim, canal, config, manifiesto)
+
+
+def reglas_indice(spark, config):
+    """Reglas del indice de inversion: cada tabla solo si existe."""
+    def leer(nombre):
+        ruta = PROCESSED / nombre
+        if ruta.exists():
+            return spark.read.parquet(str(ruta))
+        log.warning(f"Sin {nombre}: saltamos sus reglas")
+        return None
+
+    res = []
+    denue = leer("denue_establecimientos")
+    if denue is not None:
+        res += ri.reglas_denue(intentar_cache(denue), config)
+    municipios, metropolis = leer("metropolis_municipios"), leer("metropolis")
+    if municipios is not None and metropolis is not None:
+        res += ri.reglas_metropolis(municipios, metropolis)
+    importaciones = leer("importaciones")
+    if importaciones is not None:
+        res += ri.reglas_importaciones(importaciones, config)
+    indice = leer("indice_inversion")
+    if indice is not None and metropolis is not None:
+        res += ri.reglas_indice(indice, metropolis, config)
+    return res
+
+
 def main():
     asegurar_carpetas()
     config = cargar_config()
     spark = crear_spark("DatosMasivos-Validacion")
 
-    rutas = {n: PROCESSED / n for n in ["siap_produccion", "sniim_precios", "canalizacion"]}
-    faltantes = [str(p) for p in rutas.values() if not p.exists()]
-    if faltantes:
-        log.error(f"No existe {faltantes}. Primero: python -m src.processing.build_dataset")
+    filas = reglas_entrega1(spark, config) + reglas_indice(spark, config)
+    if not filas:
+        log.error("No hay tablas en data/processed. Primero: python -m src.processing.build_dataset")
+        cerrar_spark(spark)
         return 1
-
-    siap = spark.read.parquet(str(rutas["siap_produccion"]))
-    sniim = spark.read.parquet(str(rutas["sniim_precios"]))
-    canal = spark.read.parquet(str(rutas["canalizacion"]))
-
-    # Leemos una vez y reusamos: las reglas hacen muchos count().
-    siap = intentar_cache(siap)
-    sniim = intentar_cache(sniim)
-
-    manifiesto = None
-    if MANIFIESTO.exists():
-        manifiesto = json.loads(MANIFIESTO.read_text(encoding="utf-8"))
-
-    resultados = pd.DataFrame(correr_reglas(siap, sniim, canal, config, manifiesto))
+    resultados = pd.DataFrame(filas)
 
     resultados.to_csv(TABLAS / "validacion.csv", index=False, encoding="utf-8")
     (TABLAS / "validacion.md").write_text(a_markdown(resultados), encoding="utf-8")

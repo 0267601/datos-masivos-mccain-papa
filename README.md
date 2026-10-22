@@ -1,4 +1,4 @@
-# Datos Masivos 2026 — McCain: ¿dónde se vende la papa industrial en México?
+# Datos Masivos 2026 — McCain: ¿dónde invertir para vender más papas a la francesa en México?
 
 Entregable 2 — Pipeline reproducible: adquisición, procesamiento, validación y desempeño.
 Corre desde la terminal y en **Databricks**, con el data lake en Unity Catalog.
@@ -34,6 +34,22 @@ SNIIM para encontrar los estados cuya papa **no pasa por el mercado spot**.
 de papa (caso McCain México). **Decisión que habilita:** a qué estados dirigir contratos
 agrícolas y en cuáles no vale la pena invertir.
 
+### Pregunta reenfocada: dónde invertir
+
+El E1 confirmó que la papa industrial es importada: **McCain no compra papa mexicana**,
+importa papa congelada y la vende a restaurantes. Por eso movimos la pregunta del lado de
+la oferta al de la demanda:
+
+> Si McCain tuviera X millones para crecer en México, ¿en qué zonas metropolitanas
+> los pondría?
+
+Construimos un **índice de inversión** para las 92 zonas metropolitanas de CONAPO con el
+DENUE de INEGI (2019 contra 2026): A. crecimiento de restaurantes donde se venden papas,
+B. aperturas de cadenas (McDonald's, KFC, Carl's Jr.…), turismo y tamaño de mercado, con el
+mismo peso. La pieza C, competencia, sale de UN Comtrade: de qué país vienen las papas
+congeladas importadas y a qué precio por kilo. Método, fuentes y resultados en
+[`docs/indice_inversion.md`](docs/indice_inversion.md).
+
 ## Arquitectura
 
 ```
@@ -64,6 +80,14 @@ Volume `workspace.mccain_papa.datalake` cuando corremos en Databricks (ver abajo
 |---|---|---|---|---|
 | SIAP — Cierre de la Producción Agrícola | SADER | Descarga automatizada | 2013–2025, anual | CSV latin-1, todos los cultivos |
 | SNIIM — Precios de Mercados Nacionales | Secretaría de Economía | Scraping con requests + BeautifulSoup | 2025, diario | HTML, una página por variedad y mes |
+
+Para el índice de inversión sumamos tres fuentes:
+
+| Fuente | Origen | Obtención | Periodo | Formato crudo |
+|---|---|---|---|---|
+| DENUE — sector 72 (restaurantes y hoteles) | INEGI | Descarga masiva de 7 zip | feb 2015, nov 2019, nov 2022, may 2026 | CSV dentro de zip; UTF-8 en 2015, latin-1 después |
+| Las metrópolis de México 2020 | CONAPO | 2 CSV de datos.gob.mx | 2020 | CSV UTF-8 |
+| Importaciones de papa congelada (HS 200410) | UN Comtrade | API pública, un mes por consulta | 2015–2025, mensual | JSON |
 
 Ninguna fuente pide credenciales.
 
@@ -115,6 +139,17 @@ python -m src.processing.benchmark           # 4. desempeño      → reports/ta
 pytest                                       # pruebas
 ```
 
+Índice de inversión (ver [`docs/indice_inversion.md`](docs/indice_inversion.md)):
+
+```bash
+python -m src.ingestion.download_data --fuente indice    # DENUE, CONAPO, Comtrade (~15 min)
+python -m src.processing.build_dataset --fuente indice   # → processed/denue_establecimientos, metropolis, importaciones
+python -m src.analysis.indice_inversion                  # → reports/tables/indice_inversion.csv y 3 gráficas
+python -m src.validation.validate_dataset                # valida lo que exista: E1 e índice
+```
+
+`--fuente e1` hace solo SIAP y SNIIM; sin `--fuente` se hace todo.
+
 Cada comando regresa código de salida 1 si algo falla, así que se pueden encadenar con `&&`.
 
 `--muestra` no sobrescribe una descarga real: si `data/raw/` ya tiene archivos
@@ -155,6 +190,9 @@ Pasos:
 1. **Workspace → Create → Git folder** con la URL
    `https://github.com/0267601/datos-masivos-mccain-papa.git`.
 2. Abrir `notebooks/03_databricks.ipynb`, **Connect → Serverless** y **Run all**.
+3. Para el índice de inversión: `notebooks/04_indice_databricks.ipynb`, **Run all**. Descarga
+   el DENUE al Volume, calcula el índice, muestra las tres gráficas y registra las tablas
+   `indice_inversion`, `importaciones_anuales`, `serie_metropolis` y demás.
 
 El paso a paso, qué hacer si Databricks no alcanza los portales del gobierno y cómo consultar
 las tablas está en [`docs/databricks.md`](docs/databricks.md).
@@ -224,18 +262,20 @@ datos-masivos-mccain-papa/
 │   ├── validation.md
 │   ├── desempeno.md
 │   ├── databricks.md              cómo correrlo en Databricks
-│   └── hallazgos.md
+│   ├── hallazgos.md
+│   └── indice_inversion.md        pregunta reenfocada: dónde invertir
 ├── notebooks/
 │   ├── entregable_1.ipynb         entregable 1: extractores paso a paso
 │   ├── 02_cleaning.ipynb          entregable 2: pipeline y planes de Spark
-│   └── 03_databricks.ipynb        entregable 2 en Databricks: data lake y tablas Delta
+│   ├── 03_databricks.ipynb        entregable 2 en Databricks: data lake y tablas Delta
+│   └── 04_indice_databricks.ipynb índice de inversión en Databricks, con gráficas
 ├── src/
-│   ├── ingestion/                 siap_extractor, sniim_extractor, download_data, muestra
-│   ├── processing/                siap, sniim, canalizacion, build_dataset, benchmark
-│   ├── validation/                reglas, validate_dataset
-│   ├── analysis/                  (examen final)
+│   ├── ingestion/                 siap, sniim, denue y comtrade extractors, download_data, muestra
+│   ├── processing/                siap, sniim, canalizacion, denue, metropolis, comtrade, build_dataset, benchmark
+│   ├── validation/                reglas, reglas_indice, validate_dataset
+│   ├── analysis/                  indice_inversion, graficas
 │   └── utils/                     rutas, config, registro, spark
-├── tests/                         test_ingestion, test_processing, test_validation
+├── tests/                         test_ingestion, test_processing, test_validation, test_indice
 └── reports/
     ├── figures/
     └── tables/
