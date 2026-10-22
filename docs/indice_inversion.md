@@ -32,7 +32,10 @@ Todas son abiertas y no piden llave. No usamos datos internos de McCain.
    - *a la carta*: "a la carta o de comida corrida"
    - *hoteles*, *bares* y *otros*
 
-   Las tres primeras son los **restaurantes objetivo**: donde se sirven papas a la francesa.
+   *Comida rápida* y *a la carta* son los **restaurantes objetivo**: donde se sirven papas a
+   la francesa. Dejamos fuera *autoservicio* porque su conteo salta sin explicación entre
+   versiones (4,502 en 2015, 20,670 en 2019, 10,296 en 2022, 16,605 en 2026): parece un cambio
+   de clasificación de INEGI, no crecimiento real, y 2019 es nuestro año base.
 2. **Detectamos cadenas** que venden papas (McDonald's, Burger King, KFC, Carl's Jr., Wendy's,
    Vips, Toks…) con expresiones regulares sobre el nombre del establecimiento.
 3. **Asignamos cada negocio a su metrópoli** con la clave de municipio a 5 dígitos

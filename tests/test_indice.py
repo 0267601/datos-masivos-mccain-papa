@@ -279,7 +279,8 @@ def test_serie_por_metropoli_solo_cuenta_municipios_metropolitanos(denue_process
     municipios, _ = conapo
     serie = {r["version"]: r for r in ii.serie_por_metropoli(
         df, municipios, CONFIG["denue"]["categorias_objetivo"]).collect()}
-    assert serie["2019_11"]["objetivo"] == 2         # McDonald's y Burger King
+    assert serie["2019_11"]["objetivo"] == 1         # McDonald's; Burger King es autoservicio
+    assert serie["2019_11"]["autoservicio"] == 1
     assert serie["2019_11"]["cadenas"] == 2
     assert serie["2019_11"]["hoteles"] == 1
 

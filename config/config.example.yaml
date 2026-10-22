@@ -78,8 +78,11 @@ denue:
     a_la_carta: ["a la carta"]
     bares: ["bares, cantinas"]
     hoteles: ["hoteles"]
-  # Los restaurantes donde se venden papas a la francesa.
-  categorias_objetivo: [comida_rapida, autoservicio, a_la_carta]
+  # Los restaurantes donde se venden papas a la francesa. Dejamos fuera
+  # autoservicio: su conteo salta sin explicacion entre versiones (4,502 en
+  # 2015, 20,670 en 2019, 10,296 en 2022, 16,605 en 2026), lo que parece un
+  # cambio de clasificacion de INEGI y no crecimiento real.
+  categorias_objetivo: [comida_rapida, a_la_carta]
 
   # Cadenas que venden papas a la francesa. Expresion regular sobre el nombre
   # del establecimiento en mayusculas y sin acentos.
