@@ -54,7 +54,7 @@ from datetime import date, datetime
 from src.ingestion import comtrade_extractor, denue_extractor, siap_extractor, sniim_extractor
 from src.utils.config import cargar_config
 from src.utils.registro import configurar_registro
-from src.utils.rutas import RAW, asegurar_carpetas
+from src.utils.rutas import RAW, SAMPLE, asegurar_carpetas
 
 MANIFIESTO = RAW / "manifiesto.json"
 
@@ -337,6 +337,21 @@ def descargar_metropolis(config, manifiesto, forzar=False):
             }
             log.info(f"CONAPO {tabla} | {len(contenido) / 1024:6.1f} KB")
         except Exception as error:
+            # Si el portal nos bloquea, usamos la copia que guardamos en el repo
+            # (datos abiertos, 73 KB): asi el pipeline corre en cualquier Databricks.
+            respaldo = SAMPLE / "conapo" / url.rsplit("/", 1)[-1]
+            if respaldo.exists():
+                contenido = respaldo.read_bytes()
+                escribir_atomico(destino, contenido)
+                manifiesto["archivos"][clave] = {
+                    "fuente": "CONAPO", "url": url, "bytes": len(contenido),
+                    "sha256": sha256(contenido), "origen": "respaldo del repositorio",
+                    "fecha_descarga": datetime.now().isoformat(timespec="seconds"),
+                    "estado": "ok", "aviso": str(error)[:300],
+                }
+                log.warning(f"CONAPO {tabla} | portal fallo ({error}); usamos {respaldo.name} del repo")
+                guardar_manifiesto(manifiesto)
+                continue
             errores += 1
             manifiesto["archivos"][clave] = {
                 "fuente": "CONAPO", "url": url,
