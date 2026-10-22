@@ -1,7 +1,7 @@
 # Diccionario de datos
 
 Describimos las tres tablas de `data/processed/` (Parquet). Los faltantes son los de la
-corrida con la muestra (`--muestra`: SIAP 2013–2025, SNIIM enero–marzo 2025).
+corrida con la descarga real (SIAP 2013–2025, SNIIM enero–diciembre 2025).
 
 ## `siap_produccion` — producción de papa por municipio
 
@@ -30,7 +30,7 @@ Origen: SIAP, Cierre de la Producción Agrícola. Particionada por `anio`. 3,171
 
 ## `sniim_precios` — cotizaciones diarias en mercados mayoristas
 
-Origen: SNIIM, Precios de Mercados Nacionales. Particionada por `anio` y `mes`. 2,683 filas.
+Origen: SNIIM, Precios de Mercados Nacionales. Particionada por `anio` y `mes`. 11,010 filas.
 
 | Variable | Tipo | Descripción | Unidad | Faltantes | Observaciones |
 |---|---|---|---|---|---|
@@ -38,25 +38,25 @@ Origen: SNIIM, Precios de Mercados Nacionales. Particionada por `anio` y `mes`. 
 | anio, mes | int | Año y mes de la fecha | — | 0% | Particiones |
 | variedad | string | Variedad de papa | — | 0% | Alpha, Galeana, Gema, Marciana, Rouset, San Jose |
 | producto_id | int | ProductoId del catálogo del SNIIM | — | 0% | 740, 748, 749, 753, 766, 767 |
-| presentacion | string | Empaque cotizado | — | 0% | Kilogramo, arpillas y costales de 20 a 60 kg |
+| presentacion | string | Empaque cotizado | — | 0% | Kilogramo, cajas, arpillas y costales de 20 a 60 kg (15 presentaciones) |
 | origen | string | Origen declarado en el mercado | — | 0% | Incluye "Importación" |
-| destino | string | Mercado, como "Estado: Nombre del mercado" | — | 0% | 43 mercados |
+| destino | string | Mercado, como "Estado: Nombre del mercado" | — | 0% | 44 mercados |
 | estado_destino | string | Estado del mercado destino | — | 0% | Derivada; "DF" → "Ciudad de México" |
 | mercado | string | Nombre del mercado destino | — | 0% | Derivada |
 | precio_min | double | Precio mínimo del día | $/kg | 0% | |
 | precio_max | double | Precio máximo del día | $/kg | 0% | |
-| precio_frec | double | Precio más frecuente del día | $/kg | 0% | 10–35 $/kg en la muestra |
+| precio_frec | double | Precio más frecuente del día | $/kg | 0% | 6–35 $/kg; una cotización de 0.43 marcada como AVISO en la validación |
 | rango_precio | double | precio_max − precio_min | $/kg | 0% | Derivada |
 | obs | string | Observaciones del SNIIM | — | 97.7% | Casi siempre vacía; a veces el país de origen ("EUA") |
 | es_importacion | boolean | El origen es "Importación" | — | 0% | Derivada; distinción central del análisis |
-| estado_origen | string | Origen estandarizado | — | 5.4% | Nulo a propósito cuando es importación |
-| estado_origen_llave | string | Origen en minúsculas, sin acentos | — | 5.4% | Para cruzar con SIAP |
+| estado_origen | string | Origen estandarizado | — | 5.5% | Nulo a propósito cuando es importación |
+| estado_origen_llave | string | Origen en minúsculas, sin acentos | — | 5.5% | Para cruzar con SIAP |
 | estado_destino_llave | string | Destino en minúsculas, sin acentos | — | 0% | |
 | archivo | string | HTML crudo del que salió la fila | — | 0% | Trazabilidad hacia data/raw/ |
 
 ## `canalizacion` — índice por estado y año
 
-Cruce de las dos tablas anteriores. Solo años presentes en ambas fuentes. 22 filas.
+Cruce de las dos tablas anteriores. Solo años presentes en ambas fuentes. 23 filas.
 
 | Variable | Tipo | Descripción | Unidad | Faltantes | Observaciones |
 |---|---|---|---|---|---|
@@ -69,8 +69,8 @@ Cruce de las dos tablas anteriores. Solo años presentes en ambas fuentes. 22 fi
 | cotizaciones | int | Cotizaciones nacionales con ese origen (SNIIM) | conteo | 0% | Excluye importación |
 | pct_mayoreo | double | Participación en las cotizaciones | % | 0% | Suma 100 por año (validado) |
 | canalizacion | double | pct_nacional − pct_mayoreo | puntos % | 0% | Positivo: vende por contrato |
-| precio_rural_ton | double | Valor de producción / producción | $/tonelada | 9.1% | Nulo si no produce |
-| precio_frec_promedio | double | Promedio de precio_frec de sus cotizaciones | $/kg | 40.9% | Nulo si no cotiza |
+| precio_rural_ton | double | Valor de producción / producción | $/tonelada | 13.0% | Nulo si no produce |
+| precio_frec_promedio | double | Promedio de precio_frec de sus cotizaciones | $/kg | 26.1% | Nulo si no cotiza |
 
 ## Capas intermedias
 
