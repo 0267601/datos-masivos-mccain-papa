@@ -173,6 +173,37 @@ los planes de Spark (partition pruning, predicate pushdown, broadcast y shuffle)
 
 ## Ejecución en Databricks (data lake)
 
+**Evidencia de la corrida:** [`notebooks/04_indice_databricks_ejecutado.ipynb`](notebooks/04_indice_databricks_ejecutado.ipynb)
+guarda las salidas reales del workspace (tablas, validación, las tres gráficas y el plan de Spark con
+partition pruning). GitHub lo muestra sin instalar nada.
+
+Así quedó el data lake en Unity Catalog:
+
+```
+workspace.mccain_papa
+├── datalake (Volume)
+│   ├── raw/          siap/ · sniim/ · denue/<versión>/ · metropolis/ · comtrade/ · manifiesto.json
+│   ├── interim/      siap/ · sniim/ · denue/ (particionado por versión)
+│   ├── processed/    siap_produccion/ · sniim_precios/ · canalizacion/
+│   │                 denue_establecimientos/ · metropolis/ · importaciones/ · indice_inversion/ …
+│   └── reports/      tables/validacion.csv · tables/indice_inversion.csv · figures/*.png
+└── tablas Delta
+    ├── siap_produccion            3,171 filas
+    ├── sniim_precios             11,010
+    ├── canalizacion           por estado y año
+    ├── denue_establecimientos  2,774,429
+    ├── indice_inversion              92
+    ├── serie_metropolis             368
+    ├── cadenas_metropolis         1,620
+    ├── metropolis                    92
+    ├── importaciones                527
+    └── importaciones_anuales         51
+```
+
+Para reproducirlo en otro workspace basta abrir el repo como Git folder y dar **Run all** en
+`03_databricks.ipynb` (entregable 2) y `04_indice_databricks.ipynb` (índice). Si datos.gob.mx bloquea
+la descarga de CONAPO, el pipeline usa la copia de `data/sample/conapo/`.
+
 El mismo pipeline corre en Databricks sin copiar código: abrimos este repositorio como
 **Git folder** y corremos `notebooks/03_databricks.ipynb` en cómputo serverless. Las capas
 quedan en un Volume de Unity Catalog y la capa final, como tablas Delta:
@@ -257,7 +288,7 @@ datos-masivos-mccain-papa/
 │   ├── raw/                       copia cruda (no se sube)
 │   ├── interim/                   esquema unificado (no se sube)
 │   ├── processed/                 dataset preparado (no se sube)
-│   ├── sample/                    muestras pequeñas y su README
+│   ├── sample/                    muestras pequeñas, su README y conapo/ (respaldo de CONAPO)
 │   ├── siap_papa_2013_2025.csv    copia del E1 (base de --muestra)
 │   └── sniim_papa_2025.csv        copia del E1 (base de --muestra)
 ├── docs/
@@ -274,7 +305,8 @@ datos-masivos-mccain-papa/
 │   ├── entregable_1.ipynb         entregable 1: extractores paso a paso
 │   ├── 02_cleaning.ipynb          entregable 2: pipeline y planes de Spark
 │   ├── 03_databricks.ipynb        entregable 2 en Databricks: data lake y tablas Delta
-│   └── 04_indice_databricks.ipynb índice de inversión en Databricks, con gráficas
+│   ├── 04_indice_databricks.ipynb índice de inversión en Databricks, con gráficas
+│   └── 04_indice_databricks_ejecutado.ipynb   la corrida real, con sus salidas
 ├── src/
 │   ├── ingestion/                 siap, sniim, denue y comtrade extractors, download_data, muestra
 │   ├── processing/                siap, sniim, canalizacion, denue, metropolis, comtrade, build_dataset, benchmark

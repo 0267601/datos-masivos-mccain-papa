@@ -206,3 +206,27 @@ def test_conapo_manda_encabezados_de_navegador(raw_temporal, monkeypatch):
     config = {"metropolis": {"timeout": 5, "urls": {"municipios": "https://x/m.csv"}}}
     assert download_data.descargar_metropolis(config, {"archivos": {}}) == 0
     assert "Mozilla" in vistos["User-Agent"]
+
+
+def test_conapo_usa_el_respaldo_del_repo_si_el_portal_bloquea(raw_temporal, tmp_path, monkeypatch):
+    respaldo = tmp_path / "sample" / "conapo"
+    respaldo.mkdir(parents=True)
+    (respaldo / "municipios_poblacion.csv").write_text("clave_metropoli\n09.01\n")
+    monkeypatch.setattr(download_data, "SAMPLE", tmp_path / "sample")
+
+    def bloqueado(*a, **k):
+        raise download_data.requests.HTTPError("403 Client Error: Forbidden")
+
+    monkeypatch.setattr(download_data.requests, "get", bloqueado)
+    config = {"metropolis": {"timeout": 5, "urls": {
+        "municipios": "https://datos.gob.mx/x/municipios_poblacion.csv"}}}
+    manifiesto = {"archivos": {}}
+    assert download_data.descargar_metropolis(config, manifiesto) == 0
+    assert (raw_temporal / "metropolis" / "municipios.csv").exists()
+    assert list(manifiesto["archivos"].values())[0]["origen"] == "respaldo del repositorio"
+
+
+def test_respaldo_conapo_del_repo_tiene_las_92_metropolis():
+    carpeta = download_data.SAMPLE / "conapo"
+    assert len((carpeta / "metropolis_caracteristicas.csv").read_text(encoding="utf-8").splitlines()) == 93
+    assert len((carpeta / "municipios_poblacion.csv").read_text(encoding="utf-8").splitlines()) == 422

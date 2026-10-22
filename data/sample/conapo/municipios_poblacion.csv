@@ -1,0 +1,422 @@
+clave_metropoli,tipo,nombre,clave_entidad,entidad,clave_municipio,clave_compuesta_municipio,municipio,poblacion_01990,poblacion_2000,poblacion_2010,poblacion_2020,tasa_crecimiento_medio_anual_01990_2000,tasa_crecimiento_medio_anual_2000_2010,tasa_crecimiento_medio_anual_2010_2020,superficie_km2,densidad_media_urbana,entidad_etq
+01.1.01,Zona metropolitana,Aguascalientes,1,Aguascalientes,1,1001,Aguascalientes,506274,643419,797010,948990,2.4,2.1,1.8,1178.1,111.9,Aguascalientes
+01.1.01,Zona metropolitana,Aguascalientes,1,Aguascalientes,5,1005,Jesús María,41092,64097,99590,129929,4.6,4.4,2.8,505.0,79.3,Aguascalientes
+01.1.01,Zona metropolitana,Aguascalientes,1,Aguascalientes,11,1011,San Francisco de los Romo,0,20066,35769,61997,0.0,5.8,5.8,139.2,106.6,Aguascalientes
+02.2.02,Metrópoli municipal,Ensenada,2,Baja California,1,2001,Ensenada,259979,370730,466814,443807,3.6,2.3,-0.5,19877.4,64.3,Baja California
+02.2.03,Metrópoli municipal,Mexicali,2,Baja California,2,2002,Mexicali,601938,764602,936826,1049792,2.4,2.0,1.2,14650.3,63.2,Baja California
+02.1.01,Zona metropolitana,Tijuana,2,Baja California,4,2004,Tijuana,747381,1210820,1559683,1922523,5.0,2.5,2.2,1075.8,107.1,Baja California
+02.1.01,Zona metropolitana,Tijuana,2,Baja California,5,2005,Playas de Rosarito,0,63420,90668,126890,0.0,3.5,3.5,506.3,47.4,Baja California
+03.2.01,Metrópoli municipal,La Paz,3,Baja California Sur,3,3003,La Paz,160970,196907,251871,292241,2.0,2.4,1.5,15838.1,59.3,Baja California Sur
+03.2.02,Metrópoli municipal,Los Cabos,3,Baja California Sur,8,3008,Los Cabos,43920,105469,238487,351111,9.2,8.2,4.0,3751.6,82.4,Baja California Sur
+04.2.01,Metrópoli municipal,Campeche,4,Campeche,2,4002,Campeche,173645,216897,259005,294077,2.3,1.7,1.3,3224.5,72.8,Campeche
+05.1.04,Zona metropolitana,Saltillo,5,Coahuila de Zaragoza,4,5004,Arteaga,17414,19374,22544,29578,1.1,1.5,2.8,1635.3,36.1,Coahuila
+05.1.02,Zona metropolitana,Monclova-Frontera,5,Coahuila de Zaragoza,6,5006,Castaños,21356,22530,25892,29128,0.5,1.4,1.2,3343.0,26.1,Coahuila
+05.1.02,Zona metropolitana,Monclova-Frontera,5,Coahuila de Zaragoza,10,5010,Frontera,61450,66579,75215,82409,0.8,1.2,0.9,457.5,54.9,Coahuila
+05.1.01,Zona metropolitana,La Laguna,5,Coahuila de Zaragoza,17,5017,Matamoros,86398,92029,107160,118337,0.6,1.5,1.0,806.0,58.3,Coahuila
+05.1.02,Zona metropolitana,Monclova-Frontera,5,Coahuila de Zaragoza,18,5018,Monclova,178606,193744,216206,237951,0.8,1.1,1.0,1251.5,57.5,Coahuila
+05.1.03,Zona metropolitana,Piedras Negras,5,Coahuila de Zaragoza,22,5022,Nava,16915,23019,27928,33129,3.2,1.9,1.8,907.9,47.5,Coahuila
+05.1.03,Zona metropolitana,Piedras Negras,5,Coahuila de Zaragoza,25,5025,Piedras Negras,98185,128130,152806,176327,2.7,1.7,1.5,474.4,65.9,Coahuila
+05.1.04,Zona metropolitana,Saltillo,5,Coahuila de Zaragoza,27,5027,Ramos Arizpe,28246,39853,75461,122243,3.5,6.4,5.1,6754.4,83.5,Coahuila
+05.3.05,Zona conurbada,Sabinas,5,Coahuila de Zaragoza,28,5028,Sabinas,47030,52379,60847,64811,1.1,1.5,0.6,1976.3,44.1,Coahuila
+05.1.04,Zona metropolitana,Saltillo,5,Coahuila de Zaragoza,30,5030,Saltillo,440920,578046,725123,879958,2.8,2.2,2.0,5619.6,90.3,Coahuila
+05.1.02,Zona metropolitana,Monclova-Frontera,5,Coahuila de Zaragoza,31,5031,San Buenaventura,20216,20046,22149,24759,-0.1,1.0,1.1,6443.0,28.9,Coahuila
+05.3.05,Zona conurbada,Sabinas,5,Coahuila de Zaragoza,32,5032,San Juan de Sabinas,40231,40138,41649,42260,0.0,0.4,0.1,802.4,42.2,Coahuila
+05.1.01,Zona metropolitana,La Laguna,5,Coahuila de Zaragoza,35,5035,Torreón,464825,529512,639629,720848,1.3,1.8,1.2,1282.8,81.3,Coahuila
+06.3.02,Zona conurbada,Tecomán,6,Colima,1,6001,Armería,27782,28574,28695,27626,0.3,0.0,-0.4,408.8,45.0,Colima
+06.1.01,Zona metropolitana,Colima-Villa de Álvarez,6,Colima,2,6002,Colima,116505,129958,146904,157048,1.1,1.2,0.7,746.0,59.2,Colima
+06.1.01,Zona metropolitana,Colima-Villa de Álvarez,6,Colima,3,6003,Comala,16909,19384,20888,21661,1.4,0.7,0.4,314.3,39.1,Colima
+06.3.02,Zona conurbada,Tecomán,6,Colima,9,6009,Tecomán,82699,99289,112726,116305,1.9,1.2,0.3,937.9,65.2,Colima
+06.1.01,Zona metropolitana,Colima-Villa de Álvarez,6,Colima,10,6010,Villa de Álvarez,37842,80808,119956,149762,7.9,3.9,2.3,288.0,80.7,Colima
+07.1.02,Zona metropolitana,Tuxtla Gutiérrez,7,Chiapas,12,7012,Berriozábal,22170,28719,43179,64632,2.6,4.0,4.2,352.0,71.1,Chiapas
+07.1.02,Zona metropolitana,Tuxtla Gutiérrez,7,Chiapas,27,7027,Chiapa de Corzo,45143,60620,87603,112075,3.0,3.6,2.6,789.0,75.2,Chiapas
+07.1.01,Zona metropolitana,Tapachula,7,Chiapas,55,7055,Metapa,3961,4794,5033,5876,1.9,0.5,1.6,22.8,31.6,Chiapas
+07.1.02,Zona metropolitana,Tuxtla Gutiérrez,7,Chiapas,79,7079,San Fernando,22388,26436,33060,41793,1.7,2.2,2.4,359.5,90.2,Chiapas
+07.1.02,Zona metropolitana,Tuxtla Gutiérrez,7,Chiapas,86,7086,Suchiapa,12293,15890,21045,25627,2.6,2.8,2.0,283.9,57.1,Chiapas
+07.1.01,Zona metropolitana,Tapachula,7,Chiapas,89,7089,Tapachula,222405,271674,320451,353706,2.0,1.6,1.0,980.1,71.5,Chiapas
+07.1.02,Zona metropolitana,Tuxtla Gutiérrez,7,Chiapas,101,7101,Tuxtla Gutiérrez,295608,434143,553374,604147,3.9,2.4,0.9,334.9,85.2,Chiapas
+07.1.01,Zona metropolitana,Tapachula,7,Chiapas,102,7102,Tuxtla Chico,32348,33467,37737,41024,0.3,1.2,0.9,165.8,29.5,Chiapas
+08.1.01,Zona metropolitana,Chihuahua,8,Chihuahua,2,8002,Aldama,17169,19378,22302,26047,1.2,1.4,1.6,9216.3,40.7,Chihuahua
+08.1.01,Zona metropolitana,Chihuahua,8,Chihuahua,4,8004,Aquiles Serdán,3916,5327,10688,24344,3.1,7.0,8.8,495.4,87.1,Chihuahua
+08.1.01,Zona metropolitana,Chihuahua,8,Chihuahua,19,8019,Chihuahua,530783,671790,819543,937674,2.4,1.9,1.4,8381.9,65.9,Chihuahua
+08.1.02,Zona metropolitana,Delicias,8,Chihuahua,21,8021,Delicias,104014,116426,137935,150506,1.1,1.7,0.9,533.1,65.0,Chihuahua
+08.3.04,Zona conurbada,Hidalgo del Parral,8,Chihuahua,32,8032,Hidalgo del Parral,90647,100821,107061,116662,1.1,0.6,0.9,1923.6,67.5,Chihuahua
+08.2.03,Metrópoli municipal,Juárez,8,Chihuahua,37,8037,Juárez,798499,1218817,1332131,1512450,4.3,0.9,1.3,3547.5,72.1,Chihuahua
+08.1.02,Zona metropolitana,Delicias,8,Chihuahua,45,8045,Meoqui,34995,40018,43833,44853,1.4,0.9,0.2,429.2,41.4,Chihuahua
+08.1.02,Zona metropolitana,Delicias,8,Chihuahua,55,8055,Rosales,14154,14969,16785,16776,0.6,1.1,0.0,1926.9,32.4,Chihuahua
+08.3.04,Zona conurbada,Hidalgo del Parral,8,Chihuahua,59,8059,San Francisco del Oro,9486,6054,4753,5004,-4.4,-2.3,0.5,479.9,27.8,Chihuahua
+09.1.01,Zona metropolitana,Ciudad de México,9,Ciudad de México,2,9002,Azcapotzalco,474688,441008,414711,432205,-0.7,-0.6,0.4,33.5,189.8,Ciudad de México
+09.1.01,Zona metropolitana,Ciudad de México,9,Ciudad de México,3,9003,Coyoacán,640066,640423,620416,614447,0.0,-0.3,-0.1,53.9,192.5,Ciudad de México
+09.1.01,Zona metropolitana,Ciudad de México,9,Ciudad de México,4,9004,Cuajimalpa de Morelos,119669,151222,186391,217686,2.4,2.0,1.6,71.2,90.9,Ciudad de México
+09.1.01,Zona metropolitana,Ciudad de México,9,Ciudad de México,5,9005,Gustavo A. Madero,1268068,1235542,1185772,1173351,-0.3,-0.4,-0.1,87.9,195.1,Ciudad de México
+09.1.01,Zona metropolitana,Ciudad de México,9,Ciudad de México,6,9006,Iztacalco,448322,411321,384326,404695,-0.9,-0.7,0.5,23.1,218.9,Ciudad de México
+09.1.01,Zona metropolitana,Ciudad de México,9,Ciudad de México,7,9007,Iztapalapa,1490499,1773343,1815786,1835486,1.8,0.2,0.1,113.2,216.0,Ciudad de México
+09.1.01,Zona metropolitana,Ciudad de México,9,Ciudad de México,8,9008,La Magdalena Contreras,195041,222050,239086,247622,1.3,0.7,0.4,63.4,163.1,Ciudad de México
+09.1.01,Zona metropolitana,Ciudad de México,9,Ciudad de México,9,9009,Milpa Alta,63654,96773,130582,152685,4.3,2.9,1.6,298.2,51.7,Ciudad de México
+09.1.01,Zona metropolitana,Ciudad de México,9,Ciudad de México,10,9010,Álvaro Obregón,642753,687020,727034,759137,0.7,0.5,0.4,95.9,189.2,Ciudad de México
+09.1.01,Zona metropolitana,Ciudad de México,9,Ciudad de México,11,9011,Tláhuac,206700,302790,360265,392313,3.9,1.7,0.9,85.9,135.9,Ciudad de México
+09.1.01,Zona metropolitana,Ciudad de México,9,Ciudad de México,12,9012,Tlalpan,484866,581781,650567,699928,1.9,1.1,0.8,314.5,122.8,Ciudad de México
+09.1.01,Zona metropolitana,Ciudad de México,9,Ciudad de México,13,9013,Xochimilco,271151,369787,415007,442178,3.2,1.1,0.7,114.1,91.8,Ciudad de México
+09.1.01,Zona metropolitana,Ciudad de México,9,Ciudad de México,14,9014,Benito Juárez,407811,360478,385439,434153,-1.2,0.7,1.2,26.7,180.1,Ciudad de México
+09.1.01,Zona metropolitana,Ciudad de México,9,Ciudad de México,15,9015,Cuauhtémoc,595960,516255,531831,545884,-1.4,0.3,0.3,32.5,231.5,Ciudad de México
+09.1.01,Zona metropolitana,Ciudad de México,9,Ciudad de México,16,9016,Miguel Hidalgo,406868,352640,372889,414470,-1.4,0.5,1.1,46.4,210.2,Ciudad de México
+09.1.01,Zona metropolitana,Ciudad de México,9,Ciudad de México,17,9017,Venustiano Carranza,519628,462806,430978,443704,-1.2,-0.7,0.3,33.9,220.6,Ciudad de México
+10.2.01,Metrópoli municipal,Durango,10,Durango,5,10005,Durango,413835,491436,582267,688697,1.7,1.7,1.7,9285.4,90.4,Durango
+05.1.01,Zona metropolitana,La Laguna,10,Durango,7,10007,Gómez Palacio,232742,273315,327985,372750,1.6,1.8,1.3,842.4,86.8,Durango
+05.1.01,Zona metropolitana,La Laguna,10,Durango,12,10012,Lerdo,94324,112435,141043,163313,1.8,2.2,1.5,2147.7,58.6,Durango
+11.1.01,Zona metropolitana,Celaya,11,Guanajuato,7,11007,Celaya,310569,382958,468469,521169,2.1,2.0,1.1,553.1,88.6,Guanajuato
+11.1.01,Zona metropolitana,Celaya,11,Guanajuato,11,11011,Cortazar,74383,81359,88397,97928,0.9,0.8,1.1,335.2,86.8,Guanajuato
+11.2.03,Metrópoli municipal,Guanajuato,11,Guanajuato,15,11015,Guanajuato,119170,141196,171709,194500,1.7,1.9,1.3,1014.1,77.1,Guanajuato
+11.2.04,Metrópoli municipal,Irapuato,11,Guanajuato,17,11017,Irapuato,362915,440134,529440,592953,2.0,1.8,1.2,851.1,101.7,Guanajuato
+11.1.02,Zona metropolitana,León,11,Guanajuato,20,11020,León,867920,1134842,1436480,1721215,2.7,2.3,1.9,1221.6,129.9,Guanajuato
+11.3.05,Zona conurbada,Moroleón-Uriangato,11,Guanajuato,21,11021,Moroleón,48191,47132,49364,47261,-0.2,0.4,-0.4,159.7,61.2,Guanajuato
+16.1.01,Zona metropolitana,La Piedad-Pénjamo,11,Guanajuato,23,11023,Pénjamo,137842,144426,149936,154960,0.5,0.4,0.3,1561.1,53.2,Guanajuato
+11.1.02,Zona metropolitana,León,11,Guanajuato,25,11025,Purísima del Rincón,30433,44778,68795,83842,4.0,4.2,2.0,290.7,60.1,Guanajuato
+11.3.06,Zona conurbada,Silao,11,Guanajuato,26,11026,Romita,44545,51825,56655,65766,1.5,0.9,1.5,440.7,75.3,Guanajuato
+11.1.02,Zona metropolitana,León,11,Guanajuato,31,11031,San Francisco del Rincón,83601,100239,113570,130871,1.8,1.2,1.5,425.4,67.7,Guanajuato
+11.3.06,Zona conurbada,Silao,11,Guanajuato,37,11037,Silao de la Victoria,115130,134337,173024,203556,1.6,2.5,1.7,538.5,80.4,Guanajuato
+11.3.05,Zona conurbada,Moroleón-Uriangato,11,Guanajuato,41,11041,Uriangato,46710,52931,59305,61494,1.3,1.1,0.4,116.3,63.3,Guanajuato
+11.1.01,Zona metropolitana,Celaya,11,Guanajuato,44,11044,Villagrán,38680,45941,55782,65791,1.7,1.9,1.7,128.5,82.3,Guanajuato
+12.2.02,Metrópoli municipal,Acapulco,12,Guerrero,1,12001,Acapulco de Juárez,593212,722499,789971,779566,2.0,0.9,-0.1,1727.9,88.3,Guerrero
+12.1.01,Zona metropolitana,Chilpancingo,12,Guerrero,29,12029,Chilpancingo de los Bravo,136164,192947,241717,283354,3.6,2.2,1.6,2180.6,90.8,Guerrero
+16.3.05,Zona conurbada,Lázaro Cárdenas,12,Guerrero,68,12068,La Unión de Isidoro Montes de Oca,25606,27619,25712,26349,0.8,-0.7,0.3,1760.2,24.1,Guerrero
+12.1.01,Zona metropolitana,Chilpancingo,12,Guerrero,75,12075,Eduardo Neri,32997,40064,46158,53126,2.0,1.4,1.5,1249.3,85.3,Guerrero
+13.3.03,Zona conurbada,Atitalaquia,13,Hidalgo,10,13010,Atitalaquia,17626,21636,26904,31525,2.1,2.1,1.6,62.5,25.3,Hidalgo
+09.1.01,Zona metropolitana,Ciudad de México,13,Hidalgo,13,13013,Atotonilco de Tula,19327,24848,31078,62470,2.6,2.2,7.4,122.3,59.3,Hidalgo
+13.1.02,Zona metropolitana,Tulancingo,13,Hidalgo,16,13016,Cuautepec de Hinojosa,36519,45110,54500,60421,2.1,1.8,1.1,391.4,19.6,Hidalgo
+13.1.01,Zona metropolitana,Pachuca,13,Hidalgo,39,13039,Mineral del Monte,13043,12885,13864,14324,-0.1,0.7,0.3,53.4,40.3,Hidalgo
+13.1.01,Zona metropolitana,Pachuca,13,Hidalgo,48,13048,Pachuca de Soto,180630,245208,267862,314331,3.1,0.9,1.7,154.0,80.1,Hidalgo
+13.1.01,Zona metropolitana,Pachuca,13,Hidalgo,51,13051,Mineral de la Reforma,20820,42223,127404,202749,7.4,11.3,4.9,112.5,93.8,Hidalgo
+13.1.02,Zona metropolitana,Tulancingo,13,Hidalgo,56,13056,Santiago Tulantepec de Lugo Guerrero,18048,26254,33495,39561,3.8,2.4,1.7,64.3,48.3,Hidalgo
+09.1.01,Zona metropolitana,Ciudad de México,13,Hidalgo,69,13069,Tizayuca,30293,46344,97461,168302,4.4,7.5,5.8,76.8,69.8,Hidalgo
+13.3.03,Zona conurbada,Atitalaquia,13,Hidalgo,74,13074,Tlaxcoapan,18264,22641,26758,28626,2.2,1.6,0.7,39.0,28.0,Hidalgo
+13.1.02,Zona metropolitana,Tulancingo,13,Hidalgo,77,13077,Tulancingo de Bravo,92570,122274,151584,168369,2.8,2.1,1.1,217.4,71.2,Hidalgo
+13.1.01,Zona metropolitana,Pachuca,13,Hidalgo,82,13082,Zapotlán de Juárez,11481,14888,18036,21443,2.7,1.9,1.8,105.3,19.4,Hidalgo
+13.1.01,Zona metropolitana,Pachuca,13,Hidalgo,83,13083,Zempoala,21295,24516,39143,57906,1.4,4.6,4.1,319.9,41.0,Hidalgo
+14.1.01,Zona metropolitana,Guadalajara,14,Jalisco,39,14039,Guadalajara,1650205,1646319,1495189,1385629,0.0,-0.9,-0.8,151.0,137.7,Jalisco
+14.3.03,Zona conurbada,Ocotlán,14,Jalisco,47,14047,Jamay,19145,21157,22881,24894,1.0,0.8,0.9,162.8,72.0,Jalisco
+14.1.01,Zona metropolitana,Guadalajara,14,Jalisco,51,14051,Juanacatlán,10068,11792,13218,30855,1.6,1.1,9.1,138.1,100.4,Jalisco
+14.3.03,Zona conurbada,Ocotlán,14,Jalisco,63,14063,Ocotlán,69646,84200,92967,106050,1.9,1.0,1.4,242.7,82.3,Jalisco
+14.3.03,Zona conurbada,Ocotlán,14,Jalisco,66,14066,Poncitlán,32259,40827,48408,53659,2.4,1.7,1.1,834.9,60.9,Jalisco
+14.1.02,Zona metropolitana,Puerto Vallarta,14,Jalisco,67,14067,Puerto Vallarta,111457,184728,255681,291839,5.2,3.2,1.4,680.9,86.3,Jalisco
+14.1.01,Zona metropolitana,Guadalajara,14,Jalisco,70,14070,El Salto,38281,83453,138226,232852,8.2,5.0,5.5,92.8,96.0,Jalisco
+14.1.01,Zona metropolitana,Guadalajara,14,Jalisco,97,14097,Tlajomulco de Zúñiga,68428,123619,416626,727750,6.1,12.5,5.9,671.4,122.9,Jalisco
+14.1.01,Zona metropolitana,Guadalajara,14,Jalisco,98,14098,San Pedro Tlaquepaque,339649,474178,608114,687127,3.4,2.4,1.3,116.8,122.4,Jalisco
+14.1.01,Zona metropolitana,Guadalajara,14,Jalisco,101,14101,Tonalá,168555,337149,478689,569913,7.2,3.5,1.8,158.0,125.3,Jalisco
+14.1.01,Zona metropolitana,Guadalajara,14,Jalisco,120,14120,Zapopan,712008,1001021,1243756,1476491,3.5,2.1,1.8,1158.7,110.4,Jalisco
+09.1.01,Zona metropolitana,Ciudad de México,15,México,2,15002,Acolman,43276,61250,136558,171507,3.6,8.1,2.4,86.9,94.8,Estado de México
+15.1.01,Zona metropolitana,Toluca,15,México,5,15005,Almoloya de Juárez,84147,110591,147653,174587,2.8,2.8,1.7,479.6,55.9,Estado de México
+15.3.03,Zona conurbada,Tianguistenco,15,México,6,15006,Almoloya del Río,6777,8873,10886,12694,2.7,2.0,1.6,9.2,52.0,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,11,15011,Atenco,21219,34435,56243,75489,5.0,4.9,3.1,87.6,63.0,Estado de México
+15.3.03,Zona conurbada,Tianguistenco,15,México,12,15012,Atizapán,5339,8172,10299,12984,4.4,2.3,2.4,8.5,41.6,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,13,15013,Atizapán de Zaragoza,315192,467886,489937,523674,4.1,0.4,0.7,92.9,135.0,Estado de México
+15.3.02,Zona conurbada,Ozumba,15,México,15,15015,Atlautla,18993,25950,27663,31900,3.2,0.6,1.5,167.7,43.5,Estado de México
+15.1.01,Zona metropolitana,Toluca,15,México,18,15018,Calimaya,24906,35196,47033,68489,3.5,2.8,3.9,103.0,60.5,Estado de México
+15.3.03,Zona conurbada,Tianguistenco,15,México,19,15019,Capulhuac,21258,28808,34101,36921,3.1,1.6,0.8,21.6,52.5,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,20,15020,Coacalco de Berriozábal,152082,252555,278064,293444,5.2,0.9,0.6,35.0,167.4,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,22,15022,Cocotitlán,8068,10205,12142,15107,2.4,1.7,2.3,14.8,56.0,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,23,15023,Coyotepec,24451,35358,39030,40885,3.8,1.0,0.5,39.9,46.2,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,24,15024,Cuautitlán,48858,75836,140059,178847,4.5,6.1,2.5,40.9,129.9,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,25,15025,Chalco,282940,217972,310130,400057,-2.6,3.5,2.6,225.2,105.8,Estado de México
+15.1.01,Zona metropolitana,Toluca,15,México,27,15027,Chapultepec,3863,5735,9676,12772,4.1,5.2,2.9,11.6,55.9,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,28,15028,Chiautla,14764,19620,26191,30045,2.9,2.8,1.4,20.1,24.7,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,29,15029,Chicoloapan,57306,77579,175053,200750,3.1,8.2,1.4,41.3,167.2,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,30,15030,Chiconcuac,14179,17972,22819,27692,2.4,2.3,2.0,6.8,57.0,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,31,15031,Chimalhuacán,242317,490772,614453,705193,7.4,2.2,1.4,54.8,167.5,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,33,15033,Ecatepec de Morelos,1218135,1622697,1656107,1645352,2.9,0.2,-0.1,156.2,158.8,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,35,15035,Huehuetoca,25529,38458,100023,163244,4.2,9.7,5.1,119.8,99.3,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,37,15037,Huixquilucan,131926,193468,242167,284965,3.9,2.2,1.7,141.2,99.2,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,38,15038,Isidro Fabela,5190,8168,10308,11929,4.7,2.3,1.5,79.7,21.1,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,39,15039,Ixtapaluca,137357,297570,467361,542211,8.1,4.5,1.5,324.0,151.4,Estado de México
+15.3.03,Zona conurbada,Tianguistenco,15,México,43,15043,Xalatlaco,14047,19182,26865,30687,3.2,3.3,1.4,108.2,69.9,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,44,15044,Jaltenco,22803,31629,26328,28217,3.3,-1.8,0.7,4.7,150.1,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,46,15046,Jilotzingo,9011,15086,17970,19877,5.3,1.7,1.0,116.5,24.0,Estado de México
+15.1.01,Zona metropolitana,Toluca,15,México,51,15051,Lerma,66912,99870,134799,170327,4.1,2.9,2.4,230.8,52.4,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,53,15053,Melchor Ocampo,26154,37716,50240,61220,3.8,2.8,2.0,14.0,70.3,Estado de México
+15.1.01,Zona metropolitana,Toluca,15,México,54,15054,Metepec,140268,194463,214162,242307,3.3,0.9,1.3,67.5,78.8,Estado de México
+15.1.01,Zona metropolitana,Toluca,15,México,55,15055,Mexicaltzingo,7248,9225,11712,13807,2.5,2.3,1.7,11.7,61.5,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,57,15057,Naucalpan de Juárez,786551,858711,833779,834434,0.9,-0.3,0.0,157.9,181.7,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,58,15058,Nezahualcóyotl,1256115,1225972,1110565,1077208,-0.2,-1.0,-0.3,63.3,219.3,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,59,15059,Nextlalpan,10840,19532,31691,57082,6.1,4.8,6.2,54.7,86.8,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,60,15060,Nicolás Romero,184134,269546,366602,430601,3.9,3.0,1.7,232.5,95.3,Estado de México
+15.1.01,Zona metropolitana,Toluca,15,México,62,15062,Ocoyoacac,37395,49643,61805,72103,2.9,2.1,1.6,138.7,62.4,Estado de México
+15.1.01,Zona metropolitana,Toluca,15,México,67,15067,Otzolotepec,40407,57583,78146,88783,3.6,3.0,1.3,114.5,34.2,Estado de México
+15.3.02,Zona conurbada,Ozumba,15,México,68,15068,Ozumba,18052,23592,27207,30785,2.7,1.4,1.3,47.4,45.3,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,69,15069,Papalotla,2387,3469,4147,4862,3.8,1.7,1.6,3.2,22.4,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,70,15070,La Paz,134782,212694,253845,304088,4.7,1.7,1.9,37.1,137.5,Estado de México
+15.1.01,Zona metropolitana,Toluca,15,México,72,15072,Rayón,7026,9024,12748,15972,2.6,3.4,2.3,23.0,60.0,Estado de México
+15.1.01,Zona metropolitana,Toluca,15,México,73,15073,San Antonio la Isla,7321,10321,22152,31962,3.5,7.7,3.8,25.3,104.3,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,75,15075,San Martín de las Pirámides,13563,19694,24851,29182,3.8,2.3,1.7,69.9,45.5,Estado de México
+15.1.01,Zona metropolitana,Toluca,15,México,76,15076,San Mateo Atenco,41926,59647,72579,97418,3.6,1.9,3.1,21.0,57.3,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,81,15081,Tecámac,123218,172813,364579,547503,3.5,7.5,4.3,156.9,131.9,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,83,15083,Temamatla,5366,8840,11206,14130,5.2,2.3,2.4,29.2,38.8,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,84,15084,Temascalapa,19099,29307,35987,43593,4.4,2.0,2.0,164.6,24.0,Estado de México
+15.1.01,Zona metropolitana,Toluca,15,México,87,15087,Temoaya,49427,69306,90010,105766,3.5,2.6,1.7,186.3,51.3,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,89,15089,Tenango del Aire,6207,8486,10578,11359,3.2,2.2,0.7,38.0,43.3,Estado de México
+15.1.01,Zona metropolitana,Toluca,15,México,90,15090,Tenango del Valle,45952,65119,77965,90518,3.6,1.8,1.5,211.1,56.6,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,91,15091,Teoloyucan,41964,66556,63115,65459,4.8,-0.5,0.4,31.0,44.9,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,92,15092,Teotihuacán,30486,44653,53010,58507,3.9,1.7,1.0,83.2,36.8,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,93,15093,Tepetlaoxtoc,16120,22729,27944,32564,3.5,2.0,1.6,178.9,17.0,Estado de México
+15.3.02,Zona conurbada,Ozumba,15,México,94,15094,Tepetlixpa,12687,16863,18327,20500,2.9,0.8,1.2,43.1,35.9,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,95,15095,Tepotzotlán,39647,62280,88559,103696,4.7,3.5,1.6,207.1,56.4,Estado de México
+15.3.03,Zona conurbada,Tianguistenco,15,México,98,15098,Texcalyacac,2961,3997,5111,5736,3.1,2.4,1.2,24.7,30.7,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,99,15099,Texcoco,140368,204102,235151,277562,3.8,1.4,1.7,428.1,54.2,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,100,15100,Tezoyuca,12416,18852,35199,47044,4.3,6.2,3.0,16.3,48.0,Estado de México
+15.3.03,Zona conurbada,Tianguistenco,15,México,101,15101,Tianguistenco,42448,58381,70682,84259,3.3,1.9,1.8,131.8,63.5,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,103,15103,Tlalmanalco,32984,42507,46130,49196,2.6,0.8,0.7,160.2,56.5,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,104,15104,Tlalnepantla de Baz,702807,721415,664225,672202,0.3,-0.8,0.1,80.4,153.6,Estado de México
+15.1.01,Zona metropolitana,Toluca,15,México,106,15106,Toluca,487612,666596,819561,910608,3.2,2.0,1.1,426.8,71.5,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,108,15108,Tultepec,47323,93277,131567,157645,7.1,3.4,1.9,26.8,121.1,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,109,15109,Tultitlán,246464,432141,486998,516341,5.8,1.2,0.6,66.0,155.5,Estado de México
+15.1.01,Zona metropolitana,Toluca,15,México,115,15115,Xonacatlán,28837,41402,46331,54633,3.7,1.1,1.7,53.5,47.5,Estado de México
+15.1.01,Zona metropolitana,Toluca,15,México,118,15118,Zinacantepec,83197,121850,167759,203872,3.9,3.1,2.0,310.4,51.0,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,120,15120,Zumpango,71413,99774,159647,280455,3.4,4.7,5.9,223.6,78.8,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,121,15121,Cuautitlán Izcalli,326750,453298,511675,555163,3.4,1.2,0.8,110.1,127.1,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,122,15122,Valle de Chalco Solidaridad,0,323461,357645,391731,0.0,1.0,0.9,46.7,163.9,Estado de México
+09.1.01,Zona metropolitana,Ciudad de México,15,México,125,15125,Tonanitla,0,0,10216,14883,0.0,0.0,3.9,9.0,63.2,Estado de México
+11.3.05,Zona conurbada,Moroleón-Uriangato,16,Michoacán de Ocampo,20,16020,Cuitzeo,25042,26269,28227,29910,0.5,0.7,0.6,254.4,44.2,Michoacán
+16.1.02,Zona metropolitana,Morelia,16,Michoacán de Ocampo,22,16022,Charo,16213,19169,21723,25138,1.7,1.2,1.5,323.0,35.0,Michoacán
+16.1.03,Zona metropolitana,Zamora,16,Michoacán de Ocampo,43,16043,Jacona,40546,54130,64011,68781,3.0,1.6,0.7,118.7,73.8,Michoacán
+16.3.06,Zona conurbada,Sahuayo,16,Michoacán de Ocampo,45,16045,Jiquilpan,36709,36389,34199,36158,-0.1,-0.6,0.6,243.2,35.1,Michoacán
+16.3.05,Zona conurbada,Lázaro Cárdenas,16,Michoacán de Ocampo,52,16052,Lázaro Cárdenas,134969,171100,178817,196003,2.4,0.4,0.9,1150.3,69.6,Michoacán
+16.1.02,Zona metropolitana,Morelia,16,Michoacán de Ocampo,53,16053,Morelia,492901,620532,729279,849053,2.3,1.6,1.6,1192.4,91.7,Michoacán
+16.1.01,Zona metropolitana,La Piedad-Pénjamo,16,Michoacán de Ocampo,69,16069,La Piedad,81162,84946,99576,106490,0.5,1.5,0.7,284.7,75.9,Michoacán
+16.3.06,Zona conurbada,Sahuayo,16,Michoacán de Ocampo,76,16076,Sahuayo,53945,60894,72841,78477,1.2,1.7,0.8,128.1,67.8,Michoacán
+16.1.02,Zona metropolitana,Morelia,16,Michoacán de Ocampo,88,16088,Tarímbaro,33871,39408,78623,114513,1.5,6.9,3.9,255.7,131.7,Michoacán
+16.2.04,Metrópoli municipal,Uruapan,16,Michoacán de Ocampo,102,16102,Uruapan,217068,265699,315350,356786,2.1,1.7,1.3,1012.9,90.1,Michoacán
+16.1.03,Zona metropolitana,Zamora,16,Michoacán de Ocampo,108,16108,Zamora,144899,161918,186102,204860,1.1,1.4,1.0,335.0,102.4,Michoacán
+17.1.01,Zona metropolitana,Cuautla,17,Morelos,2,17002,Atlatlahucan,9255,14708,18895,25232,4.8,2.5,3.0,79.4,31.5,Morelos
+17.1.01,Zona metropolitana,Cuautla,17,Morelos,4,17004,Ayala,52969,69381,78866,89834,2.8,1.2,1.3,368.3,49.6,Morelos
+17.1.01,Zona metropolitana,Cuautla,17,Morelos,6,17006,Cuautla,120315,153329,175207,187118,2.5,1.3,0.7,121.9,56.5,Morelos
+17.1.02,Zona metropolitana,Cuernavaca,17,Morelos,7,17007,Cuernavaca,281294,338706,365168,378476,1.9,0.7,0.4,199.7,71.3,Morelos
+17.1.02,Zona metropolitana,Cuernavaca,17,Morelos,8,17008,Emiliano Zapata,33646,57617,83485,107053,5.6,3.7,2.6,68.3,64.7,Morelos
+17.1.02,Zona metropolitana,Cuernavaca,17,Morelos,9,17009,Huitzilac,10573,15184,17340,24515,3.7,1.3,3.6,189.1,34.4,Morelos
+17.1.02,Zona metropolitana,Cuernavaca,17,Morelos,11,17011,Jiutepec,101275,170589,196953,215357,5.4,1.4,0.9,55.9,94.4,Morelos
+17.1.02,Zona metropolitana,Cuernavaca,17,Morelos,18,17018,Temixco,67736,92850,108126,122263,3.2,1.5,1.3,102.8,56.0,Morelos
+17.1.02,Zona metropolitana,Cuernavaca,17,Morelos,20,17020,Tepoztlán,27646,32921,41629,54987,1.8,2.3,2.9,242.4,50.2,Morelos
+17.1.02,Zona metropolitana,Cuernavaca,17,Morelos,28,17028,Xochitepec,27828,45643,63382,73539,5.1,3.2,1.5,93.2,47.4,Morelos
+17.1.02,Zona metropolitana,Cuernavaca,17,Morelos,29,17029,Yautepec,60258,84405,97827,105780,3.5,1.4,0.8,179.6,41.3,Morelos
+17.1.01,Zona metropolitana,Cuautla,17,Morelos,30,17030,Yecapixtla,27032,36582,46809,56083,3.1,2.4,1.9,173.2,48.2,Morelos
+17.1.02,Zona metropolitana,Cuernavaca,17,Morelos,34,17034,Coatetelco,0,0,0,11347,0.0,0.0,0.0,51.6,42.7,Morelos
+17.1.02,Zona metropolitana,Cuernavaca,17,Morelos,35,17035,Xoxocotla,0,0,0,27805,0.0,0.0,0.0,61.7,49.5,Morelos
+18.1.01,Zona metropolitana,Tepic,18,Nayarit,8,18008,Xalisco,26722,37664,49102,65229,3.5,2.6,3.0,536.3,84.8,Nayarit
+18.1.01,Zona metropolitana,Tepic,18,Nayarit,17,18017,Tepic,241463,305176,380249,425924,2.4,2.2,1.2,1602.6,95.3,Nayarit
+14.1.02,Zona metropolitana,Puerto Vallarta,18,Nayarit,20,18020,Bahía de Banderas,39831,59808,124205,187632,4.2,7.3,4.3,771.4,106.4,Nayarit
+19.1.01,Zona metropolitana,Monterrey,19,Nuevo León,6,19006,Apodaca,115913,283497,523370,656464,9.4,6.1,2.3,224.0,120.0,Nuevo León
+19.1.01,Zona metropolitana,Monterrey,19,Nuevo León,9,19009,Cadereyta Jiménez,53582,75059,86445,122337,3.5,1.4,3.6,1140.9,84.8,Nuevo León
+19.1.01,Zona metropolitana,Monterrey,19,Nuevo León,10,19010,El Carmen,4906,6644,16092,104478,3.1,8.9,21.1,104.3,148.0,Nuevo León
+19.1.01,Zona metropolitana,Monterrey,19,Nuevo León,12,19012,Ciénega de Flores,6708,11204,24526,68747,5.3,7.9,11.1,138.7,92.2,Nuevo León
+19.1.01,Zona metropolitana,Monterrey,19,Nuevo León,18,19018,García,13164,28974,143668,397205,8.3,16.8,11.0,1032.0,119.9,Nuevo León
+19.1.01,Zona metropolitana,Monterrey,19,Nuevo León,19,19019,San Pedro Garza García,113040,125978,122659,132169,1.1,-0.3,0.8,70.8,55.0,Nuevo León
+19.1.01,Zona metropolitana,Monterrey,19,Nuevo León,21,19021,General Escobedo,98147,233457,357937,481213,9.1,4.2,3.1,149.4,112.4,Nuevo León
+19.1.01,Zona metropolitana,Monterrey,19,Nuevo León,25,19025,General Zuazua,4647,6033,55213,102149,2.7,23.9,6.5,184.5,123.2,Nuevo León
+19.1.01,Zona metropolitana,Monterrey,19,Nuevo León,26,19026,Guadalupe,535560,670162,678006,643143,2.3,0.1,-0.5,118.4,96.2,Nuevo León
+19.1.01,Zona metropolitana,Monterrey,19,Nuevo León,31,19031,Juárez,28014,66497,256970,471523,9.1,14.0,6.4,247.3,115.8,Nuevo León
+19.1.01,Zona metropolitana,Monterrey,19,Nuevo León,39,19039,Monterrey,1069238,1110997,1135550,1142994,0.4,0.2,0.1,324.4,94.9,Nuevo León
+19.1.01,Zona metropolitana,Monterrey,19,Nuevo León,41,19041,Pesquería,8188,11321,20843,147624,3.3,6.1,22.2,322.8,139.3,Nuevo León
+19.1.01,Zona metropolitana,Monterrey,19,Nuevo León,45,19045,Salinas Victoria,9518,19024,32660,86766,7.2,5.4,10.5,1667.4,101.4,Nuevo León
+19.1.01,Zona metropolitana,Monterrey,19,Nuevo León,46,19046,San Nicolás de los Garza,436603,496878,443273,412199,1.3,-1.1,-0.7,60.1,103.8,Nuevo León
+19.1.01,Zona metropolitana,Monterrey,19,Nuevo León,48,19048,Santa Catarina,163848,227026,268955,306322,3.3,1.7,1.3,915.8,124.4,Nuevo León
+19.1.01,Zona metropolitana,Monterrey,19,Nuevo León,49,19049,Santiago,30182,36812,40469,46784,2.0,0.9,1.5,739.2,19.2,Nuevo León
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,23,20023,Cuilápam de Guerrero,9804,12812,18428,26882,2.7,3.6,3.9,49.8,20.2,Oaxaca
+20.3.02,Zona conurbada,Juchitán,20,Oaxaca,30,20030,El Espinal,7710,7705,8310,8730,0.0,0.7,0.5,56.1,40.5,Oaxaca
+20.3.02,Zona conurbada,Juchitán,20,Oaxaca,43,20043,Juchitán de Zaragoza,66414,78512,93038,113570,1.7,1.7,2.1,911.3,68.9,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,45,20045,Magdalena Apasco,3569,3942,7522,7888,1.0,6.5,0.5,27.0,19.6,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,63,20063,Nazareno Etla,3207,3368,3882,4293,0.5,1.4,1.0,4.3,19.6,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,67,20067,Oaxaca de Juárez,213985,256130,263357,270955,1.8,0.3,0.3,89.5,74.2,Oaxaca
+20.3.03,Zona conurbada,Salina Cruz,20,Oaxaca,79,20079,Salina Cruz,65707,76452,82371,84438,1.5,0.7,0.3,131.9,46.9,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,83,20083,San Agustín de las Juntas,2646,4970,8089,11391,6.6,4.8,3.6,26.0,38.8,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,87,20087,San Agustín Yatareni,2687,3400,4075,5521,2.4,1.8,3.2,6.4,17.3,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,91,20091,San Andrés Huayápam,2355,3909,4879,6279,5.2,2.2,2.6,27.6,29.4,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,107,20107,San Antonio de la Cal,7941,15261,21456,26282,6.8,3.4,2.1,11.0,66.8,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,115,20115,San Bartolo Coyotepec,3825,4740,8684,10391,2.2,6.0,1.9,31.4,34.9,Oaxaca
+20.3.04,Zona conurbada,Tehuantepec,20,Oaxaca,124,20124,San Blas Atempa,10935,15886,17094,19696,3.8,0.7,1.5,208.3,96.3,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,157,20157,San Jacinto Amilpas,2449,8343,13860,16827,13.1,5.0,2.0,4.2,45.0,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,174,20174,Ánimas Trujano,2282,2887,3759,4564,2.4,2.6,2.0,3.0,32.9,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,227,20227,San Lorenzo Cacaotepec,7061,9965,13704,18339,3.5,3.1,3.0,27.6,19.9,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,293,20293,San Pablo Etla,4228,7103,15535,17116,5.4,7.9,1.0,44.4,75.9,Oaxaca
+20.3.03,Zona conurbada,Salina Cruz,20,Oaxaca,308,20308,San Pedro Huilotepec,2236,2588,2839,3307,1.5,0.9,1.6,26.5,21.7,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,338,20338,Villa de Etla,6077,7819,9280,10361,2.6,1.7,1.1,8.2,29.1,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,342,20342,San Raymundo Jalpan,1429,1584,2079,4105,1.0,2.7,7.2,8.2,18.4,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,350,20350,San Sebastián Tutla,4231,15690,16241,16878,14.1,0.3,0.4,7.3,97.4,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,375,20375,Santa Cruz Amilpas,4204,6457,10120,13200,4.4,4.4,2.8,2.3,83.5,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,385,20385,Santa Cruz Xoxocotlán,30762,52806,77833,100402,5.6,3.8,2.6,43.9,71.5,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,390,20390,Santa Lucía del Camino,29122,44364,47356,50362,4.3,0.6,0.6,9.4,79.7,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,399,20399,Santa María Atzompa,5781,15749,27465,41921,10.6,5.5,4.4,31.3,58.2,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,403,20403,Santa María Coyotepec,877,1658,2772,3751,6.6,5.1,3.1,6.5,22.7,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,409,20409,Santa María del Tule,6398,7272,8165,8939,1.3,1.1,0.9,16.8,54.2,Oaxaca
+20.3.02,Zona conurbada,Juchitán,20,Oaxaca,441,20441,Santa María Xadani,4957,5698,7781,9234,1.4,3.1,1.8,86.1,38.2,Oaxaca
+20.3.04,Zona conurbada,Tehuantepec,20,Oaxaca,515,20515,Santo Domingo Tehuantepec,47147,53229,61872,67739,1.2,1.5,0.9,1197.7,39.2,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,519,20519,Santo Domingo Tomaltepec,2353,2834,2790,3386,1.9,-0.2,2.0,30.5,19.7,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,539,20539,Soledad Etla,3205,3902,5025,6348,2.0,2.5,2.4,12.5,21.1,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,553,20553,Tlalixtac de Cabrera,5121,6777,9417,12067,2.9,3.2,2.6,81.5,14.5,Oaxaca
+20.1.01,Zona metropolitana,Oaxaca,20,Oaxaca,565,20565,Villa de Zaachila,11961,19247,34101,46464,4.9,5.7,3.2,81.4,39.5,Oaxaca
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,21,Puebla,1,21001,Acajete,41227,49462,60353,72894,1.9,1.9,2.0,176.9,33.5,Puebla
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,21,Puebla,15,21015,Amozoc,35738,64315,100964,125876,6.1,4.5,2.3,142.6,54.1,Puebla
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,21,Puebla,34,21034,Coronango,20576,27575,34596,46836,3.0,2.2,3.2,36.7,22.4,Puebla
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,21,Puebla,41,21041,Cuautlancingo,29047,46729,79153,137435,4.9,5.2,5.8,38.1,84.6,Puebla
+21.1.02,Zona metropolitana,San Martín Texmelucan,21,Puebla,48,21048,Chiautzingo,15483,17788,18762,22039,1.4,0.5,1.7,81.1,15.6,Puebla
+21.3.05,Zona conurbada,Teziutlán,21,Puebla,54,21054,Chignautla,13037,21571,30254,35223,5.2,3.3,1.6,148.3,42.0,Puebla
+21.3.04,Zona conurbada,Huauchinango,21,Puebla,71,21071,Huauchinango,69864,83537,97753,103946,1.8,1.5,0.6,251.0,59.9,Puebla
+21.1.02,Zona metropolitana,San Martín Texmelucan,21,Puebla,74,21074,Huejotzingo,41792,50868,63457,90794,2.0,2.2,3.7,173.0,55.1,Puebla
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,21,Puebla,90,21090,Juan C. Bonilla,11495,14483,18540,23783,2.4,2.4,2.6,22.3,20.2,Puebla
+21.3.04,Zona conurbada,Huauchinango,21,Puebla,91,21091,Juan Galindo,6709,9301,10213,9828,3.3,0.9,-0.4,23.0,42.1,Puebla
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,21,Puebla,106,21106,Ocoyucan,17708,23619,25720,42669,2.9,0.8,5.3,119.8,30.3,Puebla
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,21,Puebla,114,21114,Puebla,1057454,1346916,1539819,1692181,2.5,1.3,1.0,535.3,105.0,Puebla
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,21,Puebla,119,21119,San Andrés Cholula,37788,56066,100439,154448,4.1,5.8,4.5,63.2,47.0,Puebla
+21.1.02,Zona metropolitana,San Martín Texmelucan,21,Puebla,122,21122,San Felipe Teotlalcingo,7719,8632,9426,11063,1.1,0.9,1.7,39.4,19.9,Puebla
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,21,Puebla,125,21125,San Gregorio Atzompa,5593,6934,8170,9671,2.2,1.6,1.7,11.8,17.9,Puebla
+21.1.02,Zona metropolitana,San Martín Texmelucan,21,Puebla,132,21132,San Martín Texmelucan,94471,121071,141112,155738,2.5,1.5,1.0,89.6,53.4,Puebla
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,21,Puebla,136,21136,San Miguel Xoxtla,7478,9350,11598,12461,2.3,2.1,0.7,8.3,47.8,Puebla
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,21,Puebla,140,21140,San Pedro Cholula,78177,99794,120459,138433,2.5,1.8,1.4,76.9,45.6,Puebla
+21.1.02,Zona metropolitana,San Martín Texmelucan,21,Puebla,143,21143,San Salvador el Verde,17980,22649,28419,34880,2.4,2.2,2.1,110.9,32.9,Puebla
+21.1.03,Zona metropolitana,Tehuacán,21,Puebla,149,21149,Santiago Miahuatlán,9073,14249,21993,30309,4.6,4.3,3.3,94.0,33.9,Puebla
+21.1.03,Zona metropolitana,Tehuacán,21,Puebla,156,21156,Tehuacán,155563,226258,274906,327312,3.8,1.9,1.8,553.0,78.2,Puebla
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,21,Puebla,163,21163,Tepatlaxco de Hidalgo,12153,14055,16275,18854,1.5,1.4,1.5,61.3,45.5,Puebla
+21.3.05,Zona conurbada,Teziutlán,21,Puebla,174,21174,Teziutlán,63245,81156,92246,103583,2.5,1.2,1.2,92.5,50.2,Puebla
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,21,Puebla,181,21181,Tlaltenango,4338,5370,6269,7425,2.2,1.5,1.7,21.5,22.6,Puebla
+22.1.01,Zona metropolitana,Querétaro,22,Querétaro,6,22006,Corregidora,43775,74558,143073,212567,5.5,6.5,4.1,234.9,80.5,Querétaro
+22.1.01,Zona metropolitana,Querétaro,22,Querétaro,8,22008,Huimilpan,24106,29140,35554,36808,1.9,1.9,0.4,388.1,31.2,Querétaro
+22.1.01,Zona metropolitana,Querétaro,22,Querétaro,11,22011,El Marqués,55258,71397,116458,231668,2.6,4.8,7.3,747.6,94.6,Querétaro
+22.1.01,Zona metropolitana,Querétaro,22,Querétaro,14,22014,Querétaro,456458,641386,801940,1049777,3.5,2.2,2.8,682.7,104.2,Querétaro
+23.1.01,Zona metropolitana,Cancún,23,Quintana Roo,3,23003,Isla Mujeres,10666,11313,16203,22686,0.6,3.5,3.5,874.9,60.4,Quintana Roo
+23.2.02,Metrópoli municipal,Chetumal,23,Quintana Roo,4,23004,Othón P. Blanco,172563,208164,244553,233648,1.9,1.6,-0.5,9958.2,67.9,Quintana Roo
+23.1.01,Zona metropolitana,Cancún,23,Quintana Roo,5,23005,Benito Juárez,176765,419815,661176,911503,9.1,4.5,3.3,930.6,135.7,Quintana Roo
+23.2.03,Metrópoli municipal,Playa del Carmen,23,Quintana Roo,8,23008,Solidaridad,0,63752,159310,333800,0.0,9.3,7.9,2015.1,157.5,Quintana Roo
+24.3.03,Zona conurbada,Rioverde,24,San Luis Potosí,11,24011,Ciudad Fernández,34778,39944,43528,48106,1.4,0.8,1.0,518.4,25.4,San Luis Potosí
+24.3.02,Zona conurbada,Matehuala,24,San Luis Potosí,20,24020,Matehuala,70597,78187,91522,102199,1.0,1.5,1.1,1301.7,61.1,San Luis Potosí
+24.3.03,Zona conurbada,Rioverde,24,San Luis Potosí,24,24024,Rioverde,86434,88991,91924,97943,0.3,0.3,0.7,3064.0,36.7,San Luis Potosí
+24.1.01,Zona metropolitana,San Luis Potosí,24,San Luis Potosí,28,24028,San Luis Potosí,525733,670532,772604,911908,2.5,1.4,1.7,1482.0,103.4,San Luis Potosí
+24.1.01,Zona metropolitana,San Luis Potosí,24,San Luis Potosí,35,24035,Soledad de Graciano Sánchez,132979,180296,267839,332072,3.1,3.9,2.2,305.7,118.5,San Luis Potosí
+24.3.02,Zona conurbada,Matehuala,24,San Luis Potosí,48,24048,Villa de la Paz,5441,5135,5350,5298,-0.6,0.4,-0.1,143.8,27.5,San Luis Potosí
+25.2.02,Metrópoli municipal,Los Mochis,25,Sinaloa,1,25001,Ahome,303558,359146,416299,459310,1.7,1.4,1.0,3995.3,72.5,Sinaloa
+25.2.01,Metrópoli municipal,Culiacán,25,Sinaloa,6,25006,Culiacán,601123,745537,858638,1003530,2.2,1.4,1.6,6305.0,88.9,Sinaloa
+25.2.03,Metrópoli municipal,Mazatlán,25,Sinaloa,12,25012,Mazatlán,314345,380509,438434,501441,1.9,1.4,1.4,2532.6,89.5,Sinaloa
+26.3.05,Zona conurbada,Caborca,26,Sonora,17,26017,Caborca,59160,69516,81309,89122,1.6,1.5,0.9,10671.7,44.0,Sonora
+26.2.02,Metrópoli municipal,Ciudad Obregón,26,Sonora,18,26018,Cajeme,311443,356290,409310,436484,1.4,1.4,0.7,4876.3,76.2,Sonora
+26.1.01,Zona metropolitana,Guaymas,26,Sonora,25,26025,Empalme,46017,49987,54131,51431,0.8,0.8,-0.5,593.2,36.1,Sonora
+26.1.01,Zona metropolitana,Guaymas,26,Sonora,29,26029,Guaymas,129092,130329,149299,156863,0.1,1.3,0.5,7950.8,55.0,Sonora
+26.2.03,Metrópoli municipal,Hermosillo,26,Sonora,30,26030,Hermosillo,448966,609829,784342,936263,3.1,2.5,1.8,16955.2,80.4,Sonora
+26.2.04,Metrópoli municipal,Nogales,26,Sonora,43,26043,Nogales,107936,159787,220292,264782,4.0,3.2,1.9,1756.6,100.6,Sonora
+26.3.05,Zona conurbada,Caborca,26,Sonora,47,26047,Pitiquito,7743,9236,9468,9122,1.8,0.2,-0.4,9820.0,19.6,Sonora
+27.1.01,Zona metropolitana,Villahermosa,27,Tabasco,4,27004,Centro,386776,520308,640359,683607,3.0,2.0,0.7,1717.8,81.2,Tabasco
+27.1.01,Zona metropolitana,Villahermosa,27,Tabasco,13,27013,Nacajuca,50791,80272,115066,150300,4.7,3.5,2.8,535.3,148.1,Tabasco
+28.1.02,Zona metropolitana,Tampico,28,Tamaulipas,3,28003,Altamira,82585,127664,212001,269790,4.5,5.0,2.5,1661.9,103.4,Tamaulipas
+28.1.02,Zona metropolitana,Tampico,28,Tamaulipas,9,28009,Ciudad Madero,160331,182325,197216,205933,1.3,0.8,0.4,48.4,82.0,Tamaulipas
+28.2.04,Metrópoli municipal,Matamoros,28,Tamaulipas,22,28022,Matamoros,303293,418141,489193,541979,3.3,1.5,1.1,4633.2,79.4,Tamaulipas
+28.2.05,Metrópoli municipal,Nuevo Laredo,28,Tamaulipas,27,28027,Nuevo Laredo,219468,310915,384033,425058,3.6,2.1,1.0,1224.0,75.3,Tamaulipas
+28.1.01,Zona metropolitana,Reynosa,28,Tamaulipas,32,28032,Reynosa,282667,420463,608891,704767,4.1,3.6,1.5,3146.9,81.9,Tamaulipas
+28.1.01,Zona metropolitana,Reynosa,28,Tamaulipas,33,28033,Río Bravo,94009,104229,118259,132484,1.0,1.2,1.2,1583.7,64.5,Tamaulipas
+28.1.02,Zona metropolitana,Tampico,28,Tamaulipas,38,28038,Tampico,272690,295442,297554,297562,0.8,0.1,0.0,114.5,92.5,Tamaulipas
+28.2.03,Metrópoli municipal,Ciudad Victoria,28,Tamaulipas,41,28041,Victoria,207923,263063,321953,349688,2.4,2.0,0.8,1463.6,64.6,Tamaulipas
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,1,29001,Amaxac de Guerrero,6192,7679,9875,11403,2.2,2.5,1.5,11.2,19.2,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,2,29002,Apetatitlán de Antonio Carvajal,8990,11795,13361,16003,2.8,1.2,1.9,11.6,23.7,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,3,29003,Atlangatepec,4255,5449,6018,7087,2.5,1.0,1.7,108.2,5.8,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,5,29005,Apizaco,51744,67675,76492,80725,2.7,1.2,0.6,43.6,53.5,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,9,29009,Cuaxomulco,3365,4255,5066,5928,2.4,1.7,1.6,16.7,8.4,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,10,29010,Chiautempan,61144,57512,66149,73215,-0.6,1.4,1.0,77.2,44.5,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,11,29011,Muñoz de Domingo Arenas,3051,4080,4285,4755,3.0,0.5,1.1,36.4,25.2,Tlaxcala
+29.3.02,Zona conurbada,Huamantla,29,Tlaxcala,13,29013,Huamantla,51989,66561,84979,98764,2.5,2.4,1.6,348.8,57.2,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,15,29015,Ixtacuixtla de Mariano Matamoros,30663,30301,35162,38970,-0.1,1.5,1.1,161.5,26.6,Tlaxcala
+29.3.02,Zona conurbada,Huamantla,29,Tlaxcala,16,29016,Ixtenco,5356,5840,6791,7504,0.9,1.5,1.0,44.4,29.5,Tlaxcala
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,29,Tlaxcala,17,29017,Mazatecochco de José María Morelos,6320,8357,9740,11592,2.9,1.5,1.8,14.6,53.7,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,18,29018,Contla de Juan Cuamatzi,22380,28842,35084,38579,2.6,1.9,1.0,26.1,33.2,Tlaxcala
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,29,Tlaxcala,22,29022,Acuamanala de Miguel Hidalgo,6989,4357,5711,6432,-4.6,2.7,1.2,15.0,14.8,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,24,29024,Panotla,17903,23391,25128,28357,2.7,0.7,1.2,61.0,26.8,Tlaxcala
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,29,Tlaxcala,25,29025,San Pablo del Monte,40917,54387,69615,82688,2.9,2.4,1.8,59.7,73.4,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,26,29026,Santa Cruz Tlaxcala,10522,12824,17968,24116,2.0,3.3,3.1,25.9,12.4,Tlaxcala
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,29,Tlaxcala,27,29027,Tenancingo,9749,10142,11763,12974,0.4,1.4,1.0,12.5,33.3,Tlaxcala
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,29,Tlaxcala,28,29028,Teolocholco,13693,17067,21671,25257,2.2,2.3,1.6,76.6,25.4,Tlaxcala
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,29,Tlaxcala,29,29029,Tepeyanco,16942,9006,11048,13328,-6.2,2.0,1.9,16.4,16.8,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,31,29031,Tetla de la Solidaridad,15429,21753,28760,35284,3.5,2.7,2.1,169.8,18.8,Tlaxcala
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,29,Tlaxcala,32,29032,Tetlatlahuca,15801,10803,12410,13561,-3.8,1.4,0.9,26.1,17.8,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,33,29033,Tlaxcala,50492,73230,89795,99896,3.8,2.0,1.1,52.0,41.6,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,34,29034,Tlaxco,27089,33893,39939,45438,2.3,1.6,1.3,574.7,22.8,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,35,29035,Tocatlán,3729,4735,5589,6294,2.4,1.6,1.2,14.3,16.7,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,36,29036,Totolac,15200,16682,20625,22529,0.9,2.1,0.9,13.8,37.1,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,38,29038,Tzompantepec,10406,9294,14611,18006,-1.1,4.5,2.2,38.4,16.5,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,39,29039,Xaloztoc,13500,16857,21769,25607,2.3,2.5,1.7,41.5,26.4,Tlaxcala
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,29,Tlaxcala,41,29041,Papalotla de Xicohténcatl,17222,22288,26997,33499,2.6,1.9,2.2,23.2,29.9,Tlaxcala
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,29,Tlaxcala,42,29042,Xicohtzinco,8563,10226,12255,14197,1.8,1.8,1.5,7.3,31.7,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,43,29043,Yauhquemehcan,12783,21555,33081,42242,5.4,4.2,2.5,37.4,35.9,Tlaxcala
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,29,Tlaxcala,44,29044,Zacatelco,36650,31915,38654,45717,-1.4,1.9,1.7,29.5,42.7,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,48,29048,La Magdalena Tlaltelulco,0,13697,16834,19036,0.0,2.0,1.3,11.8,18.8,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,49,29049,San Damián Texóloc,0,4360,5064,5884,0.0,1.5,1.5,10.2,25.1,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,50,29050,San Francisco Tetlanohcan,0,9081,9880,11761,0.0,0.8,1.8,39.5,24.3,Tlaxcala
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,29,Tlaxcala,51,29051,San Jerónimo Zacualpan,0,3234,3581,4092,0.0,1.0,1.4,7.8,19.0,Tlaxcala
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,29,Tlaxcala,53,29053,San Juan Huactzinco,0,5547,6821,7688,0.0,2.0,1.2,4.6,31.3,Tlaxcala
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,29,Tlaxcala,54,29054,San Lorenzo Axocomanitla,0,4368,5045,5689,0.0,1.4,1.2,4.5,52.7,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,56,29056,Santa Ana Nopalucan,0,5851,6857,7952,0.0,1.5,1.5,9.2,21.1,Tlaxcala
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,29,Tlaxcala,58,29058,Santa Catarina Ayometla,0,6997,7992,9463,0.0,1.3,1.7,10.1,18.7,Tlaxcala
+21.1.01,Zona metropolitana,Puebla-Tlaxcala,29,Tlaxcala,59,29059,Santa Cruz Quilehtla,0,4883,6296,7750,0.0,2.5,2.2,5.4,22.1,Tlaxcala
+29.1.01,Zona metropolitana,Tlaxcala-Apizaco,29,Tlaxcala,60,29060,Santa Isabel Xiloxoxtla,0,3184,4436,5443,0.0,3.3,2.1,6.0,9.4,Tlaxcala
+30.1.07,Zona metropolitana,Xalapa,30,Veracruz de Ignacio de la Llave,1,30001,Acajete,6173,7514,8223,9701,2.0,0.9,1.7,97.5,26.3,Veracruz
+30.3.08,Zona conurbada,Acayucan,30,Veracruz de Ignacio de la Llave,3,30003,Acayucan,70059,78243,83817,80815,1.1,0.7,-0.4,655.7,56.0,Veracruz
+30.1.04,Zona metropolitana,Orizaba,30,Veracruz de Ignacio de la Llave,6,30006,Acultzingo,14030,17785,20973,23100,2.4,1.6,1.0,168.9,21.0,Veracruz
+30.1.02,Zona metropolitana,Córdoba,30,Veracruz de Ignacio de la Llave,14,30014,Amatlán de los Reyes,33669,36823,42268,46955,0.9,1.3,1.1,151.4,28.6,Veracruz
+30.1.07,Zona metropolitana,Xalapa,30,Veracruz de Ignacio de la Llave,26,30026,Banderilla,22110,16433,21546,25993,-2.9,2.7,1.9,19.8,54.5,Veracruz
+30.1.06,Zona metropolitana,Veracruz,30,Veracruz de Ignacio de la Llave,28,30028,Boca del Río,144549,135804,138058,144550,-0.6,0.2,0.5,38.1,94.7,Veracruz
+30.1.04,Zona metropolitana,Orizaba,30,Veracruz de Ignacio de la Llave,30,30030,Camerino Z. Mendoza,35084,39308,41778,41835,1.2,0.6,0.0,20.9,67.7,Veracruz
+30.1.07,Zona metropolitana,Xalapa,30,Veracruz de Ignacio de la Llave,36,30036,Coacoatzintla,5407,7301,9416,11018,3.1,2.5,1.6,43.9,54.6,Veracruz
+30.1.07,Zona metropolitana,Xalapa,30,Veracruz de Ignacio de la Llave,38,30038,Coatepec,61793,73536,86696,93911,1.8,1.6,0.8,202.3,66.0,Veracruz
+30.1.01,Zona metropolitana,Coatzacoalcos,30,Veracruz de Ignacio de la Llave,39,30039,Coatzacoalcos,233115,267212,305260,310698,1.4,1.3,0.2,311.9,82.2,Veracruz
+30.1.05,Zona metropolitana,Poza Rica,30,Veracruz de Ignacio de la Llave,40,30040,Coatzintla,34221,39189,48351,55016,1.4,2.1,1.3,277.7,71.4,Veracruz
+30.1.02,Zona metropolitana,Córdoba,30,Veracruz de Ignacio de la Llave,44,30044,Córdoba,150454,177288,196541,204721,1.7,1.0,0.4,159.9,83.6,Veracruz
+30.1.03,Zona metropolitana,Minatitlán,30,Veracruz de Ignacio de la Llave,48,30048,Cosoleacaque,46726,97437,117725,130903,7.7,1.8,1.1,276.8,59.5,Veracruz
+30.1.03,Zona metropolitana,Minatitlán,30,Veracruz de Ignacio de la Llave,59,30059,Chinameca,13067,14105,15214,22638,0.8,0.7,4.2,192.3,17.7,Veracruz
+30.1.07,Zona metropolitana,Xalapa,30,Veracruz de Ignacio de la Llave,65,30065,Emiliano Zapata,36370,44580,61718,85489,2.1,3.2,3.4,415.8,110.1,Veracruz
+30.1.02,Zona metropolitana,Córdoba,30,Veracruz de Ignacio de la Llave,68,30068,Fortín,36882,46053,59761,66372,2.3,2.6,1.1,61.2,51.0,Veracruz
+30.1.04,Zona metropolitana,Orizaba,30,Veracruz de Ignacio de la Llave,74,30074,Huiloapan de Cuauhtémoc,4760,5733,6750,7293,1.9,1.6,0.8,18.7,54.0,Veracruz
+30.1.04,Zona metropolitana,Orizaba,30,Veracruz de Ignacio de la Llave,81,30081,Ixhuatlancillo,6553,11914,21150,27295,6.2,5.7,2.6,52.4,84.9,Veracruz
+30.1.01,Zona metropolitana,Coatzacoalcos,30,Veracruz de Ignacio de la Llave,82,30082,Ixhuatlán del Sureste,11987,13294,14903,15831,1.0,1.1,0.6,156.7,46.0,Veracruz
+30.1.04,Zona metropolitana,Orizaba,30,Veracruz de Ignacio de la Llave,85,30085,Ixtaczoquitlán,43771,56896,65385,74004,2.7,1.4,1.3,137.4,50.0,Veracruz
+30.1.07,Zona metropolitana,Xalapa,30,Veracruz de Ignacio de la Llave,87,30087,Xalapa,288454,390590,457928,488531,3.1,1.6,0.7,124.6,104.9,Veracruz
+30.1.06,Zona metropolitana,Veracruz,30,Veracruz de Ignacio de la Llave,90,30090,Jamapa,9177,9969,10376,11132,0.8,0.4,0.7,132.1,45.8,Veracruz
+30.1.07,Zona metropolitana,Xalapa,30,Veracruz de Ignacio de la Llave,92,30092,Xico,24162,28762,35188,39623,1.8,2.0,1.2,179.0,65.8,Veracruz
+30.1.07,Zona metropolitana,Xalapa,30,Veracruz de Ignacio de la Llave,93,30093,Jilotepec,11540,13025,15313,16585,1.2,1.6,0.8,56.3,42.2,Veracruz
+30.1.04,Zona metropolitana,Orizaba,30,Veracruz de Ignacio de la Llave,98,30098,Magdalena,1788,2327,2920,3299,2.7,2.2,1.3,13.8,30.3,Veracruz
+30.1.04,Zona metropolitana,Orizaba,30,Veracruz de Ignacio de la Llave,99,30099,Maltrata,12576,14709,16898,18327,1.6,1.4,0.8,110.6,36.8,Veracruz
+30.1.06,Zona metropolitana,Veracruz,30,Veracruz de Ignacio de la Llave,100,30100,Manlio Fabio Altamirano,19345,20580,22585,23918,0.6,0.9,0.6,247.1,33.5,Veracruz
+30.1.04,Zona metropolitana,Orizaba,30,Veracruz de Ignacio de la Llave,101,30101,Mariano Escobedo,18758,28622,33941,38670,4.3,1.7,1.3,69.5,107.1,Veracruz
+30.1.06,Zona metropolitana,Veracruz,30,Veracruz de Ignacio de la Llave,105,30105,Medellín de Bravo,29298,35171,59126,95202,1.9,5.2,5.0,397.3,125.4,Veracruz
+30.1.03,Zona metropolitana,Minatitlán,30,Veracruz de Ignacio de la Llave,108,30108,Minatitlán,195523,153001,157840,144776,-2.4,0.3,-0.9,2118.0,49.3,Veracruz
+30.1.02,Zona metropolitana,Córdoba,30,Veracruz de Ignacio de la Llave,113,30113,Naranjal,3297,4038,4507,4614,2.1,1.1,0.2,18.6,21.4,Veracruz
+30.1.04,Zona metropolitana,Orizaba,30,Veracruz de Ignacio de la Llave,115,30115,Nogales,27524,30945,34688,37314,1.2,1.1,0.8,64.4,56.7,Veracruz
+30.3.08,Zona conurbada,Acayucan,30,Veracruz de Ignacio de la Llave,116,30116,Oluta,11552,13282,14784,17027,1.4,1.0,1.5,78.0,50.4,Veracruz
+30.1.04,Zona metropolitana,Orizaba,30,Veracruz de Ignacio de la Llave,118,30118,Orizaba,114216,118593,120995,123182,0.4,0.2,0.2,27.7,81.9,Veracruz
+30.1.03,Zona metropolitana,Minatitlán,30,Veracruz de Ignacio de la Llave,120,30120,Oteapan,10688,12137,14965,10343,1.3,2.0,-3.7,4.6,25.3,Veracruz
+28.1.02,Zona metropolitana,Tampico,30,Veracruz de Ignacio de la Llave,123,30123,Pánuco,87708,90657,97290,96185,0.3,0.7,-0.1,3168.2,44.5,Veracruz
+30.1.05,Zona metropolitana,Poza Rica,30,Veracruz de Ignacio de la Llave,131,30131,Poza Rica de Hidalgo,151739,152838,193311,189457,0.1,2.3,-0.2,64.1,65.2,Veracruz
+28.1.02,Zona metropolitana,Tampico,30,Veracruz de Ignacio de la Llave,133,30133,Pueblo Viejo,45284,50329,55358,57909,1.1,0.9,0.5,288.7,49.3,Veracruz
+30.1.04,Zona metropolitana,Orizaba,30,Veracruz de Ignacio de la Llave,135,30135,Rafael Delgado,11110,14730,20245,24127,2.9,3.1,1.8,26.4,46.2,Veracruz
+30.1.07,Zona metropolitana,Xalapa,30,Veracruz de Ignacio de la Llave,136,30136,Rafael Lucio,4309,5342,7023,8343,2.2,2.7,1.8,11.5,42.9,Veracruz
+30.1.04,Zona metropolitana,Orizaba,30,Veracruz de Ignacio de la Llave,138,30138,Río Blanco,37686,39327,40634,41795,0.4,0.3,0.3,15.2,67.1,Veracruz
+30.1.04,Zona metropolitana,Orizaba,30,Veracruz de Ignacio de la Llave,140,30140,San Andrés Tenejapan,1798,2214,2715,3134,2.1,2.0,1.5,21.9,39.9,Veracruz
+30.3.08,Zona conurbada,Acayucan,30,Veracruz de Ignacio de la Llave,145,30145,Soconusco,9712,11467,14395,16574,1.7,2.2,1.5,96.3,58.4,Veracruz
+30.1.05,Zona metropolitana,Poza Rica,30,Veracruz de Ignacio de la Llave,175,30175,Tihuatlán,77304,81088,89774,92726,0.5,1.0,0.3,718.4,45.9,Veracruz
+30.1.07,Zona metropolitana,Xalapa,30,Veracruz de Ignacio de la Llave,182,30182,Tlalnelhuayocan,6963,11484,16311,19664,5.2,3.5,1.9,36.7,130.5,Veracruz
+30.1.04,Zona metropolitana,Orizaba,30,Veracruz de Ignacio de la Llave,185,30185,Tlilapan,3118,3955,4879,5548,2.4,2.1,1.3,11.2,29.7,Veracruz
+30.1.06,Zona metropolitana,Veracruz,30,Veracruz de Ignacio de la Llave,193,30193,Veracruz,328607,457377,552156,607209,3.4,1.8,1.0,247.2,110.2,Veracruz
+30.1.02,Zona metropolitana,Córdoba,30,Veracruz de Ignacio de la Llave,196,30196,Yanga,16701,16389,17462,17902,-0.2,0.6,0.3,87.9,32.8,Veracruz
+30.1.03,Zona metropolitana,Minatitlán,30,Veracruz de Ignacio de la Llave,199,30199,Zaragoza,6725,8945,10720,11899,2.9,1.8,1.1,21.7,41.7,Veracruz
+30.1.01,Zona metropolitana,Coatzacoalcos,30,Veracruz de Ignacio de la Llave,206,30206,Nanchital de Lázaro Cárdenas del Río,26723,27218,27094,29209,0.2,0.0,0.8,28.3,81.9,Veracruz
+31.1.01,Zona metropolitana,Mérida,31,Yucatán,2,31002,Acanceh,11277,13166,15337,16772,1.6,1.5,0.9,137.3,20.2,Yucatán
+31.1.01,Zona metropolitana,Mérida,31,Yucatán,13,31013,Conkal,6430,7620,9143,16671,1.7,1.8,6.3,63.3,21.3,Yucatán
+31.1.01,Zona metropolitana,Mérida,31,Yucatán,20,31020,Chicxulub Pueblo,3061,3503,4113,4497,1.4,1.6,0.9,44.3,17.3,Yucatán
+31.3.02,Zona conurbada,Valladolid,31,Yucatán,21,31021,Chichimilá,5380,6561,7952,9406,2.0,1.9,1.7,470.0,19.4,Yucatán
+31.1.01,Zona metropolitana,Mérida,31,Yucatán,38,31038,Hunucmá,21467,25979,30731,35137,1.9,1.6,1.4,839.7,23.9,Yucatán
+31.1.01,Zona metropolitana,Mérida,31,Yucatán,39,31039,Ixil,2597,3226,3803,4186,2.2,1.6,1.0,136.8,19.4,Yucatán
+31.1.01,Zona metropolitana,Mérida,31,Yucatán,41,31041,Kanasín,24503,39191,78709,141939,4.8,7.0,6.2,106.3,61.3,Yucatán
+31.1.01,Zona metropolitana,Mérida,31,Yucatán,50,31050,Mérida,556819,705055,830732,995129,2.4,1.6,1.9,874.4,57.0,Yucatán
+31.1.01,Zona metropolitana,Mérida,31,Yucatán,63,31063,Samahil,3889,4354,5008,5631,1.1,1.4,1.2,160.6,25.5,Yucatán
+31.1.01,Zona metropolitana,Mérida,31,Yucatán,90,31090,Timucuy,4808,5883,6833,7503,2.1,1.5,1.0,134.6,20.7,Yucatán
+31.1.01,Zona metropolitana,Mérida,31,Yucatán,93,31093,Tixkokob,13696,15281,17176,18420,1.1,1.1,0.7,172.3,23.6,Yucatán
+31.1.01,Zona metropolitana,Mérida,31,Yucatán,95,31095,Tixpéhual,4352,4840,5388,5690,1.1,1.0,0.6,70.9,17.1,Yucatán
+31.3.02,Zona conurbada,Valladolid,31,Yucatán,99,31099,Uayma,2508,2976,3782,4191,1.7,2.3,1.1,187.7,25.0,Yucatán
+31.1.01,Zona metropolitana,Mérida,31,Yucatán,100,31100,Ucú,2430,2909,3469,4049,1.8,1.7,1.6,130.8,9.8,Yucatán
+31.1.01,Zona metropolitana,Mérida,31,Yucatán,101,31101,Umán,39324,49145,50993,69147,2.3,0.4,3.2,354.1,61.3,Yucatán
+31.3.02,Zona conurbada,Valladolid,31,Yucatán,102,31102,Valladolid,42717,56776,74217,85460,2.9,2.6,1.5,1078.2,40.6,Yucatán
+32.1.01,Zona metropolitana,Zacatecas-Guadalupe,32,Zacatecas,17,32017,Guadalupe,82770,109066,159991,211740,2.8,3.8,2.9,817.0,92.6,Zacatecas
+32.1.01,Zona metropolitana,Zacatecas-Guadalupe,32,Zacatecas,32,32032,Morelos,8143,9755,11493,13207,1.8,1.6,1.4,180.9,43.3,Zacatecas
+32.1.01,Zona metropolitana,Zacatecas-Guadalupe,32,Zacatecas,50,32050,Vetagrande,6559,7228,9353,10276,1.0,2.5,1.0,160.0,43.8,Zacatecas
+32.1.01,Zona metropolitana,Zacatecas-Guadalupe,32,Zacatecas,56,32056,Zacatecas,108556,123899,138176,149607,1.3,1.1,0.8,441.5,86.1,Zacatecas
+32.1.01,Zona metropolitana,Zacatecas-Guadalupe,32,Zacatecas,57,32057,Trancoso,0,13080,16934,20455,0.0,2.5,2.0,220.8,49.2,Zacatecas
