@@ -44,7 +44,7 @@ la oferta al de la demanda:
 > los pondría?
 
 Construimos un **índice de inversión** para las 92 zonas metropolitanas de CONAPO con el
-DENUE de INEGI (2019 contra 2026): A. crecimiento de restaurantes donde se venden papas,
+DENUE de INEGI (2019 contra 2026): A. crecimiento de restaurantes donde se venden papas (comida rápida y a la carta),
 B. aperturas de cadenas (McDonald's, KFC, Carl's Jr.…), turismo y tamaño de mercado, con el
 mismo peso. La pieza C, competencia, sale de UN Comtrade: de qué país vienen las papas
 congeladas importadas y a qué precio por kilo. Método, fuentes y resultados en

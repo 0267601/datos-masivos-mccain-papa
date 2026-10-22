@@ -12,7 +12,7 @@ Ejecucion desde la raiz del repositorio (despues de build_dataset):
 Como lo calculamos, para cada una de las 92 metropolis de CONAPO:
 
     A. Crecimiento   tasa anual de restaurantes donde se venden papas
-                     (comida rapida, autoservicio, a la carta) entre dos
+                     (comida rapida y a la carta) entre dos
                      versiones del DENUE
     B. Cadenas       aperturas netas de cadenas que venden papas (McDonald's,
                      KFC, Carl's Jr...) por cada 100 mil habitantes
