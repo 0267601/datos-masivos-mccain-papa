@@ -119,3 +119,27 @@ que una corrida del notebook en modo muestra reemplazó nuestra copia cruda del 
 | "Baja California " con espacio antes de los dos puntos en el destino del SNIIM | `src/processing/sniim.py` | `trim` al separar estado y mercado |
 | Acentos inconsistentes entre fuentes | `src/processing/siap.py` | Llave `estado_llave` sin acentos ni mayúsculas para cruzar |
 | Encabezados que cambian entre años | `src/processing/siap.py` | Lectura año por año y `unionByName` |
+
+## Reglas del índice de inversión
+
+`src/validation/reglas_indice.py` aplica las mismas categorías a las tablas nuevas. Cada grupo
+se valida solo si sus tablas existen, así el E1 y el índice se pueden correr por separado.
+
+| Tabla | Regla | Nivel si no se cumple |
+|---|---|---|
+| denue | columnas y tipos | FALLA |
+| denue | nulos en nombre de actividad (≤1%), latitud y personal (≤5%) | FALLA |
+| denue | sin duplicados en (`version`, `id`) | FALLA |
+| denue | `cve_mun5` de 5 dígitos | FALLA |
+| denue | coordenadas dentro de México | AVISO |
+| denue | están las 4 versiones configuradas, una fecha de corte por versión | FALLA |
+| denue | al menos 300,000 establecimientos por versión | FALLA |
+| denue | cada categoría objetivo tiene negocios en cada versión | FALLA |
+| denue | al menos 100 sucursales de cadenas por versión | AVISO |
+| metropolis | 92 metrópolis; municipios sin duplicados; población > 0; todo municipio con su metrópoli | AVISO / FALLA |
+| importaciones | tipos, nulos, duplicados en (`periodo`, `pais_codigo`) | FALLA |
+| importaciones | precio entre 0.3 y 5 US$/kg | AVISO |
+| importaciones | están los 132 meses; el total "Mundo" coincide con la suma de países (±5%) | AVISO |
+| indice | entre 0 y 100; una fila por metrópoli; pesos suman 1 | FALLA / AVISO |
+
+*Los resultados se agregan con la corrida de la descarga real.*

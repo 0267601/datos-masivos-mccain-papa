@@ -84,6 +84,9 @@ Unity Catalog
 |---|---|---|---|
 | SIAP | `requests.get` al portal de datos abiertos | Un CSV por año | Caché por archivo, escritura atómica |
 | SNIIM | `requests.get` a la consulta de precios | Una página por variedad y mes (evita el tope de 1000 registros) | Caché, reintentos con espera creciente ante 503, pausa entre peticiones, bandera de truncado |
+| DENUE | `requests.get` por bloques de 1 MB a la descarga masiva de INEGI | Un zip por versión y parte (7) | Caché, rechazo del "404 suave" (HTML con código 200) revisando la firma `PK` del zip |
+| CONAPO | `requests.get` a datos.gob.mx | 2 CSV | Caché, rechazo de respuestas HTML |
+| UN Comtrade | API pública, `requests.get` | Un mes por consulta (la API no acepta más) | Caché por mes, reintentos ante 429 y 5xx, pausa entre consultas |
 
 ## Qué transformaciones hacemos
 
@@ -102,6 +105,7 @@ Unity Catalog
 | Databricks (serverless) + Unity Catalog | Correr el pipeline en la nube; Volume como data lake y tablas Delta para consultar con SQL |
 | Parquet | Formato de interim y processed |
 | PyYAML | Configuración sin tocar código |
+| matplotlib | Las tres gráficas del índice de inversión (sobre tablas ya agregadas) |
 | logging | `logs/pipeline.log` con cada descarga y cada error (en Databricks, en el disco del driver y en la salida del notebook) |
 | pytest | 36 pruebas sin internet |
 | pandas | Solo al final, para tablas chicas y la comparación de desempeño |
@@ -115,3 +119,26 @@ Unity Catalog
 | CSV crudo del SIAP | Trae todos los cultivos (~6 MB por año) y Spark no puede empujar filtros a un CSV | Convertir raw a Parquet una vez y filtrar ahí |
 | `toPandas()` | Lleva todo al driver | Solo lo usamos en tablas agregadas |
 | Full outer join del cruce | Genera shuffle | Hoy es diminuto; si creciera, particionar por año antes |
+
+## Índice de inversión
+
+```
+DENUE (7 zip)        CONAPO (2 CSV)        UN Comtrade (132 JSON)
+      │                    │                       │
+      └─────────── download_data --fuente indice ──┘
+                           │
+                     data/raw/denue/<versión>/ · metropolis/ · comtrade/
+                           │
+              build_dataset --fuente indice          PySpark
+                           │   zip → CSV extraído → lectura por versión con su
+                           │   codificación → unionByName (schema drift 2015 vs 2019+)
+                     data/interim/denue/              version=
+                     data/processed/denue_establecimientos/   version=
+                     data/processed/metropolis/, importaciones/
+                           │
+              analysis.indice_inversion               broadcast join DENUE × municipios,
+                           │                          percent_rank (window)
+                     data/processed/indice_inversion/, serie_metropolis/
+                     reports/tables/indice_inversion.csv
+                     reports/figures/*.png
+```

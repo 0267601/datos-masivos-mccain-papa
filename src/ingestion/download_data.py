@@ -1,10 +1,11 @@
 """
-Adquisicion de datos crudos — SIAP y SNIIM.
+Adquisicion de datos crudos — SIAP, SNIIM, DENUE, CONAPO y UN Comtrade.
 
 Ejecucion desde la terminal, en la raiz del repositorio:
 
-    python -m src.ingestion.download_data                  # ambas fuentes
+    python -m src.ingestion.download_data                  # todas las fuentes
     python -m src.ingestion.download_data --fuente sniim   # solo una
+    python -m src.ingestion.download_data --fuente indice  # DENUE + CONAPO + Comtrade
     python -m src.ingestion.download_data --forzar         # ignora la cache
     python -m src.ingestion.download_data --muestra        # sin internet (copias del E1)
 
@@ -16,6 +17,9 @@ Que hacemos aqui y por que:
    el Volume del data lake en Databricks):
        data/raw/siap/siap_cierre_<anio>.csv                  (CSV completo, latin-1)
        data/raw/sniim/<variedad>/sniim_<id>_<anio>-<mes>.html (HTML de la consulta)
+       data/raw/denue/<version>/denue_..._csv.zip            (zip tal como lo da INEGI)
+       data/raw/metropolis/<tabla>.csv                       (CSV de CONAPO)
+       data/raw/comtrade/<YYYYMM>.json                       (respuesta de la API)
    No filtramos ni limpiamos nada: eso le toca a src/processing/. Si una
    transformacion sale mal, podemos rehacerla sin volver a pedirle nada a la
    fuente.
@@ -32,7 +36,7 @@ Que hacemos aqui y por que:
    guardamos url, parametros, bytes, sha256, fecha y estado. En SNIIM ademas
    contamos las filas y marcamos si la particion toco el limite de 1000.
 
-5. No usamos credenciales: ninguna de las dos fuentes las pide.
+5. No usamos credenciales: ninguna de las fuentes las pide.
 
 Pipeline:
     fuente -> requests -> bytes/HTML -> data/raw/ -> manifiesto.json
@@ -43,9 +47,11 @@ import hashlib
 import json
 import sys
 import time
+
+import requests
 from datetime import date, datetime
 
-from src.ingestion import siap_extractor, sniim_extractor
+from src.ingestion import comtrade_extractor, denue_extractor, siap_extractor, sniim_extractor
 from src.utils.config import cargar_config
 from src.utils.registro import configurar_registro
 from src.utils.rutas import RAW, asegurar_carpetas
@@ -235,6 +241,148 @@ def descargar_sniim(config, manifiesto, forzar=False):
     return errores
 
 
+# --- DENUE ----------------------------------------------------------------------
+
+def ruta_denue(etiqueta, url):
+    return RAW / "denue" / etiqueta / denue_extractor.nombre_archivo(url)
+
+
+def descargar_denue(config, manifiesto, forzar=False):
+    """Descargamos los zip del sector 72 de cada version configurada."""
+    cfg = config["denue"]
+    errores = 0
+
+    for version in cfg["versiones"]:
+        for url in version["urls"]:
+            destino = ruta_denue(version["etiqueta"], url)
+            clave = ruta_relativa(destino)
+
+            if destino.exists() and destino.stat().st_size > 0 and not forzar:
+                log.info(f"DENUE {version['etiqueta']} | {destino.name} en cache")
+                continue
+
+            try:
+                inicio = time.perf_counter()
+                total, huella = denue_extractor.descargar_zip(url, destino, cfg["timeout"])
+                manifiesto["archivos"][clave] = {
+                    "fuente": "DENUE",
+                    "url": url,
+                    "version": version["etiqueta"],
+                    "bytes": total,
+                    "sha256": huella,
+                    "fecha_descarga": datetime.now().isoformat(timespec="seconds"),
+                    "segundos": round(time.perf_counter() - inicio, 1),
+                    "estado": "ok",
+                }
+                log.info(f"DENUE {version['etiqueta']} | {destino.name} | "
+                         f"{total / 1024**2:6.1f} MB")
+            except Exception as error:
+                errores += 1
+                manifiesto["archivos"][clave] = {
+                    "fuente": "DENUE", "url": url, "version": version["etiqueta"],
+                    "fecha_descarga": datetime.now().isoformat(timespec="seconds"),
+                    "estado": "error", "error": str(error)[:300],
+                }
+                log.error(f"DENUE {version['etiqueta']} | {destino.name} | fallo: {error}")
+
+            guardar_manifiesto(manifiesto)
+            time.sleep(cfg["pausa"])
+
+    return errores
+
+
+# --- CONAPO: zonas metropolitanas ----------------------------------------------
+
+def descargar_metropolis(config, manifiesto, forzar=False):
+    """Descargamos los CSV de Las metropolis de Mexico 2020."""
+    cfg = config["metropolis"]
+    errores = 0
+
+    for tabla, url in cfg["urls"].items():
+        destino = RAW / "metropolis" / f"{tabla}.csv"
+        clave = ruta_relativa(destino)
+
+        if destino.exists() and destino.stat().st_size > 0 and not forzar:
+            log.info(f"CONAPO {tabla} | en cache")
+            continue
+
+        try:
+            respuesta = requests.get(url, timeout=cfg["timeout"])
+            respuesta.raise_for_status()
+            contenido = respuesta.content
+            if contenido.lstrip()[:15].lower().startswith((b"<!doctype", b"<html")):
+                raise ValueError("la respuesta es una pagina HTML, no un CSV")
+            escribir_atomico(destino, contenido)
+            manifiesto["archivos"][clave] = {
+                "fuente": "CONAPO", "url": url, "bytes": len(contenido),
+                "sha256": sha256(contenido),
+                "fecha_descarga": datetime.now().isoformat(timespec="seconds"),
+                "estado": "ok",
+            }
+            log.info(f"CONAPO {tabla} | {len(contenido) / 1024:6.1f} KB")
+        except Exception as error:
+            errores += 1
+            manifiesto["archivos"][clave] = {
+                "fuente": "CONAPO", "url": url,
+                "fecha_descarga": datetime.now().isoformat(timespec="seconds"),
+                "estado": "error", "error": str(error)[:300],
+            }
+            log.error(f"CONAPO {tabla} | fallo: {error}")
+
+        guardar_manifiesto(manifiesto)
+
+    return errores
+
+
+# --- UN Comtrade ----------------------------------------------------------------
+
+def descargar_comtrade(config, manifiesto, forzar=False):
+    """Descargamos un JSON por mes con las importaciones de HS 200410."""
+    cfg = config["comtrade"]
+    errores = 0
+
+    for periodo in comtrade_extractor.periodos(cfg["desde"], cfg["hasta"]):
+        destino = RAW / "comtrade" / f"{periodo}.json"
+        clave = ruta_relativa(destino)
+
+        if destino.exists() and destino.stat().st_size > 0 and not forzar:
+            continue
+
+        try:
+            datos = comtrade_extractor.consultar_mes(cfg, periodo)
+            filas = len(datos.get("data", []))
+            if filas == 0:
+                # Mes sin datos (todavia no publicado): no lo guardamos para
+                # que la siguiente corrida lo vuelva a pedir.
+                log.warning(f"Comtrade {periodo} | sin datos todavia")
+            else:
+                contenido = json.dumps(datos, ensure_ascii=False).encode("utf-8")
+                escribir_atomico(destino, contenido)
+                manifiesto["archivos"][clave] = {
+                    "fuente": "COMTRADE", "url": cfg["url"],
+                    "params": {"reporterCode": cfg["reportero"], "period": periodo,
+                               "cmdCode": cfg["producto"], "flowCode": cfg["flujo"]},
+                    "bytes": len(contenido), "sha256": sha256(contenido),
+                    "filas": filas,
+                    "fecha_descarga": datetime.now().isoformat(timespec="seconds"),
+                    "estado": "ok",
+                }
+                log.info(f"Comtrade {periodo} | {filas:2d} paises")
+        except Exception as error:
+            errores += 1
+            manifiesto["archivos"][clave] = {
+                "fuente": "COMTRADE", "params": {"period": periodo},
+                "fecha_descarga": datetime.now().isoformat(timespec="seconds"),
+                "estado": "error", "error": str(error)[:300],
+            }
+            log.error(f"Comtrade {periodo} | fallo: {error}")
+
+        guardar_manifiesto(manifiesto)
+        time.sleep(cfg["pausa"])
+
+    return errores
+
+
 # --- Muestra sin internet -------------------------------------------------------
 
 def hay_descarga_real():
@@ -246,7 +394,10 @@ def hay_descarga_real():
       unos 6 MB; el de la muestra solo trae papa, unos 30 KB).
     """
     manifiesto = leer_manifiesto()
-    if any(m.get("estado") == "ok" for m in manifiesto["archivos"].values()):
+    # Solo cuentan SIAP y SNIIM: la muestra no toca las demas fuentes.
+    if any(m.get("estado") == "ok" and (m.get("fuente") in ("SIAP", "SNIIM")
+                                        or clave.startswith(("siap/", "sniim/")))
+           for clave, m in manifiesto["archivos"].items()):
         return True
     return any(ruta.stat().st_size > 1024**2
                for ruta in (RAW / "siap").glob("siap_cierre_*.csv"))
@@ -284,8 +435,11 @@ def copiar_muestra(forzar=False):
 # --- Punto de entrada -----------------------------------------------------------
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Descarga de datos crudos SIAP y SNIIM")
-    parser.add_argument("--fuente", choices=["siap", "sniim", "todas"], default="todas")
+    parser = argparse.ArgumentParser(description="Descarga de datos crudos")
+    parser.add_argument("--fuente", default="todas",
+                        choices=["siap", "sniim", "e1", "denue", "metropolis", "comtrade",
+                                 "indice", "todas"],
+                        help="e1 = siap + sniim; indice = denue + metropolis + comtrade")
     parser.add_argument("--forzar", action="store_true",
                         help="descargamos aunque el archivo ya exista; con --muestra, "
                              "permite sobrescribir una descarga real")
@@ -303,10 +457,16 @@ def main(argv=None):
     inicio = time.perf_counter()
     errores = 0
 
-    if args.fuente in ("siap", "todas"):
-        errores += descargar_siap(config, manifiesto, args.forzar)
-    if args.fuente in ("sniim", "todas"):
-        errores += descargar_sniim(config, manifiesto, args.forzar)
+    grupos = {
+        "siap": (descargar_siap, {"siap", "e1", "todas"}),
+        "sniim": (descargar_sniim, {"sniim", "e1", "todas"}),
+        "metropolis": (descargar_metropolis, {"metropolis", "indice", "todas"}),
+        "comtrade": (descargar_comtrade, {"comtrade", "indice", "todas"}),
+        "denue": (descargar_denue, {"denue", "indice", "todas"}),
+    }
+    for funcion, cuando in grupos.values():
+        if args.fuente in cuando:
+            errores += funcion(config, manifiesto, args.forzar)
 
     log.info(f"Adquisicion terminada en {time.perf_counter() - inicio:.1f} s "
              f"| errores: {errores}")
