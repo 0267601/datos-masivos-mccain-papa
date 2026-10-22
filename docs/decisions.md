@@ -72,18 +72,23 @@ Un `read` por año. Con 13 años no se nota.
 ---
 
 ## Decisión
-Parsear el HTML del SNIIM dentro de Spark con `wholeTextFiles` + `flatMap`.
+Parsear el HTML del SNIIM dentro de Spark con `read.text(wholetext=True)` y una UDF de
+BeautifulSoup.
 
 ## Razón
-El parseo con BeautifulSoup se reparte entre las particiones. Con 72 archivos da igual;
-con varios años deja de ser un cuello de botella.
+El parseo se reparte entre las particiones. Con 72 archivos da igual; con varios años deja
+de ser un cuello de botella. Al principio usamos `wholeTextFiles` + `flatMap`, pero esa es la
+API de RDD y Databricks serverless no la expone; con la API de DataFrame el mismo código corre
+local y en Databricks.
 
 ## Alternativas consideradas
-Un ciclo de Python y luego `createDataFrame` (lo que hacíamos en el E1).
+`wholeTextFiles` + `flatMap` (RDD); un ciclo de Python y luego `createDataFrame` (lo que
+hacíamos en el E1).
 
 ## Consecuencias
-BeautifulSoup tiene que estar instalado donde corran los executors. En modo local es la
-misma máquina.
+BeautifulSoup tiene que estar instalado donde corran los workers. En serverless los workers
+no ven la carpeta `src/`, así que le pedimos a cloudpickle que mande el código del parser
+completo junto con la UDF (`register_pickle_by_value`).
 
 ---
 
@@ -199,3 +204,40 @@ Constantes en el código (como en el E1).
 
 ## Consecuencias
 Dependencia de PyYAML. `config/config.yaml` local está en `.gitignore`.
+
+---
+
+## Decisión
+Usar un Volume de Unity Catalog como data lake en Databricks y registrar la capa
+`processed` como tablas Delta.
+
+## Razón
+El Volume guarda las capas como archivos (CSV, HTML y Parquet), igual que `data/` en local,
+así que el pipeline no cambia: solo le pasamos otra raíz con la variable de entorno
+`DATOS_MASIVOS_DATA`. Las tablas Delta permiten consultar el resultado con SQL desde el
+workspace sin saber dónde están los archivos.
+
+## Alternativas consideradas
+DBFS (`dbfs:/FileStore`), que Databricks ya no recomienda; guardar todo solo como tablas
+Delta, que no sirve para la copia cruda en HTML.
+
+## Consecuencias
+El notebook `03_databricks.ipynb` crea el esquema `workspace.mccain_papa` y el Volume
+`datalake` la primera vez. En serverless no hay `cache()` ni `spark.stop()`; el código los
+omite cuando detecta Databricks (`src/utils/spark.py`).
+
+---
+
+## Decisión
+Que `--muestra` se niegue a sobrescribir una descarga real.
+
+## Razón
+Una corrida del notebook en modo muestra reemplazó nuestra copia cruda del SIAP (72 MB) por
+la muestra (0.4 MB). La copia cruda es justo lo que debemos conservar sin modificar.
+
+## Alternativas consideradas
+Escribir la muestra en otra carpeta; solo advertir en el log.
+
+## Consecuencias
+Si `data/raw/` ya tiene una descarga real, `--muestra` termina con código 1 sin tocar nada.
+Para reemplazarla hay que pedirlo explícitamente con `--muestra --forzar`.
