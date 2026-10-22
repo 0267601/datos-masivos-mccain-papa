@@ -328,3 +328,22 @@ Data México; el SIAVI de la Secretaría de Economía (sin API).
 La API pública acepta un periodo por consulta: pedimos mes por mes (132 consultas) con pausa y
 reintentos, igual que el particionado del SNIIM. Comtrade no separa por ciudad, así que la
 competencia queda a nivel nacional.
+
+---
+
+## Decisión
+Dejar *restaurantes de autoservicio* fuera de los restaurantes objetivo.
+
+## Razón
+Con la descarga real, su conteo nacional salta sin lógica entre versiones del DENUE: 4,502
+(2015), 20,670 (2019), 10,296 (2022) y 16,605 (2026). Las otras dos categorías crecen de forma
+estable (comida rápida 61 mil → 80 mil, a la carta 60 mil → 73 mil entre 2019 y 2026). El salto
+parece un cambio de clasificación de INEGI; como 2019 es el año base del crecimiento, castigaba a
+las metrópolis donde hubo más reclasificación.
+
+## Alternativas consideradas
+Mantenerla y advertirlo; usar 2022 como año base.
+
+## Consecuencias
+`denue.categorias_objetivo` queda en comida rápida y a la carta. La categoría se sigue
+calculando y queda en `serie_metropolis` para quien la quiera revisar.
