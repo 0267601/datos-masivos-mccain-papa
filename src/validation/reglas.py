@@ -220,7 +220,7 @@ def validar_truncamiento(manifiesto, tabla="sniim raw"):
                          "sin manifiesto (datos de muestra): no se puede revisar")
     sniim = [m for m in manifiesto["archivos"].values() if m.get("fuente") == "SNIIM"]
     truncadas = sum(1 for m in sniim if m.get("truncado"))
-    errores = sum(1 for m in manifiesto["archivos"].values() if m.get("estado") == "error")
+    errores = sum(1 for m in sniim if m.get("estado") == "error")
     estado = OK if truncadas == 0 and errores == 0 else FALLA
     return resultado(tabla, "particiones truncadas o con error", estado, truncadas + errores,
                      f"{truncadas} truncadas, {errores} con error de descarga")
