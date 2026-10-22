@@ -293,6 +293,13 @@ def descargar_denue(config, manifiesto, forzar=False):
 
 # --- CONAPO: zonas metropolitanas ----------------------------------------------
 
+ENCABEZADOS_NAVEGADOR = {
+    "User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 "
+                   "(KHTML, like Gecko) Version/17.0 Safari/605.1.15"),
+    "Accept": "text/csv,application/octet-stream,*/*",
+}
+
+
 def descargar_metropolis(config, manifiesto, forzar=False):
     """Descargamos los CSV de Las metropolis de Mexico 2020."""
     cfg = config["metropolis"]
@@ -302,12 +309,21 @@ def descargar_metropolis(config, manifiesto, forzar=False):
         destino = RAW / "metropolis" / f"{tabla}.csv"
         clave = ruta_relativa(destino)
 
+        # Si alguien bajo el CSV a mano y lo subio con su nombre original, lo usamos.
+        original = RAW / "metropolis" / url.rsplit("/", 1)[-1]
+        if not destino.exists() and original.exists():
+            escribir_atomico(destino, original.read_bytes())
+            log.info(f"CONAPO {tabla} | tomado de {original.name} (subido a mano)")
+            continue
+
         if destino.exists() and destino.stat().st_size > 0 and not forzar:
             log.info(f"CONAPO {tabla} | en cache")
             continue
 
         try:
-            respuesta = requests.get(url, timeout=cfg["timeout"])
+            # datos.gob.mx responde 403 al agente por defecto de requests desde
+            # algunas nubes (Databricks); nos presentamos como navegador.
+            respuesta = requests.get(url, timeout=cfg["timeout"], headers=ENCABEZADOS_NAVEGADOR)
             respuesta.raise_for_status()
             contenido = respuesta.content
             if contenido.lstrip()[:15].lower().startswith((b"<!doctype", b"<html")):

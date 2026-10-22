@@ -87,3 +87,9 @@ def test_validar_truncamiento():
     assert r.validar_truncamiento(sano)["estado"] == r.OK
     assert r.validar_truncamiento(truncado)["estado"] == r.FALLA
     assert r.validar_truncamiento(None)["estado"] == r.AVISO
+
+
+def test_validar_truncamiento_ignora_errores_de_otras_fuentes():
+    otra = {"archivos": {"a": {"fuente": "SNIIM", "truncado": False, "estado": "ok"},
+                         "b": {"fuente": "CONAPO", "estado": "error"}}}
+    assert r.validar_truncamiento(otra)["estado"] == r.OK
