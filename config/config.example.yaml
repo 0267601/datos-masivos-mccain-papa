@@ -35,3 +35,98 @@ validacion:
   sniim_filas_minimas: 1000
   rendimiento_max_ton_ha: 120      # papa de riego rara vez pasa de 60 t/ha
   precio_kg_rango: [1, 100]        # $/kg en mercado mayorista
+
+# --- Indice de inversion (examen final) -------------------------------------
+# Pregunta: si McCain tuviera X millones para crecer en Mexico, ¿en que zonas
+# metropolitanas deberia ponerlos? Fuentes: DENUE (restaurantes, cadenas,
+# hoteles), CONAPO (zonas metropolitanas y poblacion) y UN Comtrade
+# (importaciones de papas congeladas, HS 200410).
+
+denue:
+  # Sector 72 (alojamiento y preparacion de alimentos), nacional. Desde 2019
+  # INEGI lo parte en dos archivos. La version vigente no lleva fecha en el
+  # nombre; cuando salga una nueva, se agrega aqui con su carpeta fechada.
+  versiones:
+    - etiqueta: "2015_02"
+      fecha: "2015-02-25"
+      urls:
+        - https://www.inegi.org.mx/contenidos/masiva/denue/2015/denue_72_25022015_csv.zip
+    - etiqueta: "2019_11"
+      fecha: "2019-11-01"
+      urls:
+        - https://www.inegi.org.mx/contenidos/masiva/denue/2019_11/denue_00_72_1_1119_csv.zip
+        - https://www.inegi.org.mx/contenidos/masiva/denue/2019_11/denue_00_72_2_1119_csv.zip
+    - etiqueta: "2022_11"
+      fecha: "2022-11-01"
+      urls:
+        - https://www.inegi.org.mx/contenidos/masiva/denue/2022_11/denue_00_72_1_1122_csv.zip
+        - https://www.inegi.org.mx/contenidos/masiva/denue/2022_11/denue_00_72_2_1122_csv.zip
+    - etiqueta: "2026_05"
+      fecha: "2026-05-20"
+      urls:
+        - https://www.inegi.org.mx/contenidos/masiva/denue/denue_00_72_1_csv.zip
+        - https://www.inegi.org.mx/contenidos/masiva/denue/denue_00_72_2_csv.zip
+  timeout: 900
+  pausa: 1.0
+
+  # Categorias por palabras en el nombre de la actividad (sin acentos, en
+  # minusculas). Usamos el nombre y no el codigo SCIAN porque el codigo cambio
+  # entre SCIAN 2013 (DENUE 2015) y SCIAN 2018 (DENUE 2019 en adelante).
+  categorias:
+    comida_rapida: ["hamburguesas"]     # pizzas, hamburguesas, hot dogs y pollos para llevar
+    autoservicio: ["autoservicio"]
+    a_la_carta: ["a la carta"]
+    bares: ["bares, cantinas"]
+    hoteles: ["hoteles"]
+  # Los restaurantes donde se venden papas a la francesa.
+  categorias_objetivo: [comida_rapida, autoservicio, a_la_carta]
+
+  # Cadenas que venden papas a la francesa. Expresion regular sobre el nombre
+  # del establecimiento en mayusculas y sin acentos.
+  cadenas:
+    McDonald's: "\\bMC ?DONALD"
+    Burger King: "\\bBURGER KING\\b"
+    KFC: "\\bKFC\\b|KENTUCKY FRIED"
+    Carl's Jr.: "\\bCARL'?S JR"
+    Jack in the Box: "JACK IN THE BOX"
+    Wendy's: "\\bWENDY'?S\\b"
+    Popeyes: "\\bPOPEYES\\b"
+    Church's: "\\bCHURCH'?S (CHICKEN|TEXAS)"
+    Wingstop: "\\bWINGSTOP\\b"
+    Buffalo Wild Wings: "BUFFALO WILD WINGS"
+    Hooters: "\\bHOOTERS\\b"
+    Chili's: "\\bCHILI'?S\\b"
+    Applebee's: "\\bAPPLEBEE'?S\\b"
+    Vips: "\\bVIPS\\b"
+    Toks: "\\bTOKS\\b"
+    Sanborns: "\\bSANBORNS\\b"
+
+metropolis:
+  # Las metropolis de Mexico 2020 (CONAPO, SEDATU, INEGI): 92 metropolis y los
+  # municipios que las forman, con poblacion 2020.
+  urls:
+    municipios: https://www.datos.gob.mx/dataset/da65ccd9-888c-4ce8-b3b5-6bd867be344d/resource/6f57ab97-d1df-4768-beb8-c929c2449923/download/municipios_poblacion.csv
+    caracteristicas: https://www.datos.gob.mx/dataset/da65ccd9-888c-4ce8-b3b5-6bd867be344d/resource/622497d1-7a92-43e1-8279-e8c286889509/download/metropolis_caracteristicas.csv
+  timeout: 120
+
+comtrade:
+  # API publica de UN Comtrade (sin llave): un mes por consulta.
+  url: https://comtradeapi.un.org/public/v1/preview/C/M/HS
+  reportero: 484                 # Mexico
+  producto: "200410"             # papas preparadas o conservadas, congeladas
+  flujo: M                       # importaciones
+  desde: "2015-01"
+  hasta: "2025-12"
+  pausa: 1.5
+  timeout: 60
+
+indice:
+  # Comparamos la version mas reciente contra 2019_11: misma clasificacion
+  # SCIAN 2018 y mismo formato, asi el crecimiento no mezcla cambios de metodo.
+  version_inicial: "2019_11"
+  version_final: "2026_05"
+  pesos:
+    crecimiento: 0.25     # A. crecimiento anual de restaurantes objetivo
+    cadenas: 0.25         # B. aperturas netas de cadenas por 100 mil habitantes
+    turismo: 0.25         # hoteles por 100 mil habitantes
+    mercado: 0.25         # tamano: restaurantes objetivo hoy
