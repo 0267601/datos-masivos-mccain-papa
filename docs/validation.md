@@ -52,49 +52,64 @@ Los umbrales viven en `config/config.example.yaml` (sección `validacion`), no e
 En SIAP conservamos `ddr` y `cader` a propósito: sin ellas la llave no es única y
 aparecen 186 falsos duplicados (lo vimos en el E1).
 
-## Resultados de la última corrida
+## Resultados con la descarga real
 
-Corrida con la **muestra** (`python -m src.ingestion.download_data --muestra`):
-SIAP 2013–2025 completo y SNIIM enero–marzo 2025 (5 variedades: Marciana no tiene
-cotizaciones en 2025).
+Corrida del 21 de octubre de 2026 con la descarga completa de las fuentes
+(`python -m src.ingestion.download_data`): SIAP 2013–2025 (13 CSV, 72.3 MB) y SNIIM
+enero–diciembre 2025 (72 páginas, 0 truncadas, 0 errores). Marciana no tiene
+cotizaciones en 2025, así que el SNIIM aporta 5 variedades.
 
 **36 reglas: 34 OK, 2 AVISO, 0 FALLA.**
 
 | tabla | regla | estado | detalle |
 |---|---|---|---|
-| siap | columnas requeridas | OK | 13 columnas presentes |
-| sniim | columnas requeridas | OK | 12 columnas presentes |
-| canalizacion | columnas requeridas | OK | 6 columnas presentes |
+| siap / sniim / canalizacion | columnas requeridas | OK | 13, 12 y 6 columnas presentes |
 | siap / sniim / canalizacion | tipos de datos | OK | todas con el tipo esperado |
 | siap | nulos (estado, produccion_ton, sup_sembrada_ha, rendimiento_ton_ha, precio_medio_rural) | OK | 0 de 3,171 |
-| sniim | nulos (fecha, precio_frec, precio_min, precio_max, origen) | OK | 0 de 2,683 |
+| sniim | nulos (fecha, precio_frec, precio_min, precio_max, origen) | OK | 0 de 11,010 |
 | siap / sniim / canalizacion | duplicados en la llave | OK | 0 |
 | siap | rangos de producción, superficie y rendimiento | OK | 0 fuera de rango |
 | siap | sup_cosechada_ha ≤ sup_sembrada_ha | OK | 0 filas |
 | siap | producción = cosechada × rendimiento | OK | 0 de 3,166 filas fuera de ±5% |
-| sniim | rango de precio_frec | OK | 0 fuera de [1, 100] |
+| sniim | rango de precio_frec | **AVISO** | 1 de 11,010 fuera de [1, 100] $/kg |
 | sniim | precio_min ≤ precio_frec ≤ precio_max | OK | 0 filas |
 | siap | años esperados | OK | 2013–2025 sin huecos |
 | sniim | años esperados | OK | 2025 |
 | sniim | fechas consistentes | OK | 0 en el futuro, 0 en la partición equivocada |
-| sniim | cobertura mensual por variedad | OK | las 5 variedades cotizan los 3 meses |
+| sniim | cobertura mensual por variedad | OK | las 5 variedades cotizan los 12 meses |
 | siap × sniim | orígenes SNIIM con producción en SIAP | **AVISO** | Nayarit y Yucatán aparecen como origen y no producen papa en SIAP |
 | canalizacion | participaciones suman 100% | OK | — |
 | siap | volumen por año | OK | todos los años en [150, 400] filas |
-| sniim | volumen mínimo | OK | 2,683 ≥ 1,000 |
-| sniim raw | particiones truncadas | **AVISO** | con la muestra no hay manifiesto de descarga; con la descarga completa esta regla sí se evalúa |
+| sniim | volumen mínimo | OK | 11,010 ≥ 1,000 |
+| sniim raw | particiones truncadas o con error | OK | 0 truncadas, 0 con error de descarga |
 
 La tabla completa, regla por regla, está en `reports/tables/validacion.md`.
 
 ### Cómo interpretamos los avisos
 
-1. **Nayarit y Yucatán como origen.** Es el mismo fenómeno que Coahuila en el E1: el
+1. **Un precio de $0.43/kg.** Es una sola cotización: papa Alpha en caja de 40 kg, de
+   Puebla a la Central de Abasto de Mérida, el 11 de septiembre de 2025, con mínimo,
+   frecuente y máximo iguales a 0.43. El resto de la Alpha se cotiza entre 6 y
+   35 $/kg (mediana 18) y las otras 55 cotizaciones en caja de 40 kg, entre 16 y
+   28.5 $/kg, así que lo tratamos como error de captura del SNIIM (probablemente $4.30 o el precio
+   de otra unidad). No la borramos: una fila entre 11,010 no mueve ningún resultado,
+   y preferimos que el dataset refleje la fuente y que el aviso quede documentado.
+2. **Nayarit y Yucatán como origen.** Es el mismo fenómeno que Coahuila en el E1: el
    SNIIM registra el origen que declara el comerciante, que puede ser el estado desde
    donde se redistribuye. No los quitamos: en el índice de canalización quedan con
-   producción 0 y canalización negativa, que es justo la señal de redistribución.
-2. **Sin manifiesto.** La muestra se copia, no se descarga, así que no hay registro de
-   truncamiento. Con `python -m src.ingestion.download_data` el manifiesto existe y la
-   regla pasa a OK o FALLA.
+   producción 0 y canalización negativa (−1.9 y −2.4), que es justo la señal de
+   redistribución.
+
+### Con la muestra
+
+Con `--muestra` (SIAP completo, SNIIM enero–marzo, 2,683 filas) el resultado también es
+34 OK, 2 AVISO y 0 FALLA, pero los avisos cambian: el de precios no aparece (la
+cotización de $0.43 es de septiembre) y aparece uno de truncamiento, porque la muestra
+no se descarga y no deja manifiesto que revisar.
+
+`--muestra` se niega a sobrescribir una descarga real: si `data/raw/` ya tiene archivos
+descargados, el comando termina con código 1 sin tocar nada. Lo agregamos después de
+que una corrida del notebook en modo muestra reemplazó nuestra copia cruda del SIAP.
 
 ## Problemas que encontramos al validar y que ya corrige el procesamiento
 
