@@ -142,4 +142,13 @@ se valida solo si sus tablas existen, así el E1 y el índice se pueden correr p
 | importaciones | están los 132 meses; el total "Mundo" coincide con la suma de países (±5%) | AVISO |
 | indice | entre 0 y 100; una fila por metrópoli; pesos suman 1 | FALLA / AVISO |
 
-*Los resultados se agregan con la corrida de la descarga real.*
+Resultado con la descarga real en Databricks: **69 reglas en total (E1 + índice): 66 OK,
+3 AVISO, 0 FALLA.** Todas las reglas del DENUE, CONAPO y el índice dan OK: las 4 versiones
+presentes, más de 300 mil establecimientos por versión, 92 metrópolis, 132 de 132 meses de
+Comtrade y el total "Mundo" igual a la suma de países. El aviso nuevo es de Comtrade: algún
+registro mes-país con precio por kilo fuera de [0.3, 5] US$/kg. El resumen anual de los tres
+orígenes principales queda entre 0.69 y 1.84 US$/kg.
+
+En la primera corrida salió una FALLA en "particiones truncadas o con error" del SNIIM que en
+realidad eran los dos CSV de CONAPO (datos.gob.mx respondió 403 a Databricks). Corregimos la
+regla para que solo cuente errores del SNIIM y subimos los CSV de CONAPO a mano al Volume.
