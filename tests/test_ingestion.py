@@ -175,3 +175,34 @@ def test_muestra_detecta_csv_real_sin_manifiesto(raw_temporal):
     (carpeta / "siap_cierre_2013.csv").write_bytes(b"x" * (2 * 1024**2))
 
     assert download_data.hay_descarga_real() is True
+
+
+def test_conapo_usa_el_csv_subido_a_mano(raw_temporal, monkeypatch):
+    config = {"metropolis": {"timeout": 5, "urls": {
+        "municipios": "https://datos.gob.mx/x/municipios_poblacion.csv"}}}
+    carpeta = raw_temporal / "metropolis"
+    carpeta.mkdir()
+    (carpeta / "municipios_poblacion.csv").write_text("clave_metropoli\n09.01\n")
+    monkeypatch.setattr(download_data.requests, "get",
+                        lambda *a, **k: pytest.fail("no debe pedir a internet"))
+    assert download_data.descargar_metropolis(config, {"archivos": {}}) == 0
+    assert (carpeta / "municipios.csv").read_text().startswith("clave_metropoli")
+
+
+def test_conapo_manda_encabezados_de_navegador(raw_temporal, monkeypatch):
+    vistos = {}
+
+    class Respuesta:
+        content = b"clave_metropoli\n09.01\n"
+
+        def raise_for_status(self):
+            pass
+
+    def falso_get(url, timeout, headers):
+        vistos.update(headers)
+        return Respuesta()
+
+    monkeypatch.setattr(download_data.requests, "get", falso_get)
+    config = {"metropolis": {"timeout": 5, "urls": {"municipios": "https://x/m.csv"}}}
+    assert download_data.descargar_metropolis(config, {"archivos": {}}) == 0
+    assert "Mozilla" in vistos["User-Agent"]
