@@ -1,6 +1,7 @@
 # Datos Masivos 2026 — McCain: ¿dónde se vende la papa industrial en México?
 
 Entregable 2 — Pipeline reproducible: adquisición, procesamiento, validación y desempeño.
+Corre desde la terminal y en **Databricks**, con el data lake en Unity Catalog.
 
 ## Integrantes
 
@@ -55,6 +56,9 @@ SIAP (CSV por año)          SNIIM (HTML por variedad y mes)
                         │
                 Dataset preparado
 ```
+
+Las capas `raw/`, `interim/` y `processed/` viven en `data/` cuando corremos en local, y en el
+Volume `workspace.mccain_papa.datalake` cuando corremos en Databricks (ver abajo).
 
 | Fuente | Origen | Obtención | Periodo | Formato crudo |
 |---|---|---|---|---|
@@ -132,6 +136,29 @@ Los años, variedades, pausas y umbrales de validación están en
 El notebook `notebooks/02_cleaning.ipynb` corre el mismo pipeline paso a paso y muestra
 los planes de Spark (partition pruning, predicate pushdown, broadcast y shuffle).
 
+## Ejecución en Databricks (data lake)
+
+El mismo pipeline corre en Databricks sin copiar código: abrimos este repositorio como
+**Git folder** y corremos `notebooks/03_databricks.ipynb` en cómputo serverless. Las capas
+quedan en un Volume de Unity Catalog y la capa final, como tablas Delta:
+
+```
+workspace.mccain_papa
+├── datalake (Volume)   raw/ · interim/ · processed/ · reports/
+├── siap_produccion     tabla Delta
+├── sniim_precios       tabla Delta
+└── canalizacion        tabla Delta
+```
+
+Pasos:
+
+1. **Workspace → Create → Git folder** con la URL
+   `https://github.com/0267601/datos-masivos-mccain-papa.git`.
+2. Abrir `notebooks/03_databricks.ipynb`, **Connect → Serverless** y **Run all**.
+
+El paso a paso, qué hacer si Databricks no alcanza los portales del gobierno y cómo consultar
+las tablas está en [`docs/databricks.md`](docs/databricks.md).
+
 ## Resultados principales
 
 **Pipeline.** Con la descarga real (21 de octubre de 2026):
@@ -196,10 +223,12 @@ datos-masivos-mccain-papa/
 │   ├── decisions.md
 │   ├── validation.md
 │   ├── desempeno.md
+│   ├── databricks.md              cómo correrlo en Databricks
 │   └── hallazgos.md
 ├── notebooks/
 │   ├── entregable_1.ipynb         entregable 1: extractores paso a paso
-│   └── 02_cleaning.ipynb          entregable 2: pipeline y planes de Spark
+│   ├── 02_cleaning.ipynb          entregable 2: pipeline y planes de Spark
+│   └── 03_databricks.ipynb        entregable 2 en Databricks: data lake y tablas Delta
 ├── src/
 │   ├── ingestion/                 siap_extractor, sniim_extractor, download_data, muestra
 │   ├── processing/                siap, sniim, canalizacion, build_dataset, benchmark
