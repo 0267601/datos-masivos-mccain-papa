@@ -237,6 +237,12 @@ de arranque de Spark. Ver [`docs/desempeno.md`](docs/desempeno.md).
 aparece en el 2.6% de las cotizaciones mayoristas: su papa sale por contrato. La Russet, la variedad
 industrial, es 99.6% importada. Ver [`docs/hallazgos.md`](docs/hallazgos.md).
 
+**Índice de inversión (pregunta reenfocada).** Top 5 de 92 zonas metropolitanas: Los Cabos
+(82.7), Acapulco (73.4), Guanajuato (73.1), Tecomán (72.0) y Tapachula (71.1). La oportunidad
+está en ciudades medianas turísticas o industriales; las tres grandes no entran al top 15. La
+papa congelada importada se triplicó desde 2019 (US$455 M en 2025) y Canadá pasó de 10% a 39%
+del valor importado. Ver [`docs/indice_inversion.md`](docs/indice_inversion.md).
+
 ## Estructura del repositorio
 
 ```
