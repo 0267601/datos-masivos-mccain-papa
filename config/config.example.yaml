@@ -1,0 +1,37 @@
+# Configuracion del pipeline — Datos Masivos 2026, McCain papa industrial
+#
+# Copiamos este archivo a config/config.yaml si queremos cambiar algo localmente.
+# config.yaml esta en .gitignore; este ejemplo es el que corre por defecto.
+# No guardamos credenciales aqui: ninguna de las dos fuentes las pide.
+
+siap:
+  # Cierre de la Produccion Agricola, nivel municipal
+  anios: [2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+  cultivo: papa
+  pausa: 0.5            # segundos entre peticiones (cortesia con el servidor)
+  timeout: 180
+
+sniim:
+  # Precios de Mercados Nacionales; ProductoId -> variedad
+  anios: [2025]
+  variedades:
+    740: Alpha
+    748: Galeana
+    749: Gema
+    753: Marciana
+    766: Rouset
+    767: San Jose
+  pausa: 1.0
+  timeout: 90
+  intentos: 4
+
+procesamiento:
+  particiones_shuffle: 8
+  memoria_driver: 2g
+
+validacion:
+  # Volumen esperado por capa processed; fuera de rango marcamos FALLA
+  siap_filas_por_anio: [150, 400]
+  sniim_filas_minimas: 1000
+  rendimiento_max_ton_ha: 120      # papa de riego rara vez pasa de 60 t/ha
+  precio_kg_rango: [1, 100]        # $/kg en mercado mayorista
