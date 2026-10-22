@@ -14,7 +14,6 @@ def raw_temporal(tmp_path, monkeypatch):
     """Redirigimos data/raw a una carpeta temporal para no tocar el repositorio."""
     monkeypatch.setattr(download_data, "RAW", tmp_path)
     monkeypatch.setattr(download_data, "MANIFIESTO", tmp_path / "manifiesto.json")
-    monkeypatch.setattr(download_data, "RAIZ", tmp_path)
     monkeypatch.setattr(download_data.time, "sleep", lambda s: None)
     return tmp_path
 
