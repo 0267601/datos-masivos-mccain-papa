@@ -4,6 +4,7 @@ venv/
 env/
 __pycache__/
 *.py[cod]
+.pytest_cache/
 
 # Jupyter
 .ipynb_checkpoints/
@@ -13,11 +14,25 @@ __pycache__/
 *.key
 *.pem
 secrets.json
+config/config.yaml
 
-# Datos grandes generados (se regeneran con los extractores)
-data/crudo/
-data/*.parquet
+# Capas de datos: se regeneran con el pipeline. Solo subimos la estructura.
+data/raw/*
+!data/raw/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
 *.zip
+
+# Spark
+spark-warehouse/
+metastore_db/
+derby.log
+*.crc
+
+# Logs del pipeline
+logs/
 
 # Sistema
 .DS_Store

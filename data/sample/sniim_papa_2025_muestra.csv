@@ -1,0 +1,86 @@
+fecha,presentacion,origen,destino,precio_min,precio_max,precio_frec,obs,variedad,estado_destino,es_importacion
+2025-01-02,Kilogramo,México,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,18.0,20.0,19.0,,Alpha,Aguascalientes,False
+2025-01-02,Kilogramo,Michoacán,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,21.0,25.0,23.0,,Alpha,Aguascalientes,False
+2025-01-03,Kilogramo,México,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,18.0,20.0,19.0,,Alpha,Aguascalientes,False
+2025-01-03,Kilogramo,Michoacán,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,21.0,25.0,23.0,,Alpha,Aguascalientes,False
+2025-01-06,Kilogramo,México,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,18.0,20.0,19.0,,Alpha,Aguascalientes,False
+2025-01-06,Kilogramo,Michoacán,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,21.0,25.0,23.0,,Alpha,Aguascalientes,False
+2025-01-07,Kilogramo,México,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,18.0,20.0,19.0,,Alpha,Aguascalientes,False
+2025-01-07,Kilogramo,Michoacán,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,21.0,25.0,23.0,,Alpha,Aguascalientes,False
+2025-01-08,Kilogramo,México,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,18.0,20.0,19.0,,Alpha,Aguascalientes,False
+2025-01-08,Kilogramo,Michoacán,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,21.0,25.0,23.0,,Alpha,Aguascalientes,False
+2025-01-09,Kilogramo,México,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,18.0,20.0,19.0,,Alpha,Aguascalientes,False
+2025-01-09,Kilogramo,Michoacán,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,21.0,25.0,23.0,,Alpha,Aguascalientes,False
+2025-01-10,Kilogramo,México,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,18.0,20.0,19.0,,Alpha,Aguascalientes,False
+2025-01-10,Kilogramo,Michoacán,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,21.0,25.0,23.0,,Alpha,Aguascalientes,False
+2025-01-13,Kilogramo,México,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,18.0,20.0,19.0,,Alpha,Aguascalientes,False
+2025-01-13,Kilogramo,Michoacán,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,21.0,25.0,23.0,,Alpha,Aguascalientes,False
+2025-01-14,Kilogramo,México,Aguascalientes: Centro Comercial Agropecuario de Aguascalientes,18.0,20.0,19.0,,Alpha,Aguascalientes,False
+2025-01-02,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",17.0,20.0,18.0,,Galeana,Nuevo León,False
+2025-01-03,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",18.0,20.0,18.0,,Galeana,Nuevo León,False
+2025-01-06,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",18.0,20.0,18.0,,Galeana,Nuevo León,False
+2025-01-07,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",18.0,21.0,19.0,,Galeana,Nuevo León,False
+2025-01-08,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",19.0,21.0,19.0,,Galeana,Nuevo León,False
+2025-01-09,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",18.0,21.0,19.0,,Galeana,Nuevo León,False
+2025-01-10,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",18.0,21.0,19.0,,Galeana,Nuevo León,False
+2025-01-13,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",19.0,20.0,20.0,,Galeana,Nuevo León,False
+2025-01-14,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",18.0,22.0,19.0,,Galeana,Nuevo León,False
+2025-01-15,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",18.0,20.0,19.0,,Galeana,Nuevo León,False
+2025-01-16,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",18.0,22.0,19.0,,Galeana,Nuevo León,False
+2025-01-17,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",18.0,22.0,19.0,,Galeana,Nuevo León,False
+2025-01-20,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",18.0,22.0,20.0,,Galeana,Nuevo León,False
+2025-01-21,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",15.0,19.0,18.0,,Galeana,Nuevo León,False
+2025-01-22,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",15.0,19.0,18.0,,Galeana,Nuevo León,False
+2025-01-23,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",15.0,19.0,18.0,,Galeana,Nuevo León,False
+2025-01-24,Kilogramo,Puebla,"Nuevo León: Mercado de Abasto ""Estrella"" de San Nicolás de los Garza",15.0,19.0,18.0,,Galeana,Nuevo León,False
+2025-01-02,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-03,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-06,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-07,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-08,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-09,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-10,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-13,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-14,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-15,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-16,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-17,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-20,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-21,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-22,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-23,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-24,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,12.0,15.0,15.0,,Gema,Veracruz,False
+2025-01-02,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",12.73,12.73,12.73,,Rouset,Baja California,True
+2025-01-03,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",12.73,12.73,12.73,,Rouset,Baja California,True
+2025-01-06,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",12.73,12.73,12.73,,Rouset,Baja California,True
+2025-01-07,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",12.73,12.73,12.73,,Rouset,Baja California,True
+2025-01-08,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",12.27,12.27,12.27,,Rouset,Baja California,True
+2025-01-09,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",12.27,12.27,12.27,,Rouset,Baja California,True
+2025-01-10,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",12.27,12.27,12.27,,Rouset,Baja California,True
+2025-01-13,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",11.82,11.82,11.82,,Rouset,Baja California,True
+2025-01-14,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",11.82,11.82,11.82,,Rouset,Baja California,True
+2025-01-15,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",11.82,11.82,11.82,,Rouset,Baja California,True
+2025-01-16,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",11.82,11.82,11.82,,Rouset,Baja California,True
+2025-01-17,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",11.82,11.82,11.82,,Rouset,Baja California,True
+2025-01-20,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",11.82,11.82,11.82,,Rouset,Baja California,True
+2025-01-21,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",11.36,11.36,11.36,,Rouset,Baja California,True
+2025-01-22,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",11.36,11.36,11.36,,Rouset,Baja California,True
+2025-01-23,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",11.36,11.36,11.36,,Rouset,Baja California,True
+2025-01-24,Arpilla de 22 kg.,Importación,"Baja California : Central de Abasto INDIA, Tijuana",11.36,11.36,11.36,,Rouset,Baja California,True
+2025-01-02,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,23.0,25.0,25.0,,San Jose,Veracruz,False
+2025-01-03,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,23.0,25.0,25.0,,San Jose,Veracruz,False
+2025-01-06,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,20.0,22.0,22.0,,San Jose,Veracruz,False
+2025-01-07,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,20.0,22.0,22.0,,San Jose,Veracruz,False
+2025-01-08,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,20.0,22.0,22.0,,San Jose,Veracruz,False
+2025-01-09,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,20.0,22.0,22.0,,San Jose,Veracruz,False
+2025-01-10,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,20.0,22.0,22.0,,San Jose,Veracruz,False
+2025-01-13,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,20.0,22.0,22.0,,San Jose,Veracruz,False
+2025-01-14,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,20.0,22.0,22.0,,San Jose,Veracruz,False
+2025-01-15,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,20.0,22.0,22.0,,San Jose,Veracruz,False
+2025-01-16,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,20.0,22.0,22.0,,San Jose,Veracruz,False
+2025-01-17,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,20.0,22.0,22.0,,San Jose,Veracruz,False
+2025-01-20,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,20.0,22.0,22.0,,San Jose,Veracruz,False
+2025-01-21,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,20.0,22.0,22.0,,San Jose,Veracruz,False
+2025-01-22,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,20.0,22.0,22.0,,San Jose,Veracruz,False
+2025-01-23,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,20.0,22.0,22.0,,San Jose,Veracruz,False
+2025-01-24,Caja de 24 kg.,Veracruz,Veracruz: Central de Abasto de Jalapa,20.0,22.0,22.0,,San Jose,Veracruz,False
