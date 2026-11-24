@@ -55,11 +55,12 @@ Muestra **real** del índice de inversión, generada en Databricks por el notebo
 (`src/ingestion/muestra_indice.py`):
 
 - `denue/<versión>/muestra_denue_<versión>.zip`: los establecimientos del sector 72 de tres
-  metrópolis, en el formato original de cada versión (2015: encabezados largos y UTF-8;
+  metrópolis (Los Cabos, Guanajuato y Tecomán: 3,459 / 4,773 / 4,634 / 6,172 filas en
+  2015, 2019, 2022 y 2026; ~0.5 MB), en el formato original de cada versión (2015: encabezados largos y UTF-8;
   2019 en adelante: encabezados cortos, Latin-1, CSV en `conjunto_de_datos/`). Solo trae las
   columnas que usa el pipeline.
 - `comtrade/<YYYYMM>.json`: los 132 meses de importaciones (HS 200410), solo con los campos
-  que usamos.
+  que usamos (~0.5 MB).
 
 `python main.py --muestra` copia esta carpeta y `conapo/` a `data/raw/` y corre todo sin
 internet. Con tan pocas metrópolis las reglas de volumen fallan (es lo esperado) y el modelo
