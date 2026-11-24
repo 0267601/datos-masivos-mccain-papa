@@ -266,10 +266,15 @@ Pasos:
 3. Para el índice de inversión: `notebooks/04_indice_databricks.ipynb`, **Run all**. Descarga
    el DENUE al Volume, calcula el índice, muestra las tres gráficas y registra las tablas
    `indice_inversion`, `importaciones_anuales`, `serie_metropolis` y demás.
-4. Para el modelo y el heatmap: `notebooks/05_modelo_potencial_databricks.ipynb`, **Run all**.
-   Corre el pipeline completo con `ejecutar_pipeline`, muestra el heatmap interactivo y
-   registra `potencial_metropolis`, `panel_municipios` y `denue_rechazos`. Se puede programar
-   como **Job**: sus widgets son los parámetros.
+4. Para el modelo: `notebooks/05_modelo_potencial_databricks.ipynb`, **Run all**. Corre el
+   pipeline completo con `ejecutar_pipeline`, registra `potencial_metropolis`,
+   `panel_municipios` y `denue_rechazos` y arma `reports/entrega_final.zip`. Se puede
+   programar como **Job**: sus widgets son los parámetros.
+
+**Entregable aparte: heatmap interactivo.** `reports/figures/mapa_potencial.html` no se
+muestra en el notebook; es un archivo propio que se abre en cualquier navegador: mapa de
+México con todas las metrópolis, heatmap por percentil y, al hacer clic en una metrópoli, sus
+números e insights. Lo genera el pipeline y viaja también en la raíz de `entrega_final.zip`.
 
 El paso a paso, qué hacer si Databricks no alcanza los portales del gobierno y cómo consultar
 las tablas está en [`docs/databricks.md`](docs/databricks.md).
@@ -332,7 +337,7 @@ Resultados, top 10 por potencial incremental e importancia de variables en
 | `01_exploration.ipynb` | `entregable_1.ipynb` (exploración del E1: dimensiones, tipos, faltantes, duplicados) |
 | `02_cleaning.ipynb` | `02_cleaning.ipynb` (pipeline paso a paso y planes de Spark) |
 | `03_analysis.ipynb` | `04_indice_databricks.ipynb` (índice de inversión y competencia) |
-| `04_results.ipynb` | `05_modelo_potencial_databricks.ipynb` (modelo, potencial y heatmap) y `04_indice_databricks_ejecutado.ipynb` (salidas reales) |
+| `04_results.ipynb` | `05_modelo_potencial_databricks.ipynb` (modelo y potencial; el heatmap es un HTML aparte) y `04_indice_databricks_ejecutado.ipynb` (salidas reales) |
 | — | `03_databricks.ipynb` (pipeline del E2 en Databricks) |
 
 ## Estructura del repositorio
@@ -372,7 +377,7 @@ datos-masivos-mccain-papa/
 │   ├── 03_databricks.ipynb        entregable 2 en Databricks: data lake y tablas Delta
 │   ├── 04_indice_databricks.ipynb índice de inversión en Databricks, con gráficas
 │   ├── 04_indice_databricks_ejecutado.ipynb   la corrida real, con sus salidas
-│   └── 05_modelo_potencial_databricks.ipynb   pipeline completo, modelo y heatmap
+│   └── 05_modelo_potencial_databricks.ipynb   pipeline completo y modelo
 ├── src/
 │   ├── ingestion/                 siap, sniim, denue y comtrade extractors, download_data, muestra, muestra_indice
 │   ├── processing/                siap, sniim, canalizacion, denue, metropolis, comtrade, build_dataset, benchmark

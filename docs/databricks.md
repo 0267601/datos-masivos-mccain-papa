@@ -123,16 +123,16 @@ Tablas que registra en `workspace.mccain_papa`: `indice_inversion`, `serie_metro
 `cadenas_metropolis`, `metropolis`, `importaciones`, `importaciones_anuales` y
 `denue_establecimientos`.
 
-## Modelo de potencial y heatmap (`05_modelo_potencial_databricks.ipynb`)
+## Modelo de potencial (`05_modelo_potencial_databricks.ipynb`)
 
 1. En el Git folder: **Pull**.
 2. Abrir `notebooks/05_modelo_potencial_databricks.ipynb`, **Serverless** y **Run all**
    (unos 5 minutos). Corre el pipeline completo con `ejecutar_pipeline`, entrena el modelo,
-   muestra el heatmap interactivo y registra `potencial_metropolis`, `panel_municipios` y
+   genera el heatmap como archivo aparte y registra `potencial_metropolis`, `panel_municipios` y
    `denue_rechazos` como tablas Delta.
 3. Descargar **Catalog → workspace → mccain_papa → datalake → reports → entrega_final.zip →
-   Download**. Trae las tablas, las gráficas, el heatmap y la muestra real para
-   `data/sample/indice/`.
+   Download**. Trae las tablas, las gráficas, el heatmap interactivo
+   (`mapa_potencial.html`, entregable aparte) y la muestra real para `data/sample/indice/`.
 
 ### Como Job
 

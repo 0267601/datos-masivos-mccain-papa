@@ -1,12 +1,12 @@
 """
 Heatmap interactivo del potencial de mercado por metropoli.
 
-Generamos un solo archivo HTML, sin dependencias externas: los datos van
-dentro del archivo, asi se abre en cualquier navegador y en Databricks con
-displayHTML. Tiene tres piezas:
+Es un entregable aparte del notebook: generamos un solo archivo HTML, sin
+dependencias externas (los datos van dentro), que se abre en cualquier
+navegador. Tiene tres piezas:
 
-    mapa       un punto por metropoli en su latitud/longitud; tamano = mercado
-               proyectado, color = la metrica que elijas
+    mapa       silueta de Mexico y un punto por metropoli en su latitud/longitud;
+               tamano = mercado proyectado, color = la metrica que elijas
     heatmap    una fila por metropoli y una columna por metrica, coloreada por
                percentil dentro de la columna
     detalle    al hacer clic en un punto o una fila: numeros e insights
@@ -22,6 +22,10 @@ import json
 
 import numpy as np
 import pandas as pd
+
+
+# Contorno de Mexico (Natural Earth 1:110m, dominio publico), en [lon, lat].
+CONTORNO_MEXICO = [[-117.13,32.54],[-115.99,32.61],[-114.72,32.72],[-114.81,32.53],[-113.3,32.04],[-111.02,31.33],[-109.04,31.34],[-108.24,31.34],[-108.24,31.75],[-106.51,31.75],[-106.14,31.4],[-105.63,31.08],[-105.04,30.64],[-104.71,30.12],[-104.46,29.57],[-103.94,29.27],[-103.11,28.97],[-102.48,29.76],[-101.66,29.78],[-100.96,29.38],[-100.46,28.7],[-100.11,28.11],[-99.52,27.54],[-99.3,26.84],[-99.02,26.37],[-98.24,26.06],[-97.53,25.84],[-97.14,25.87],[-97.53,24.99],[-97.7,24.27],[-97.78,22.93],[-97.87,22.44],[-97.7,21.9],[-97.39,21.41],[-97.19,20.64],[-96.53,19.89],[-96.29,19.32],[-95.9,18.83],[-94.84,18.56],[-94.43,18.14],[-93.55,18.42],[-92.79,18.52],[-92.04,18.7],[-91.41,18.88],[-90.77,19.28],[-90.53,19.87],[-90.45,20.71],[-90.28,21.0],[-89.6,21.26],[-88.54,21.49],[-87.66,21.46],[-87.05,21.54],[-86.81,21.33],[-86.85,20.85],[-87.38,20.26],[-87.62,19.65],[-87.44,19.47],[-87.59,19.04],[-87.84,18.26],[-88.09,18.52],[-88.3,18.5],[-88.49,18.49],[-88.85,17.88],[-89.03,18.0],[-89.15,17.96],[-89.14,17.81],[-90.07,17.82],[-91.0,17.82],[-91.0,17.25],[-91.45,17.25],[-91.08,16.92],[-90.71,16.69],[-90.6,16.47],[-90.44,16.41],[-90.46,16.07],[-91.75,16.07],[-92.23,15.25],[-92.09,15.06],[-92.2,14.83],[-92.23,14.54],[-93.36,15.62],[-93.88,15.94],[-94.69,16.2],[-95.25,16.13],[-96.05,15.75],[-96.56,15.65],[-97.26,15.92],[-98.01,16.11],[-98.95,16.57],[-99.7,16.71],[-100.83,17.17],[-101.67,17.65],[-101.92,17.92],[-102.48,17.98],[-103.5,18.29],[-103.92,18.75],[-104.99,19.32],[-105.49,19.95],[-105.73,20.43],[-105.4,20.53],[-105.5,20.82],[-105.27,21.08],[-105.27,21.42],[-105.6,21.87],[-105.69,22.27],[-106.03,22.77],[-106.91,23.77],[-107.92,24.55],[-108.4,25.17],[-109.26,25.58],[-109.44,25.82],[-109.29,26.44],[-109.8,26.68],[-110.39,27.16],[-110.64,27.86],[-111.18,27.94],[-111.76,28.47],[-112.23,28.95],[-112.27,29.27],[-112.81,30.02],[-113.16,30.79],[-113.15,31.17],[-113.87,31.57],[-114.21,31.52],[-114.78,31.8],[-114.94,31.39],[-114.77,30.91],[-114.67,30.16],[-114.33,29.75],[-113.59,29.06],[-113.42,28.83],[-113.27,28.75],[-113.14,28.41],[-112.96,28.43],[-112.76,27.78],[-112.46,27.53],[-112.24,27.17],[-111.62,26.66],[-111.28,25.73],[-110.99,25.29],[-110.71,24.83],[-110.66,24.3],[-110.17,24.27],[-109.77,23.81],[-109.41,23.36],[-109.43,23.19],[-109.85,22.82],[-110.03,22.82],[-110.3,23.43],[-110.95,24.0],[-111.67,24.48],[-112.18,24.74],[-112.15,25.47],[-112.3,26.01],[-112.78,26.32],[-113.46,26.77],[-113.6,26.64],[-113.85,26.9],[-114.47,27.14],[-115.06,27.72],[-114.98,27.8],[-114.57,27.74],[-114.2,28.12],[-114.16,28.57],[-114.93,29.28],[-115.52,29.56],[-115.89,30.18],[-116.26,30.84],[-116.72,31.64],[-117.13,32.54]]
 
 
 def millones(valor):
@@ -122,7 +126,8 @@ def generar(tabla, metricas, mercado, importancia, ruta=None):
         "importancia": [{"variable": k, "valor": round(float(v), 3)}
                         for k, v in importancia.head(5).items()],
     }
-    datos = json.dumps({"metros": preparar_datos(tabla, mercado), "contexto": contexto},
+    datos = json.dumps({"metros": preparar_datos(tabla, mercado), "contexto": contexto,
+                        "contorno": CONTORNO_MEXICO},
                        ensure_ascii=False).replace("</", "<\\/")
     html = PLANTILLA.replace("/*__DATOS__*/null", datos)
     if ruta is not None:
@@ -140,19 +145,19 @@ PLANTILLA = r"""<!doctype html>
 :root{
   --bg:#fcfcfb; --surface:#ffffff; --ink:#0b0b0b; --ink2:#52514e; --muted:#8a8984;
   --grid:#e6e5e1; --line:#d9d8d4; --accent:#2a78d6; --sel:#eb6834;
-  --r0:#eef4fc; --r1:#1a4f94;
+  --r0:#eef4fc; --r1:#1a4f94; --tierra:#f1f0ec;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#111214; --surface:#1a1b1e; --ink:#f2f2f0; --ink2:#b3b2ad; --muted:#85847f;
     --grid:#2a2b2f; --line:#34353a; --accent:#5b9be6; --sel:#f08a5d;
-    --r0:#1c2633; --r1:#7fb3f0;
+    --r0:#1c2633; --r1:#7fb3f0; --tierra:#222327;
   }
 }
 :root[data-theme="dark"]{
   --bg:#111214; --surface:#1a1b1e; --ink:#f2f2f0; --ink2:#b3b2ad; --muted:#85847f;
   --grid:#2a2b2f; --line:#34353a; --accent:#5b9be6; --sel:#f08a5d;
-  --r0:#1c2633; --r1:#7fb3f0;
+  --r0:#1c2633; --r1:#7fb3f0; --tierra:#222327;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);
@@ -210,7 +215,7 @@ td.nombre{font-weight:500;color:var(--ink)}
       <option value="indice">Color: índice de inversión</option>
     </select>
     <select id="top" aria-label="Metrópolis en la tabla">
-      <option value="20">Top 20</option><option value="40">Top 40</option><option value="999">Todas</option>
+      <option value="999" selected>Todas</option><option value="20">Top 20</option><option value="40">Top 40</option>
     </select>
     <button class="boton" id="tema" type="button">Tema</button>
   </div>
@@ -297,6 +302,7 @@ function encabezado() {
     `Potencial = restaurantes objetivo × kg importados por restaurante × US$/kg. ` +
     `Supone que el consumo por restaurante y el precio se mantienen; no incluye márgenes, costos ni papa nacional. ` +
     `Validación temporal: entrenado con 2015→2019 y 2019→2022, probado con ${C.periodo_prueba}. ` +
+    `Contorno: Natural Earth. ` +
     `Spearman entre metrópolis (prueba): XGBoost ${C.spearman.XGBoost ?? "—"}, persistencia ${C.spearman.Persistencia ?? "—"}.`;
 }
 
@@ -309,16 +315,17 @@ function dibujarMapa() {
   const svg = document.getElementById("mapa");
   const metrica = document.getElementById("metrica").value;
   const pts = D.metros.filter(m => m.lat != null && m.lon != null);
-  const W = 640, H = 420, pad = 28;
-  const lon0 = -118, lon1 = -86, lat0 = 14, lat1 = 33;
+  const W = 640, H = 420, pad = 14;
+  const lon0 = -117.5, lon1 = -86.5, lat0 = 14.3, lat1 = 33;
   const x = lon => pad + (lon - lon0) / (lon1 - lon0) * (W - 2 * pad);
   const y = lat => H - pad - (lat - lat0) / (lat1 - lat0) * (H - 2 * pad);
   const maxPot = Math.max(...pts.map(m => m.pot_proy || 0), 1);
   const r = m => 3 + 22 * Math.sqrt((m.pot_proy || 0) / maxPot);
   const visibles = new Set(filtrados().map(m => m.clave));
   let g = "";
-  for (let lat = 15; lat <= 32; lat += 5) g += `<line x1="${pad}" x2="${W - pad}" y1="${y(lat)}" y2="${y(lat)}" stroke="var(--grid)"/><text x="${pad - 4}" y="${y(lat) + 4}" text-anchor="end">${lat}°</text>`;
-  for (let lon = -115; lon <= -90; lon += 5) g += `<line y1="${pad}" y2="${H - pad}" x1="${x(lon)}" x2="${x(lon)}" stroke="var(--grid)"/><text x="${x(lon)}" y="${H - pad + 16}" text-anchor="middle">${lon}°</text>`;
+  if (D.contorno && D.contorno.length) {
+    g += `<path d="M${D.contorno.map(([lo, la]) => x(lo).toFixed(1) + "," + y(la).toFixed(1)).join("L")}Z" fill="var(--tierra)" stroke="var(--line)" stroke-width="1"/>`;
+  }
   const ordenados = [...pts].sort((a, b) => (b.pot_proy || 0) - (a.pot_proy || 0));
   const p = pct[metrica];
   for (const m of ordenados) {
