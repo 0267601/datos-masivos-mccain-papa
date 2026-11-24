@@ -142,3 +142,97 @@ DENUE (7 zip)        CONAPO (2 CSV)        UN Comtrade (132 JSON)
                      reports/tables/indice_inversion.csv
                      reports/figures/*.png
 ```
+
+## Arquitectura final (examen final)
+
+```
+ FUENTES ABIERTAS                         ADQUISICIÓN                 CAPAS (Volume en Databricks / data/ en local)
+ ─────────────────                        ───────────                 ──────────────────────────────────────────────
+ SIAP · SNIIM (E1)                                                     raw/        archivos tal como llegan (zip, CSV, HTML, JSON)
+ DENUE 2015·2019·2022·2026  ──►  download_data  (requests, caché,  ──►      │      manifiesto con sha256 por archivo
+ CONAPO 2020                     reintentos, firma PK, respaldo)           ▼
+ UN Comtrade HS 200410                                                 interim/    BRONZE tabular: un esquema por fuente, todo texto
+                                                                           │       (unionByName contra el schema drift)
+                                  build_dataset (PySpark)                  ▼
+                                  construir_silver: tipos, llaves,     processed/  SILVER: denue_establecimientos, siap, sniim,
+                                  motivos_rechazo, huella, conciliación            metropolis, importaciones (+ denue_rechazos)
+                                                                           │
+                                  validate_dataset (69+ reglas)  ── FALLA → se detiene, no hay Gold
+                                                                           ▼
+                                  indice_inversion (broadcast, window) GOLD: indice_inversion, serie_metropolis, cadenas_metropolis
+                                  modelo_potencial (XGBoost)            GOLD: panel_municipios, potencial_metropolis
+                                                                           │
+                                                                           ▼
+                                                                       reports/    tablas CSV, gráficas PNG, mapa_potencial.html
+                                                                       Unity Catalog: tablas Delta en workspace.mccain_papa
+```
+
+### Las capas, con el vocabulario de la clase
+
+| Capa de la clase | Pregunta | Nuestra carpeta | Una fila es |
+|---|---|---|---|
+| Bronze | ¿Qué recibimos? | `raw/` (archivos) e `interim/` (tabular, texto) | Un registro tal como lo publicó la fuente |
+| Silver | ¿Qué podemos usar y bajo qué reglas? | `processed/` | Un establecimiento, cotización o mes-país validado y sin duplicados |
+| Gold | ¿Qué necesita el usuario? | `processed/` (tablas de análisis) y `reports/` | Una metrópoli (índice, potencial) o un municipio-versión (panel) |
+
+Conciliación del DENUE (`construir_silver`): **interim = silver + rechazos + duplicados**. Los
+rechazos se guardan con su `motivos_rechazo` (`id_invalido`, `municipio_invalido`,
+`version_sin_fecha`) y los duplicados se resuelven con una huella sha256 de las columnas, para
+que la elección no dependa del orden de lectura.
+
+### Orquestación
+
+`python main.py` (o el notebook 05 en Databricks) llama a `ejecutar_pipeline`, con las mismas
+piezas de la clase de automatización:
+
+| Función | Qué hace |
+|---|---|
+| `leer_configuracion` | Parámetros explícitos: `--fuente`, `--sin-descarga`, `--muestra` (widgets en Databricks) |
+| `ejecutar_etapa` | Corre una etapa, mide su duración y registra `OK`, `OK_CON_FALLAS` o `ERROR` en JSON |
+| `ejecutar_pipeline` | Encadena 01 adquisición → 02 Silver → 03 validación → 04 Gold → 05 modelo; si una falla, las siguientes no corren |
+
+Cada corrida queda en `reports/tables/registro_pipeline.json` con su `run_id`. Repetir la
+corrida con los mismos insumos da el mismo resultado: las escrituras son `overwrite` y la
+descarga usa la caché. En Databricks el notebook 05 se puede programar como **Job** (ver
+`docs/databricks.md`).
+
+### El modelo dentro de la arquitectura
+
+```
+denue_establecimientos ─┐
+metropolis_municipios ──┼─ construir_panel (Spark) ─► panel_municipios (Gold, 421 municipios × 4 versiones)
+                        │                                   │ toPandas: ya es chico
+metropolis ─────────────┤                          construir_ejemplos (variables en t, crecimiento t→t+1)
+                        │                                   │
+                        │                    evaluar_modelo: entrena 2015→2019 y 2019→2022, prueba 2022→2026
+                        │                                   │ contra persistencia y promedio
+importaciones_anuales ──┴─ parametros_mercado ─► proyectar_potencial (2026→2030, US$) ─► validar_potencial
+                                                            │
+                                         potencial_metropolis (Gold) · mapa_potencial.html
+```
+
+Spark hace todo lo que toca los 2.77 millones de establecimientos; el modelo trabaja sobre el
+panel agregado (unos 1,700 renglones), donde pandas y XGBoost en un solo nodo bastan.
+
+### Colaboración
+
+```
+issue (#N) ──► rama N-descripcion ──► commits (autor: Diego Zamora,
+                                       Co-authored-by: Diego Pérez)
+                                          │
+                                          ▼
+                                pull request "Closes #N" ──► revisión y aprobación de
+                                                             Diego Pérez ──► merge a main
+                                                                                 │
+                                                       Databricks: Git folder ──► Pull ──► Run all
+```
+
+Detalle de la convención en `CONTRIBUTING.md`.
+
+### Qué cambiaría con más volumen
+
+| Punto | Hoy | Con más volumen |
+|---|---|---|
+| Modelo | XGBoost en un nodo sobre ~1,700 renglones | `xgboost.spark` o MLflow en Databricks si el panel fuera por colonia o AGEB |
+| Panel | Se recalcula completo en cada corrida | `MERGE` incremental por versión del DENUE (clase de cargas incrementales) |
+| Heatmap | Un HTML con los datos adentro (~50 KB) | Un dashboard de Databricks SQL sobre `potencial_metropolis` |

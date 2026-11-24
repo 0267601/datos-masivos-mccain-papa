@@ -146,3 +146,37 @@ Origen: UN Comtrade, HS 200410. Llave (`periodo`, `pais_codigo`).
 
 `serie_metropolis` trae los conteos por metrópoli y versión (las cuatro), y
 `cadenas_metropolis` las sucursales por cadena.
+
+---
+
+# Tablas del modelo de potencial
+
+## `panel_municipios` — una fila por municipio metropolitano y versión del DENUE
+
+| Variable | Tipo | Descripción |
+|---|---|---|
+| cve_mun5, clave_metropoli | string | Municipio y su metrópoli |
+| version, fecha_corte | string, date | Versión del DENUE |
+| objetivo | long | Restaurantes objetivo (comida rápida + a la carta) |
+| comida_rapida, cadenas, hoteles, bares | long | Conteos por categoría; `cadenas` = sucursales de cadena entre los objetivo |
+| personal_promedio | double | Límite inferior promedio del estrato de personal de los restaurantes objetivo |
+| sector_72 | long | Todos los establecimientos del sector 72 |
+
+## `potencial_metropolis` — una fila por metrópoli
+
+| Variable | Tipo | Descripción | Unidad |
+|---|---|---|---|
+| ranking_potencial | int | Lugar por potencial incremental (1 = mayor) | — |
+| restaurantes_hoy, restaurantes_proyectados | double | Restaurantes objetivo en la última versión y al año de proyección | — |
+| crecimiento_esperado | double | Crecimiento anual compuesto proyectado por XGBoost | % |
+| potencial_hoy_usd, potencial_proyectado_usd | double | Restaurantes × kg por restaurante × US$/kg | US$ por año |
+| potencial_incremental_usd | double | Proyectado − hoy: el mercado nuevo | US$ por año |
+| anio_proyeccion | int | Año de la proyección (fecha de corte + 4 años) | — |
+| impulsores | string (JSON) | Las dos variables que más mueven la predicción, con su aporte | pp |
+| latitud, longitud | double | Centroide de los establecimientos de la metrópoli | grados |
+| ranking, indice, … | | Columnas del índice de inversión, para compararlos | |
+
+## `denue_rechazos` — establecimientos que no pasaron las reglas de Silver
+
+Mismas columnas de `interim/denue` más `motivos_rechazo` (`id_invalido`,
+`municipio_invalido`, `version_sin_fecha`, separados por `;` si son varios).

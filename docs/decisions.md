@@ -347,3 +347,82 @@ Mantenerla y advertirlo; usar 2022 como año base.
 ## Consecuencias
 `denue.categorias_objetivo` queda en comida rápida y a la carta. La categoría se sigue
 calculando y queda en `serie_metropolis` para quien la quiera revisar.
+
+---
+
+## Decisión
+Agregar un modelo XGBoost que proyecte el crecimiento de restaurantes objetivo por municipio
+de 2026 a 2030.
+
+## Razón
+El índice dice dónde está la oportunidad hoy; para decidir una inversión de varios años hace
+falta saber dónde va a crecer. El DENUE trae cuatro versiones (2015, 2019, 2022, 2026), así
+que podemos aprender de tres periodos de crecimiento reales. XGBoost maneja relaciones no
+lineales (un municipio turístico chico no crece como uno industrial grande), tolera valores
+faltantes (el periodo 2015→2019 no tiene crecimiento previo) y da la contribución de cada
+variable a cada predicción.
+
+## Alternativas consideradas
+Regresión lineal (no captura interacciones), repetir el crecimiento anterior (persistencia) o
+el promedio. Las dos últimas las conservamos como referencias: el modelo solo vale si les gana
+en un periodo que no vio.
+
+## Consecuencias
+Validación temporal: entrenamos con 2015→2019 y 2019→2022 y probamos con 2022→2026. El
+periodo de prueba incluye la recuperación pospandemia, distinta a los anteriores; por eso
+reportamos el error contra las referencias y no lo escondemos. Parámetros en
+`config/config.example.yaml` (`modelo`).
+
+---
+
+## Decisión
+Medir la "rentabilidad" como potencial de mercado en dólares, no como utilidad.
+
+## Razón
+No tenemos ventas, precios de venta, márgenes ni costos de McCain, y no usamos datos internos
+en un repositorio público. Lo que sí podemos medir con datos abiertos es el tamaño del
+mercado: restaurantes objetivo × kg de papa congelada importada por restaurante × US$/kg
+(UN Comtrade, último año completo).
+
+## Alternativas consideradas
+Un índice de rentabilidad con márgenes supuestos (inventaría números); quedarnos solo con el
+crecimiento predicho (no dice cuánto vale).
+
+## Consecuencias
+Supone que el consumo por restaurante y el precio por kilo se mantienen, y que todo el
+mercado es papa importada. El potencial ordena metrópolis por tamaño de oportunidad; para
+hablar de rentabilidad hace falta cruzarlo con datos internos fuera del repositorio.
+
+---
+
+## Decisión
+Entrenar el modelo por municipio, no por metrópoli, y usar pandas para esa parte.
+
+## Razón
+Con 92 metrópolis y tres periodos habría 276 ejemplos; por municipio son unos 1,200, y luego
+sumamos los restaurantes proyectados a su metrópoli. El panel ya agregado cabe de sobra en
+memoria: Spark lo construye a partir de 2.77 millones de establecimientos y de ahí en
+adelante un solo nodo basta.
+
+## Alternativas consideradas
+`xgboost.spark` (distribuido): innecesario para 1,700 renglones y más lento por el costo de
+arranque.
+
+## Consecuencias
+Municipios con menos de 10 restaurantes objetivo no se usan como etiqueta (su tasa es ruido)
+pero sí se proyectan. Pesamos cada ejemplo por la raíz del número de restaurantes.
+
+---
+
+## Decisión
+Separar rechazos y duplicados del DENUE en lugar de solo descartarlos.
+
+## Razón
+Lo vimos en la clase de capas Bronze/Silver/Gold: limpiar no siempre significa eliminar, y
+una tabla de rechazos permite auditar qué quedó fuera. Con la huella sha256 la elección entre
+duplicados es reproducible.
+
+## Consecuencias
+Nueva tabla `denue_rechazos` con `motivos_rechazo`, regla de conciliación
+(interim = silver + rechazos + duplicados) y regla de validación sobre la proporción de
+rechazos.
