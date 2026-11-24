@@ -34,6 +34,7 @@ Escribimos:
     data/processed/potencial_metropolis/  una fila por metropoli
     reports/tables/modelo_metricas.csv    XGBoost contra las referencias
     reports/tables/potencial_metropolis.csv
+    reports/tables/modelo_importancia.csv  ganancia de cada variable
     reports/figures/importancia_variables.png
     reports/figures/mapa_potencial.html   heatmap interactivo
 
@@ -63,6 +64,7 @@ SALIDAS = {
     "metricas": TABLAS / "modelo_metricas.csv",
     "tabla": TABLAS / "potencial_metropolis.csv",
     "importancia": FIGURAS / "importancia_variables.png",
+    "importancia_tabla": TABLAS / "modelo_importancia.csv",
     "mapa": FIGURAS / "mapa_potencial.html",
 }
 
@@ -448,6 +450,8 @@ def main():
 
     from src.analysis import graficas, mapa_potencial
     importancia = importancia_variables(modelo)
+    importancia.rename("ganancia").rename_axis("variable").to_csv(
+        SALIDAS["importancia_tabla"], encoding="utf-8")
     graficas.importancia_variables(importancia).savefig(
         SALIDAS["importancia"], dpi=150, facecolor=graficas.FONDO)
     mapa_potencial.generar(potencial, tabla_metricas, mercado, importancia, SALIDAS["mapa"])

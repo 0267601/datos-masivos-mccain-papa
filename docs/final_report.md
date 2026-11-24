@@ -5,22 +5,32 @@ Diego Zamora González (0267601) · Diego Pérez Palafox (0269250) · Datos Masi
 
 ## Resumen ejecutivo
 
-La oportunidad de McCain en México está en **ciudades medianas turísticas o industriales**, no
-en las tres grandes metrópolis. Con 2.77 millones de establecimientos del DENUE (cuatro
+Con 2.77 millones de establecimientos del DENUE (cuatro
 versiones, 2015–2026), el catálogo de 92 zonas metropolitanas de CONAPO y diez años de
 importaciones de UN Comtrade, construimos:
 
-1. Un **índice de inversión** de 0 a 100 por metrópoli. Lo encabezan Los Cabos (82.7),
-   Acapulco (73.4) y Guanajuato (73.1). El Valle de México, Monterrey y Guadalajara no entran
-   al top 15.
+1. Un **índice de inversión** de 0 a 100 por metrópoli, que mide la oportunidad de hoy. Lo
+   encabezan Los Cabos (82.7), Acapulco (73.4) y Guanajuato (73.1). El Valle de México,
+   Monterrey y Guadalajara no entran al top 15.
 2. Un **modelo XGBoost** que proyecta el crecimiento de restaurantes de 2026 a 2030 y lo
-   traduce a **potencial de mercado en US$**, con un heatmap interactivo que explica cada
-   metrópoli.
+   traduce a **potencial de mercado en US$**. Le gana a las dos referencias simples (error
+   11% menor que repetir el crecimiento anterior) y estima **US$32 M de mercado nuevo** en
+   las 92 metrópolis al 2030 (de US$313 M a US$345 M al año).
 3. Una lectura de la **competencia**: la papa congelada importada se triplicó desde 2019
    (US$148 M → US$455 M en 2025) y Canadá pasó de 10% a 39% del valor importado.
 
-Todo corre con un comando (`python main.py`) y en Databricks, con el data lake en Unity
-Catalog, 69 reglas de validación (66 OK, 3 AVISO, 0 FALLA) y 68 pruebas automáticas.
+**Respuesta corta.** En dólares, el mercado nuevo está donde ya hay más restaurantes: Ciudad
+de México, Guadalajara y Monterrey juntan 29% del crecimiento. Para crecer donde la
+oportunidad de hoy y el crecimiento esperado coinciden, las apuestas son **ciudades medianas
+industriales y capitales regionales**: Querétaro, La Laguna, Mérida, Saltillo y
+Puebla-Tlaxcala están en el top 20 de las dos mediciones. Las turísticas que encabezan el
+índice (Los Cabos, Acapulco) ya tienen muchos restaurantes por habitante y el modelo espera
+que se frenen.
+
+Todo corre con un comando (`python main.py`, unos 2.5 minutos en Databricks con caché), con
+el data lake en Unity Catalog, 70 reglas de validación (67 OK, 3 AVISO, 0 FALLA) y 68 pruebas
+automáticas. El heatmap interactivo (`reports/figures/mapa_potencial.html`) es un entregable
+aparte: al hacer clic en cualquiera de las 92 metrópolis muestra sus números e insights.
 
 ## Problema
 
@@ -100,7 +110,7 @@ por 100 mil habitantes y número de restaurantes objetivo.
 | raw → interim (DENUE) | 7 zip → 2,774,445 filas; cada versión leída con su codificación y unida con `unionByName` |
 | interim → Silver | 2,774,429 establecimientos; 0 sin llave, 16 duplicados (huella sha256); rechazos en `denue_rechazos` |
 | Gold | `indice_inversion` (92), `serie_metropolis` (368), `panel_municipios`, `potencial_metropolis` |
-| Tiempo | Procesar el DENUE completo: ~50 s en Databricks serverless; pipeline completo con caché: ~5 min |
+| Tiempo | Pipeline completo en Databricks serverless con caché: 2 min 26 s (adquisición 10 s, Silver 72 s, validación 35 s, Gold 17 s, modelo 13 s; `reports/tables/registro_pipeline.json`) |
 
 Técnicas: Parquet particionado por versión (partition pruning comprobado en el plan),
 broadcast join del catálogo de 421 municipios, `percent_rank` con ventana, UDF para el HTML
@@ -108,8 +118,9 @@ del SNIIM, conciliación interim = silver + rechazos + duplicados.
 
 ## Validación
 
-69 reglas en ocho categorías (columnas, tipos, faltantes, duplicados, rangos, temporal,
-entre tablas, volumen): **66 OK, 3 AVISO, 0 FALLA** con los datos reales. Los avisos son una
+70 reglas en ocho categorías (columnas, tipos, faltantes, duplicados, rangos, temporal,
+entre tablas, volumen): **67 OK, 3 AVISO, 0 FALLA** con los datos reales. La regla nueva
+revisa los rechazos del DENUE: 0 establecimientos rechazados y 16 duplicados exactos. Los avisos son una
 cotización del SNIIM de $0.43/kg, dos estados que cotizan sin producir y algún mes-país de
 Comtrade con precio fuera de rango. Antes de publicar el potencial, `validar_potencial`
 comprueba que los totales cuadren. Al revisar los resultados encontramos que *autoservicio*
@@ -136,9 +147,53 @@ nosotros. Detalle en `docs/validation.md`.
 
 ### ¿Dónde crecerá el mercado? Modelo y potencial en US$
 
-*Pendiente de la corrida real del notebook 05 en Databricks: métricas del modelo contra las
-referencias, top 10 por potencial incremental a 2030, importancia de variables y el heatmap
-`reports/figures/mapa_potencial.html`.*
+**¿El modelo sirve?** Probado con 2022→2026, un periodo que no vio (359 municipios; entrenó
+con 691 ejemplos de 2015→2019 y 2019→2022):
+
+| Modelo | MAE municipal (pp) | RMSE (pp) | MAE por metrópoli (pp) | Spearman entre metrópolis |
+|---|---|---|---|---|
+| **XGBoost** | **3.65** | **5.15** | **2.47** | **0.19** |
+| Persistencia (repetir el crecimiento anterior) | 4.10 | 6.31 | 2.63 | 0.05 |
+| Promedio (todos crecen igual) | 3.96 | 5.56 | 2.58 | — |
+
+XGBoost se equivoca 11% menos que la persistencia y 8% menos que el promedio. La mejora es
+real pero modesta, y el orden de las metrópolis lo acierta poco (Spearman 0.19). Por eso
+usamos la proyección como **escenario** para comparar ciudades, no como pronóstico puntual.
+
+**¿Qué mueve el crecimiento?** La variable que más pesa es la **densidad de restaurantes por
+100 mil habitantes** (15% de la ganancia del modelo), y en contra: donde ya hay muchos
+restaurantes por habitante, el modelo espera que el crecimiento se frene (saturación). Le
+siguen el crecimiento del periodo anterior (13%), el crecimiento de población 2010–2020 (13%)
+y los bares por habitante (11%).
+
+**Potencial en US$.** En 2025 México importó 354 millones de kg de papa congelada por
+US$460 M (US$1.30/kg). Repartido entre los 152,142 restaurantes objetivo del país, cada uno
+equivale a unos **2,327 kg al año (≈US$3,000)**. Con eso, el mercado de las 92 metrópolis
+pasa de US$313 M hoy a **US$345 M en 2030: US$32 M de mercado nuevo**.
+
+| # | Metrópoli | Mercado nuevo al 2030 | Mercado 2030 | Crecimiento esperado | Restaurantes hoy | Índice (#) |
+|---|---|---|---|---|---|---|
+| 1 | Ciudad de México | US$5.3 M | US$73.8 M | 1.9% | 22,646 | 52.5 (#36) |
+| 2 | Guadalajara | US$2.3 M | US$20.6 M | 2.9% | 6,076 | 56.3 (#31) |
+| 3 | Monterrey | US$1.8 M | US$20.2 M | 2.3% | 6,101 | 56.9 (#30) |
+| 4 | Puebla-Tlaxcala | US$1.3 M | US$13.5 M | 2.6% | 4,025 | 62.6 (#19) |
+| 5 | Tijuana | US$1.1 M | US$8.5 M | 3.6% | 2,438 | 59.9 (#23) |
+| 6 | Toluca | US$0.8 M | US$8.7 M | 2.5% | 2,592 | 42.3 (#62) |
+| 7 | Mérida | US$0.8 M | US$7.4 M | 3.0% | 2,174 | 66.2 (#11) |
+| 8 | Juárez | US$0.6 M | US$5.5 M | 3.0% | 1,624 | 60.1 (#22) |
+| 9 | Querétaro | US$0.6 M | US$7.3 M | 2.1% | 2,212 | 68.1 (#8) |
+| 10 | La Laguna | US$0.6 M | US$5.6 M | 2.8% | 1,667 | 69.2 (#6) |
+
+**¿Coinciden el índice y el modelo?** Solo en parte. Entre el índice y el crecimiento esperado
+hay correlación de rangos **negativa (−0.30)**: el índice premia a las ciudades que ya
+crecieron y tienen turismo; el modelo espera que justo esas se frenen. Los Cabos pasó de 5.4%
+anual (2019–2026) a 2.4% esperado; Acapulco, Tecomán y Tapachula, a menos de 1%. Diez
+metrópolis están en el top 20 de las dos mediciones: Puebla-Tlaxcala, Mérida, Querétaro,
+La Laguna, Cuernavaca, León, Saltillo, Tuxtla Gutiérrez, Pachuca y Oaxaca.
+
+El heatmap interactivo (`reports/figures/mapa_potencial.html`, entregable aparte) muestra las
+92 metrópolis en el mapa y en la tabla; al hacer clic en una aparecen sus números, su lugar en
+el índice y qué variables movieron su predicción.
 
 ### ¿Contra quién competimos?
 
@@ -154,19 +209,31 @@ referencias, top 10 por potencial incremental a 2030, importancia de variables y
 - El DENUE cuenta establecimientos, no ventas; las cadenas se detectan por nombre (mínimo).
 - El potencial es tamaño de mercado, no utilidad; supone consumo por restaurante y precio
   constantes y que todo el mercado es papa importada.
-- El modelo aprende de tres periodos, uno con la pandemia; la población es del censo 2020.
+- El modelo aprende de tres periodos, uno con la pandemia; la población es del censo 2020. Le
+  gana a las referencias, pero ordena poco a las metrópolis (Spearman 0.19).
+- El consumo por restaurante viene de dividir las importaciones nacionales entre los
+  restaurantes objetivo: es un promedio, no el consumo real de cada ciudad. Como las
+  importaciones crecieron más rápido que los restaurantes, el potencial probablemente se
+  queda corto.
 - La competencia es nacional: Comtrade no separa por ciudad ni por empresa.
 - Pesos iguales en el índice es una decisión, no un hallazgo.
 
 ## Conclusiones
 
-1. **Ciudades medianas primero.** Turísticas (Los Cabos, Acapulco, Guanajuato, Oaxaca) e
-   industriales en expansión (La Laguna, Querétaro, Saltillo, León).
-2. **Para una primera inversión, tamaño y crecimiento juntos:** La Laguna, Querétaro y
-   Acapulco tienen más de 1,400 restaurantes objetivo y crecen.
-3. **El mercado importado crece más rápido que los restaurantes** (se triplicó desde 2019
+1. **El tamaño está en las grandes; el crecimiento relativo, en las medianas.** Ciudad de
+   México, Guadalajara y Monterrey aportan 29% del mercado nuevo en dólares, pero crecen
+   entre 1.9% y 2.9% anual.
+2. **Si McCain tuviera X millones para crecer, los pondría primero donde coinciden el índice
+   y el modelo:** Querétaro, La Laguna, Mérida, Saltillo y Puebla-Tlaxcala. Tienen más de
+   1,000 restaurantes objetivo, están en el top 20 del índice y del mercado nuevo, y el
+   modelo espera que crezcan entre 2.1% y 3.7% anual.
+3. **Las turísticas ya están muy servidas.** Los Cabos, Acapulco y Tapachula encabezan el
+   índice por su crecimiento pasado y su turismo, pero tienen tantos restaurantes por
+   habitante que el modelo espera que se frenen: son para atender bien, no para apostar a
+   crecimiento.
+4. **El mercado importado crece más rápido que los restaurantes** (se triplicó desde 2019
    contra +25% de restaurantes objetivo): cada restaurante usa más papa congelada.
-4. **La competencia cambió:** Canadá ganó participación y es el origen más barato en 2025;
+5. **La competencia cambió:** Canadá ganó participación y es el origen más barato en 2025;
    Bélgica ya tiene 12%.
 
 ## Trabajo futuro

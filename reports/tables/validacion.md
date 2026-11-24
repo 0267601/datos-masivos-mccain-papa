@@ -36,3 +36,37 @@
 | siap | volumen por anio | OK | 0.0 | rango esperado [150, 400]; fuera: ninguno |
 | sniim | volumen minimo | OK | 11010.0 | minimo esperado 1,000 |
 | sniim raw | particiones truncadas o con error | OK | 0.0 | 0 truncadas, 0 con error de descarga |
+| denue | columnas requeridas | OK | 10.0 | 10 columnas presentes |
+| denue | tipos de datos | OK | 10.0 | 10 columnas con el tipo esperado |
+| denue | nulos en nombre_act | OK | 0.0 | 0 de 2,774,429 (max 1%) |
+| denue | nulos en fecha_corte | OK | 0.0 | 0 de 2,774,429 (max 0%) |
+| denue | nulos en latitud | OK | 0.0 | 0 de 2,774,429 (max 5%) |
+| denue | nulos en personal_min | OK | 0.0 | 0 de 2,774,429 (max 5%) |
+| denue | duplicados en la llave | OK | 0.0 | llave ['version', 'id'] |
+| denue | formato de cve_mun5 | OK | 0.0 | filas que no cumplen ^\d{5}$ |
+| denue | rango de latitud | OK | 0.0 | valores fuera de [14.0, 33.0] |
+| denue | rango de longitud | OK | 0.0 | valores fuera de [-119.0, -86.0] |
+| denue | versiones esperadas | OK | 0.0 | presentes ['2015_02', '2019_11', '2022_11', '2026_05']; faltan ninguna |
+| denue | una fecha de corte por version | OK | 0.0 | 0 versiones con mas de una fecha |
+| denue | volumen por version | OK | 0.0 | minimo 300,000 por version; debajo: ninguna |
+| denue | categorias objetivo en cada version | OK | 0.0 | version/categoria sin establecimientos: ninguna |
+| denue | cadenas detectadas | OK | 0.0 | 2015_02: 1,646, 2019_11: 2,037, 2022_11: 2,254, 2026_05: 2,370 |
+| denue_rechazos | proporcion de rechazos | OK | 0.0 | 0.00% de los establecimientos; motivos: ninguno |
+| metropolis | 92 metropolis de CONAPO | OK | 92.0 | 92 metropolis en el catalogo |
+| metropolis_municipios | duplicados en la llave | OK | 0.0 | llave ['cve_mun5'] |
+| metropolis_municipios | formato de cve_mun5 | OK | 0.0 | filas que no cumplen ^\d{5}$ |
+| metropolis | rango de poblacion_2020 | OK | 0.0 | valores fuera de [1, 30000000.0] |
+| metropolis | municipios con metropoli en el catalogo | OK | 0.0 | 0 claves de metropoli sin ficha |
+| importaciones | tipos de datos | OK | 8.0 | 8 columnas con el tipo esperado |
+| importaciones | nulos en valor_usd | OK | 0.0 | 0 de 527 (max 0%) |
+| importaciones | nulos en kg | OK | 0.0 | 0 de 527 (max 5%) |
+| importaciones | duplicados en la llave | OK | 0.0 | llave ['periodo', 'pais_codigo'] |
+| importaciones | rango de usd_kg | AVISO | 1.0 | valores fuera de [0.3, 5.0] |
+| importaciones | meses esperados | OK | 0.0 | 132 de 132 meses; faltan [] |
+| importaciones | total = suma de paises | OK | 0.0 | 0 meses con diferencia mayor a 5% |
+| indice | tipos de datos | OK | 4.0 | 4 columnas con el tipo esperado |
+| indice | rango de indice | OK | 0.0 | valores fuera de [0, 100] |
+| indice | duplicados en la llave | OK | 0.0 | llave ['clave_metropoli'] |
+| indice | una fila por metropoli | OK | 92.0 | 92 en el indice de 92 metropolis |
+| indice | pesos suman 1 | OK | 1.0 | {'crecimiento': 0.25, 'cadenas': 0.25, 'turismo': 0.25, 'mercado': 0.25} |
+| indice | metropolis con crecimiento calculable | OK | 0.0 | 0 sin restaurantes objetivo en la version inicial |
