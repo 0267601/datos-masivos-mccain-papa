@@ -4,11 +4,13 @@ Examen final — sistema integrado: adquisición, procesamiento, validación, an
 y comunicación. Corre con un comando (`python main.py`) y en **Databricks**, con el data lake
 en Unity Catalog.
 
-**Respuesta corta.** La oportunidad está en ciudades medianas turísticas o industriales, no
-en las tres grandes: Los Cabos, Acapulco y Guanajuato encabezan el índice de inversión. Un
-modelo XGBoost proyecta dónde crecerá más el mercado de papas a la francesa hacia 2030 y
-cuánto vale ese crecimiento en dólares; se explora en el heatmap interactivo
-`reports/figures/mapa_potencial.html`. Reporte completo en
+**Respuesta corta.** Un modelo XGBoost estima US$32 M de mercado nuevo de papa congelada en
+las 92 metrópolis al 2030. En dólares, ese crecimiento está en Ciudad de México, Guadalajara y
+Monterrey (29%); donde la oportunidad de hoy (índice de inversión) y el crecimiento esperado
+coinciden es en ciudades medianas: **Querétaro, La Laguna, Mérida, Saltillo y
+Puebla-Tlaxcala**. Las turísticas que encabezan el índice (Los Cabos, Acapulco) ya tienen
+muchos restaurantes por habitante y el modelo espera que se frenen. Se explora en el heatmap
+interactivo `reports/figures/mapa_potencial.html` (entregable aparte). Reporte completo en
 [`docs/final_report.md`](docs/final_report.md).
 
 ## Integrantes
@@ -325,10 +327,27 @@ está en ciudades medianas turísticas o industriales; las tres grandes no entra
 papa congelada importada se triplicó desde 2019 (US$455 M en 2025) y Canadá pasó de 10% a 39%
 del valor importado. Ver [`docs/indice_inversion.md`](docs/indice_inversion.md).
 
-**Modelo de potencial.** Validación temporal (entrena 2015→2019 y 2019→2022, prueba
-2022→2026) contra dos referencias: repetir el crecimiento anterior y usar el promedio.
-Resultados, top 10 por potencial incremental e importancia de variables en
-[`docs/final_report.md`](docs/final_report.md) y en el heatmap.
+**Modelo de potencial** (Databricks, 23 de noviembre de 2026). Validación temporal: entrena
+2015→2019 y 2019→2022 y prueba 2022→2026 en 359 municipios.
+
+| Modelo | MAE municipal (pp) | Spearman entre metrópolis |
+|---|---|---|
+| **XGBoost** | **3.65** | **0.19** |
+| Persistencia | 4.10 | 0.05 |
+| Promedio | 3.96 | — |
+
+Le gana a las dos referencias (11% menos error que repetir el crecimiento anterior), aunque
+ordena poco a las metrópolis, así que lo usamos como escenario. Con 2,327 kg de papa
+importada por restaurante al año a US$1.30/kg (Comtrade 2025), el mercado de las 92
+metrópolis pasa de US$313 M a US$345 M en 2030. Top 5 en mercado nuevo: Ciudad de México
+(US$5.3 M), Guadalajara (2.3), Monterrey (1.8), Puebla-Tlaxcala (1.3) y Tijuana (1.1). Lo que
+más pesa es la densidad de restaurantes por habitante, en contra (saturación). Detalle en
+[`docs/final_report.md`](docs/final_report.md).
+
+**Pipeline completo** (`ejecutar_pipeline`, `reports/tables/registro_pipeline.json`): 2 min
+26 s en Databricks serverless con caché; validación 70 reglas, 67 OK, 3 AVISO, 0 FALLA. Sin
+internet, `python main.py --muestra` corre todo con la muestra real de `data/sample/` en
+alrededor de 1 minuto.
 
 ## Notebooks y la guía del proyecto
 

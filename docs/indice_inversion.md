@@ -90,7 +90,7 @@ Corrida en Databricks serverless con la descarga real (22 de octubre de 2026).
 | CONAPO | 92 metrópolis, 421 municipios |
 | Comtrade | 132 de 132 meses, 527 filas mes-país |
 | Procesamiento | ~1 minuto (DENUE completo en ~40 s) |
-| Validación | 69 reglas: 66 OK, 3 AVISO, 0 FALLA |
+| Validación | 70 reglas: 67 OK, 3 AVISO, 0 FALLA (corrida del 23 de noviembre) |
 
 Restaurantes en todo el país por versión del DENUE:
 

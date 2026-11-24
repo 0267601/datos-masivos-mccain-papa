@@ -142,8 +142,9 @@ se valida solo si sus tablas existen, así el E1 y el índice se pueden correr p
 | importaciones | están los 132 meses; el total "Mundo" coincide con la suma de países (±5%) | AVISO |
 | indice | entre 0 y 100; una fila por metrópoli; pesos suman 1 | FALLA / AVISO |
 
-Resultado con la descarga real en Databricks: **69 reglas en total (E1 + índice): 66 OK,
-3 AVISO, 0 FALLA.** Todas las reglas del DENUE, CONAPO y el índice dan OK: las 4 versiones
+Resultado con la descarga real en Databricks (23 de noviembre de 2026): **70 reglas en
+total (E1 + índice + rechazos del DENUE): 67 OK, 3 AVISO, 0 FALLA.** La regla de rechazos
+reporta 0.00% de establecimientos rechazados. Todas las reglas del DENUE, CONAPO y el índice dan OK: las 4 versiones
 presentes, más de 300 mil establecimientos por versión, 92 metrópolis, 132 de 132 meses de
 Comtrade y el total "Mundo" igual a la suma de países. El aviso nuevo es de Comtrade: algún
 registro mes-país con precio por kilo fuera de [0.3, 5] US$/kg. El resumen anual de los tres
