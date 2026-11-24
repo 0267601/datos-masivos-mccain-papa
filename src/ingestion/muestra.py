@@ -12,6 +12,9 @@ problemas que con la descarga real:
     SNIIM -> un HTML por variedad y mes con table#tblResultados, dos filas de
              encabezado y celdas td.Datos2.
 
+    INDICE -> copia de data/sample/indice/ (extracto real del DENUE y los JSON
+             de Comtrade, generados en Databricks) y de data/sample/conapo/.
+
 Diferencias con la descarga real: el SIAP real trae todos los cultivos (aqui
 solo papa) y el HTML real trae ademas las tablas de diseno del portal.
 
@@ -20,11 +23,12 @@ Pipeline:
 """
 
 import html
+import shutil
 
 import pandas as pd
 
 from src.ingestion.sniim_extractor import VARIEDADES_PAPA
-from src.utils.rutas import DATA_REPO, RAW
+from src.utils.rutas import DATA_REPO, RAW, SAMPLE
 
 COPIA_SIAP = DATA_REPO / "siap_papa_2013_2025.csv"
 COPIA_SNIIM = DATA_REPO / "sniim_papa_2025.csv"
@@ -106,6 +110,29 @@ def escribir_sniim():
     return paginas
 
 
+def escribir_indice():
+    """Copiamos la muestra real del indice (DENUE, Comtrade, CONAPO) a data/raw/.
+
+    El extracto del DENUE y los JSON de Comtrade los genera Databricks
+    (ver muestra_indice.py); CONAPO es la copia completa (73 KB).
+    """
+    copiados = {"denue": 0, "comtrade": 0, "metropolis": 0}
+    origen = SAMPLE / "indice"
+    for ruta in sorted(origen.glob("denue/*/*.zip")) + sorted(origen.glob("comtrade/*.json")):
+        destino = RAW / ruta.relative_to(origen)
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ruta, destino)
+        copiados[ruta.relative_to(origen).parts[0]] += 1
+    for nombre, tabla in [("municipios_poblacion.csv", "municipios"),
+                          ("metropolis_caracteristicas.csv", "caracteristicas")]:
+        ruta = SAMPLE / "conapo" / nombre
+        if ruta.exists():
+            (RAW / "metropolis").mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ruta, RAW / "metropolis" / f"{tabla}.csv")
+            copiados["metropolis"] += 1
+    return copiados
+
+
 def construir_muestra():
     """Escribimos la muestra en data/raw/ y devolvemos cuantos archivos generamos."""
-    return {"siap": escribir_siap(), "sniim": escribir_sniim()}
+    return {"siap": escribir_siap(), "sniim": escribir_sniim(), "indice": escribir_indice()}
