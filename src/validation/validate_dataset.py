@@ -154,6 +154,8 @@ def reglas_indice(spark, config):
     denue = leer("denue_establecimientos")
     if denue is not None:
         res += ri.reglas_denue(intentar_cache(denue), config)
+        if (PROCESSED / "denue_rechazos").exists():
+            res += ri.reglas_rechazos(spark.read.parquet(str(PROCESSED / "denue_rechazos")), denue)
     municipios, metropolis = leer("metropolis_municipios"), leer("metropolis")
     if municipios is not None and metropolis is not None:
         res += ri.reglas_metropolis(municipios, metropolis)

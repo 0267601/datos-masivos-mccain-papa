@@ -145,3 +145,14 @@ def reglas_indice(indice, metropolis, config):
                          OK if sin_base == 0 else AVISO, sin_base,
                          f"{sin_base} sin restaurantes objetivo en la version inicial"))
     return res
+
+
+def reglas_rechazos(rechazos, denue):
+    """Conciliacion del DENUE: cuanto quedo fuera y por que."""
+    n_rechazos, n_validos = rechazos.count(), denue.count()
+    proporcion = n_rechazos / max(n_rechazos + n_validos, 1)
+    motivos = {r["motivos_rechazo"]: r["count"]
+               for r in rechazos.groupBy("motivos_rechazo").count().collect()}
+    return [resultado("denue_rechazos", "proporcion de rechazos",
+                      OK if proporcion <= 0.01 else AVISO, n_rechazos,
+                      f"{proporcion:.2%} de los establecimientos; motivos: {motivos or 'ninguno'}")]

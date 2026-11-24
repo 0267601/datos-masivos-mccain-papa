@@ -47,6 +47,7 @@ SALIDAS = {
     # Indice de inversion
     "interim_denue": INTERIM / "denue",
     "denue": PROCESSED / "denue_establecimientos",
+    "denue_rechazos": PROCESSED / "denue_rechazos",
     "metropolis_municipios": PROCESSED / "metropolis_municipios",
     "metropolis": PROCESSED / "metropolis",
     "importaciones": PROCESSED / "importaciones",
@@ -168,9 +169,12 @@ def construir_indice(spark, config):
                                           config["denue"]["versiones"])
         escribir(interim, SALIDAS["interim_denue"], particiones=["version"])
 
-        df, metricas = denue.construir_processed(
+        salida = denue.construir_silver(
             spark.read.parquet(str(SALIDAS["interim_denue"])), config["denue"])
-        escribir(df, SALIDAS["denue"], particiones=["version"])
+        escribir(salida["silver"], SALIDAS["denue"], particiones=["version"])
+        # Rechazos: los conservamos para poder auditarlos (son pocos).
+        escribir(salida["rechazos"], SALIDAS["denue_rechazos"], archivos=1)
+        metricas = denue.metricas_silver(salida)
         metricas["segundos"] = round(time.perf_counter() - inicio, 2)
         resumen["denue"] = metricas
         log.info(f"DENUE | interim {metricas['filas_interim']:,} -> processed "

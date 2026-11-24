@@ -14,8 +14,10 @@ raw -> interim
     En interim dejamos las columnas que usamos, todo como texto, mas la
     version y el archivo de origen.
 
-interim -> processed
-    Clave de municipio a 5 digitos, categoria del negocio (comida rapida,
+interim -> processed (construir_silver)
+    Validamos y separamos rechazos (con motivos_rechazo) y duplicados, como en
+    la clase de capas Bronze/Silver/Gold; interim = silver + rechazos +
+    duplicados. Ademas: clave de municipio a 5 digitos, categoria del negocio (comida rapida,
     autoservicio, a la carta, bares, hoteles), cadena (McDonald's, KFC...),
     personal ocupado, coordenadas como numero y fecha de corte de la version.
     Escribimos Parquet particionado por version.
@@ -32,6 +34,7 @@ from pathlib import Path
 
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
+from pyspark.sql.window import Window
 
 # Columnas que usamos, con su nombre corto (el de 2019 en adelante).
 COLUMNAS = ["id", "nom_estab", "raz_social", "codigo_act", "nombre_act", "per_ocu",
@@ -170,18 +173,31 @@ def columna_cadena(cadenas):
     return expr
 
 
-def construir_processed(df_interim, cfg):
-    """Tipos, claves, categorias y cadenas. Devolvemos (df, metricas)."""
-    metricas = {"filas_interim": df_interim.count()}
+def construir_silver(df_interim, cfg):
+    """Tipos, claves, categorias y cadenas, con rechazos y duplicados aparte.
+
+    Seguimos el contrato de la clase de capas Bronze -> Silver: primero
+    validamos, despues deduplicamos, y conservamos lo que sale. Cada fila de
+    interim termina en exactamente una de tres tablas:
+
+        silver       establecimiento valido, una fila por (version, id)
+        rechazos     no se puede usar; motivos_rechazo dice por que
+        duplicados   repeticion de un (version, id) que ya esta en silver
+
+    Regresamos un diccionario con las tres tablas y sus conteos.
+    """
+    n_interim = df_interim.count()
 
     df = df_interim
     for columna in COLUMNAS:
-        df = df.withColumn(columna, F.trim(F.col(columna)))
+        # Recortamos espacios y dejamos los vacios como nulos (desconocido no es cero).
+        df = df.withColumn(columna, F.when(F.length(F.trim(F.col(columna))) > 0,
+                                           F.trim(F.col(columna))))
 
     fechas = F.create_map(*[x for v in cfg["versiones"]
                             for x in (F.lit(v["etiqueta"]), F.lit(v["fecha"]))])
 
-    df = (
+    tipada = (
         df
         .withColumn("cve_mun5", F.when(
             F.col("cve_ent").rlike(r"^\d{1,2}$") & F.col("cve_mun").rlike(r"^\d{1,3}$"),
@@ -195,22 +211,59 @@ def construir_processed(df_interim, cfg):
         .withColumn("fecha_corte", F.to_date(fechas[F.col("version")]))
     )
 
-    sin_llave = df.filter(F.col("id").isNull() | F.col("cve_mun5").isNull())
-    metricas["filas_sin_llave"] = sin_llave.count()
-    df = df.filter(F.col("id").isNotNull() & F.col("cve_mun5").isNotNull())
+    # Los motivos pueden coexistir; una fila puede incumplir varias reglas.
+    reglas = [
+        (F.col("id").isNull(), "id_invalido"),
+        (F.col("cve_mun5").isNull(), "municipio_invalido"),
+        (F.col("fecha_corte").isNull(), "version_sin_fecha"),
+    ]
+    validada = tipada.withColumn("motivos_rechazo", F.concat_ws(";", *[
+        F.when(condicion, F.lit(motivo)) for condicion, motivo in reglas
+    ]))
+    rechazos = validada.filter(F.col("motivos_rechazo") != "")
+    validos = validada.filter(F.col("motivos_rechazo") == "")
 
-    df_unico = df.dropDuplicates(["version", "id"])
-    metricas["filas_duplicadas"] = (metricas["filas_interim"] - metricas["filas_sin_llave"]
-                                    - df_unico.count())
+    # Deduplicar tambien es una decision: si un (version, id) se repite,
+    # conservamos una sola fila con una regla reproducible (la huella de sus
+    # columnas), sin depender del orden de lectura.
+    desempate = F.to_json(F.struct(*[F.col(c) for c in sorted(COLUMNAS)]))
+    validos = validos.withColumn("huella", F.sha2(desempate, 256))
+    ventana = Window.partitionBy("version", "id").orderBy(F.col("huella").asc())
+    ordenados = validos.withColumn("orden_version", F.row_number().over(ventana))
+    duplicados = ordenados.filter(F.col("orden_version") > 1)
 
-    df_final = df_unico.select(
+    silver = ordenados.filter(F.col("orden_version") == 1).select(
         "version", "fecha_corte", "id", "nom_estab", "raz_social", "codigo_act",
         "nombre_act", "categoria", "cadena", "per_ocu", "personal_min",
         "cve_ent", "entidad", "cve_mun", "municipio", "cve_mun5",
         "latitud", "longitud", "fecha_alta", "archivo",
     )
-    metricas["filas_processed"] = df_final.count()
-    return df_final, metricas
+
+    # count dispara acciones: los errores de Spark aparecen dentro de la etapa.
+    n_silver = silver.count()
+    n_rechazos = rechazos.count()
+    n_duplicados = duplicados.count()
+    if n_interim != n_silver + n_rechazos + n_duplicados:
+        raise ValueError("DENUE no concilia: interim != silver + rechazos + duplicados")
+
+    return {"silver": silver, "rechazos": rechazos, "duplicados": duplicados,
+            "filas": n_silver, "n_rechazos": n_rechazos, "n_duplicados": n_duplicados,
+            "n_interim": n_interim}
+
+
+def construir_processed(df_interim, cfg):
+    """Version corta de construir_silver: (silver, metricas)."""
+    salida = construir_silver(df_interim, cfg)
+    return salida["silver"], metricas_silver(salida)
+
+
+def metricas_silver(salida):
+    return {
+        "filas_interim": salida["n_interim"],
+        "filas_sin_llave": salida["n_rechazos"],
+        "filas_duplicadas": salida["n_duplicados"],
+        "filas_processed": salida["filas"],
+    }
 
 
 def ruta_csv_staging(interim):
