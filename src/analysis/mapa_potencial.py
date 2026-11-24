@@ -179,6 +179,8 @@ h1{font-size:22px;margin:0 0 6px;letter-spacing:-.01em}
 .panel h2{font-size:14px;margin:0 0 8px}
 svg text{fill:var(--ink2);font-size:11px}
 .punto{cursor:pointer;stroke:var(--surface);stroke-width:1.5}
+svg text.etiqueta{fill:var(--ink);font-weight:600;font-size:11.5px;paint-order:stroke;
+  stroke:var(--surface);stroke-width:3.5px;stroke-linejoin:round;pointer-events:none}
 .punto.sel{stroke:var(--sel);stroke-width:3}
 .leyenda{display:flex;align-items:center;gap:8px;color:var(--ink2);font-size:12px;margin-top:6px}
 .rampa{height:10px;width:140px;border-radius:5px;background:linear-gradient(90deg,var(--r0),var(--r1))}
@@ -315,8 +317,8 @@ function dibujarMapa() {
   const svg = document.getElementById("mapa");
   const metrica = document.getElementById("metrica").value;
   const pts = D.metros.filter(m => m.lat != null && m.lon != null);
-  const W = 640, H = 420, pad = 14;
-  const lon0 = -117.5, lon1 = -86.5, lat0 = 14.3, lat1 = 33;
+  const W = 640, H = 420, pad = 22;
+  const lon0 = -118, lon1 = -86.3, lat0 = 14.3, lat1 = 33;
   const x = lon => pad + (lon - lon0) / (lon1 - lon0) * (W - 2 * pad);
   const y = lat => H - pad - (lat - lat0) / (lat1 - lat0) * (H - 2 * pad);
   const maxPot = Math.max(...pts.map(m => m.pot_proy || 0), 1);
@@ -332,12 +334,22 @@ function dibujarMapa() {
     const t = p(m[metrica]); const op = visibles.has(m.clave) ? 0.92 : 0.15;
     g += `<circle class="punto${m.clave === seleccion ? " sel" : ""}" data-clave="${m.clave}" cx="${x(m.lon).toFixed(1)}" cy="${y(m.lat).toFixed(1)}" r="${r(m).toFixed(1)}" fill="${t == null ? "var(--muted)" : rampa(t)}" fill-opacity="${op}"></circle>`;
   }
-  // Etiquetas solo para las 6 de mayor potencial incremental; probamos a la
-  // derecha, a la izquierda, arriba y abajo hasta no encimar otra etiqueta.
-  const puestas = [];
+  // Etiquetas: la metropoli seleccionada y las de mayor potencial que no esten
+  // pegadas a otra ya etiquetada. Probamos a la derecha, a la izquierda, arriba
+  // y abajo hasta no encimar otra etiqueta.
+  const puestas = [], centros = [];
   const choca = (a) => puestas.some(b => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0);
-  D.metros.slice(0, 6).forEach(m => {
-    if (m.lat == null) return;
+  const sel = D.metros.find(m => m.clave === seleccion);
+  const candidatas = [sel, ...D.metros.slice(0, 8)].filter(m => m && m.lat != null);
+  const etiquetadas = [];
+  for (const m of candidatas) {
+    if (etiquetadas.includes(m)) continue;
+    const cx = x(m.lon), cy = y(m.lat);
+    if (m !== sel && centros.some(([a, b]) => Math.hypot(a - cx, b - cy) < 45)) continue;
+    centros.push([cx, cy]); etiquetadas.push(m);
+    if (etiquetadas.length > 5) break;
+  }
+  etiquetadas.forEach(m => {
     const cx = x(m.lon), cy = y(m.lat), rr = r(m), ancho = m.nombre.length * 6.4;
     const opciones = [
       [cx + rr + 3, cy + 4, "start"], [cx - rr - 3, cy + 4, "end"],
@@ -347,7 +359,7 @@ function dibujarMapa() {
       const caja = {x0, x1: x0 + ancho, y0: ty - 10, y1: ty + 2};
       if (!choca(caja) || ancla === "middle" && ty > cy) {
         puestas.push(caja);
-        g += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="${ancla}" style="fill:var(--ink);font-weight:600">${m.nombre}</text>`;
+        g += `<text class="etiqueta" x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="${ancla}">${m.nombre}</text>`;
         break;
       }
     }

@@ -195,8 +195,9 @@ def importancia_variables(importancia):
     ax.set_xlim(0, datos.max() * 100 * 1.18)
     ax.set_xlabel("Participación en la ganancia del modelo (%)",
                   color=TEXTO_SECUNDARIO, fontsize=9)
-    ax.set_title(f"Lo que más predice el crecimiento: {datos.index[-1].lower()}",
-                 loc="left", fontsize=12, color=TEXTO)
+    # Titulo sobre toda la figura (no solo el eje) para que no se corte.
+    fig.suptitle("Lo que más predice el crecimiento de restaurantes",
+                 x=0.02, ha="left", fontsize=12, color=TEXTO)
     fig.tight_layout()
     return fig
 
