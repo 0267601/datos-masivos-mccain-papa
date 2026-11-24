@@ -25,6 +25,41 @@
 5. **Revisión del otro integrante** antes de hacer merge. Nadie hace merge de su propio
    PR sin revisión.
 
+## Quién hace qué
+
+| Paso | Diego Zamora (0267601) | Diego Pérez (0269250-eng) |
+|---|---|---|
+| Issue | Lo abre y se lo asigna | Comenta si falta algo |
+| Rama y commits | Los sube desde la terminal | — |
+| Coautoría | Agrega a Diego Pérez como coautor en los commits que trabajamos juntos | Aparece como coautor en esos commits |
+| Pull request | Lo abre con `Closes #N` y pide revisión a `0269250-eng` | Revisa *Files changed*, comenta y **aprueba** |
+| Merge | — | Hace el merge cuando aprobó |
+| Databricks | **Pull** en el Git folder y **Run all** | Revisa la salida |
+
+### Coautoría en los commits
+
+GitHub reconoce a un coautor por la última línea del mensaje, separada por una línea en
+blanco:
+
+```
+Agrega el modelo de potencial por metropoli
+
+Co-authored-by: Diego Pérez Palafox <0269250@up.edu.mx>
+```
+
+Así el commit cuenta para los dos en el historial y en la lista de contribuidores. El correo
+tiene que ser el verificado en la cuenta de GitHub de Diego Pérez.
+
+### Revisión desde la web (sin instalar nada)
+
+1. Abrir el PR en `github.com/0267601/datos-masivos-mccain-papa/pulls`.
+2. **Files changed** → revisar → **Review changes** → **Approve** → **Submit review**.
+3. **Conversation** → **Merge pull request** → **Confirm merge**.
+
+Para subir un archivo propio desde la web (por ejemplo, su reflexión): **Add file →
+Upload files**, elegir *Create a new branch for this commit and start a pull request* y
+pedir revisión a `0267601`.
+
 ## Antes de abrir un pull request
 
 ```bash

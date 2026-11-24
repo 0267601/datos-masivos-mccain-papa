@@ -133,3 +133,26 @@ indice:
     cadenas: 0.25         # B. aperturas netas de cadenas por 100 mil habitantes
     turismo: 0.25         # hoteles por 100 mil habitantes
     mercado: 0.25         # tamano: restaurantes objetivo hoy
+
+# ---------------------------------------------------------------------------
+# Modelo de crecimiento (XGBoost) y potencial de mercado
+# ---------------------------------------------------------------------------
+modelo:
+  # Municipios con menos restaurantes objetivo que esto no entran como
+  # etiqueta: con 3 restaurantes, pasar a 6 es "+100%" y solo es ruido.
+  min_restaurantes: 10
+  # Recortamos el crecimiento anual (%) para que un caso extremo no domine.
+  limites_crecimiento: [-30, 40]
+  # Horizonte de la proyeccion desde la version mas reciente del DENUE.
+  anios_proyeccion: 4
+  xgboost:
+    n_estimators: 400
+    max_depth: 3
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    min_child_weight: 5
+    reg_lambda: 1.0
+    tree_method: hist
+    random_state: 42
+    n_jobs: 1            # un hilo: mismo resultado en cada corrida

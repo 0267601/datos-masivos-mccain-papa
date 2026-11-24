@@ -1,7 +1,15 @@
 # Datos Masivos 2026 — McCain: ¿dónde invertir para vender más papas a la francesa en México?
 
-Entregable 2 — Pipeline reproducible: adquisición, procesamiento, validación y desempeño.
-Corre desde la terminal y en **Databricks**, con el data lake en Unity Catalog.
+Examen final — sistema integrado: adquisición, procesamiento, validación, análisis, modelo
+y comunicación. Corre con un comando (`python main.py`) y en **Databricks**, con el data lake
+en Unity Catalog.
+
+**Respuesta corta.** La oportunidad está en ciudades medianas turísticas o industriales, no
+en las tres grandes: Los Cabos, Acapulco y Guanajuato encabezan el índice de inversión. Un
+modelo XGBoost proyecta dónde crecerá más el mercado de papas a la francesa hacia 2030 y
+cuánto vale ese crecimiento en dólares; se explora en el heatmap interactivo
+`reports/figures/mapa_potencial.html`. Reporte completo en
+[`docs/final_report.md`](docs/final_report.md).
 
 ## Integrantes
 
@@ -24,17 +32,25 @@ estadísticas agrícolas reportan cuánto se produce, pero no por qué canal se
 comercializa. Cruzamos la producción del SIAP con las cotizaciones mayoristas del
 SNIIM para encontrar los estados cuya papa **no pasa por el mercado spot**.
 
-### Pregunta principal
+## Pregunta principal
+
+> Si McCain tuviera X millones para crecer en México, ¿en qué zonas metropolitanas
+> los pondría, y cuánto crecería ahí el mercado de papas a la francesa?
+
+**Usuario:** equipo comercial, de expansión y de planeación de demanda de McCain México.
+**Decisión que habilita:** en qué ciudades abrir distribución, fuerza de ventas o promociones
+primero.
+
+### Antecedente: la pregunta de los entregables 1 y 2
 
 > ¿Qué estados mexicanos venden su papa fuera del mercado mayorista público,
 > y cuáles de ellos están creciendo lo suficiente para sustituir importación
 > de papa industrial?
 
-**Usuario:** equipo de abasto agrícola y desarrollo de proveedores de una procesadora
-de papa (caso McCain México). **Decisión que habilita:** a qué estados dirigir contratos
-agrícolas y en cuáles no vale la pena invertir.
+Esa pregunta, del lado del abasto, se respondió con el cruce SIAP × SNIIM y su pipeline sigue
+en el repositorio (`--fuente e1`).
 
-### Pregunta reenfocada: dónde invertir
+### Por qué la reenfocamos
 
 El E1 confirmó que la papa industrial es importada: **McCain no compra papa mexicana**,
 importa papa congelada y la vende a restaurantes. Por eso movimos la pregunta del lado de
@@ -50,28 +66,30 @@ mismo peso. La pieza C, competencia, sale de UN Comtrade: de qué país vienen l
 congeladas importadas y a qué precio por kilo. Método, fuentes y resultados en
 [`docs/indice_inversion.md`](docs/indice_inversion.md).
 
+Encima del índice, un **modelo XGBoost** aprende cómo crecieron los restaurantes de cada
+municipio entre las cuatro versiones del DENUE y proyecta 2026 → 2030. El **potencial en US$**
+de cada metrópoli es restaurantes proyectados × kg de papa congelada importada por
+restaurante × US$/kg. Es tamaño de mercado, no utilidad: no usamos ventas ni costos de McCain.
+
 ## Arquitectura
 
 ```
-SIAP (CSV por año)          SNIIM (HTML por variedad y mes)
-        │                               │
-        └──── src/ingestion/download_data ────┘   requests, caché, manifiesto
-                        │
-                  data/raw/                       copia cruda, sin modificar
-                        │
-              src/processing/build_dataset        PySpark
-                        │
-                  data/interim/                   esquema unificado, texto, Parquet
-                        │
-                  data/processed/                 tipado y limpio, Parquet particionado
-                        │                           siap_produccion/   anio=
-                        │                           sniim_precios/     anio=/mes=
-                        │                           canalizacion/
-                        │
-              src/validation/validate_dataset     36 reglas → reports/tables/
-                        │
-                Dataset preparado
+Fuentes abiertas ─► download_data ─► raw/ ─► build_dataset (PySpark) ─► interim/ ─► processed/
+SIAP · SNIIM         caché, reintentos,       Bronze: archivos  Silver: tipos, llaves,  (Silver)
+DENUE · CONAPO       manifiesto sha256                          rechazos, conciliación
+UN Comtrade                                                                │
+                                              validate_dataset ◄───────────┘  FALLA ⇒ se detiene
+                                                     │
+                                  indice_inversion ──┴── modelo_potencial (XGBoost)
+                                     (Gold)                  (Gold)
+                                        │                       │
+                       reports/: tablas, gráficas, mapa_potencial.html · tablas Delta en Unity Catalog
+
+main.py ─► src/pipeline.py: leer_configuracion → ejecutar_pipeline → ejecutar_etapa (registro JSON)
 ```
+
+Detalle de cada capa, el modelo, la orquestación y el flujo de colaboración en
+[`docs/architecture.md`](docs/architecture.md).
 
 Las capas `raw/`, `interim/` y `processed/` viven en `data/` cuando corremos en local, y en el
 Volume `workspace.mccain_papa.datalake` cuando corremos en Databricks (ver abajo).
@@ -122,6 +140,10 @@ python -m src.ingestion.download_data
 python -m src.ingestion.download_data --muestra
 ```
 
+Con `--muestra` también se copian la muestra real del índice (`data/sample/indice/`: un
+extracto del DENUE de tres metrópolis y los 132 meses de Comtrade) y CONAPO
+(`data/sample/conapo/`), así `python main.py --muestra` corre todo sin internet.
+
 Los archivos se guardan en `data/raw/siap/` y `data/raw/sniim/`, junto con
 `data/raw/manifiesto.json` (url, parámetros, bytes, sha256 y estado de cada archivo).
 Si un archivo ya existe no se vuelve a descargar; `--forzar` lo ignora. Si una
@@ -129,7 +151,23 @@ partición falla, se registra en `logs/pipeline.log` y la corrida sigue.
 
 ## Ejecución
 
-Desde la raíz del repositorio, en este orden:
+**Todo con un comando** (adquisición → Silver → validación → Gold → modelo):
+
+```bash
+python main.py                    # descarga lo que falte y corre todo
+python main.py --sin-descarga     # usa lo que ya está en data/raw/
+python main.py --muestra          # sin internet: muestra real del repositorio
+python main.py --fuente indice    # solo el índice y el modelo
+```
+
+Cada etapa imprime una línea JSON con su estado y duración; si una falla, las siguientes no
+corren y el comando termina con código 1. El historial queda en
+`reports/tables/registro_pipeline.json`.
+
+Resultados en: `reports/tables/` (índice, potencial, métricas del modelo, validación) y
+`reports/figures/` (gráficas PNG y `mapa_potencial.html`, que se abre en cualquier navegador).
+
+**Por etapas**, desde la raíz del repositorio, en este orden:
 
 ```bash
 python -m src.ingestion.download_data        # 1. adquisición    → data/raw/
@@ -144,9 +182,13 @@ pytest                                       # pruebas
 ```bash
 python -m src.ingestion.download_data --fuente indice    # DENUE, CONAPO, Comtrade (~15 min)
 python -m src.processing.build_dataset --fuente indice   # → processed/denue_establecimientos, metropolis, importaciones
-python -m src.analysis.indice_inversion                  # → reports/tables/indice_inversion.csv y 3 gráficas
 python -m src.validation.validate_dataset                # valida lo que exista: E1 e índice
+python -m src.analysis.run_analysis                      # índice + modelo XGBoost + heatmap
 ```
+
+`run_analysis` corre `src.analysis.indice_inversion` (índice y 3 gráficas) y
+`src.analysis.modelo_potencial` (modelo, potencial en US$, importancia de variables y
+`mapa_potencial.html`).
 
 `--fuente e1` hace solo SIAP y SNIIM; sin `--fuente` se hace todo.
 
@@ -224,6 +266,15 @@ Pasos:
 3. Para el índice de inversión: `notebooks/04_indice_databricks.ipynb`, **Run all**. Descarga
    el DENUE al Volume, calcula el índice, muestra las tres gráficas y registra las tablas
    `indice_inversion`, `importaciones_anuales`, `serie_metropolis` y demás.
+4. Para el modelo: `notebooks/05_modelo_potencial_databricks.ipynb`, **Run all**. Corre el
+   pipeline completo con `ejecutar_pipeline`, registra `potencial_metropolis`,
+   `panel_municipios` y `denue_rechazos` y arma `reports/entrega_final.zip`. Se puede
+   programar como **Job**: sus widgets son los parámetros.
+
+**Entregable aparte: heatmap interactivo.** `reports/figures/mapa_potencial.html` no se
+muestra en el notebook; es un archivo propio que se abre en cualquier navegador: mapa de
+México con todas las metrópolis, heatmap por percentil y, al hacer clic en una metrópoli, sus
+números e insights. Lo genera el pipeline y viaja también en la raíz de `entrega_final.zip`.
 
 El paso a paso, qué hacer si Databricks no alcanza los portales del gobierno y cómo consultar
 las tablas está en [`docs/databricks.md`](docs/databricks.md).
@@ -274,12 +325,28 @@ está en ciudades medianas turísticas o industriales; las tres grandes no entra
 papa congelada importada se triplicó desde 2019 (US$455 M en 2025) y Canadá pasó de 10% a 39%
 del valor importado. Ver [`docs/indice_inversion.md`](docs/indice_inversion.md).
 
+**Modelo de potencial.** Validación temporal (entrena 2015→2019 y 2019→2022, prueba
+2022→2026) contra dos referencias: repetir el crecimiento anterior y usar el promedio.
+Resultados, top 10 por potencial incremental e importancia de variables en
+[`docs/final_report.md`](docs/final_report.md) y en el heatmap.
+
+## Notebooks y la guía del proyecto
+
+| La guía pide | En este repositorio |
+|---|---|
+| `01_exploration.ipynb` | `entregable_1.ipynb` (exploración del E1: dimensiones, tipos, faltantes, duplicados) |
+| `02_cleaning.ipynb` | `02_cleaning.ipynb` (pipeline paso a paso y planes de Spark) |
+| `03_analysis.ipynb` | `04_indice_databricks.ipynb` (índice de inversión y competencia) |
+| `04_results.ipynb` | `05_modelo_potencial_databricks.ipynb` (modelo y potencial; el heatmap es un HTML aparte) y `04_indice_databricks_ejecutado.ipynb` (salidas reales) |
+| — | `03_databricks.ipynb` (pipeline del E2 en Databricks) |
+
 ## Estructura del repositorio
 
 ```
 datos-masivos-mccain-papa/
 ├── README.md
-├── CONTRIBUTING.md
+├── CONTRIBUTING.md                cómo trabajamos: issues, ramas, PR, coautoría
+├── main.py                        comando principal: corre todo el pipeline
 ├── requirements.txt
 ├── pyproject.toml
 ├── config/
@@ -288,7 +355,7 @@ datos-masivos-mccain-papa/
 │   ├── raw/                       copia cruda (no se sube)
 │   ├── interim/                   esquema unificado (no se sube)
 │   ├── processed/                 dataset preparado (no se sube)
-│   ├── sample/                    muestras pequeñas, su README y conapo/ (respaldo de CONAPO)
+│   ├── sample/                    muestras pequeñas: E1, conapo/ e indice/ (DENUE y Comtrade reales)
 │   ├── siap_papa_2013_2025.csv    copia del E1 (base de --muestra)
 │   └── sniim_papa_2025.csv        copia del E1 (base de --muestra)
 ├── docs/
@@ -300,20 +367,25 @@ datos-masivos-mccain-papa/
 │   ├── desempeno.md
 │   ├── databricks.md              cómo correrlo en Databricks
 │   ├── hallazgos.md
-│   └── indice_inversion.md        pregunta reenfocada: dónde invertir
+│   ├── indice_inversion.md        pregunta reenfocada: dónde invertir
+│   ├── final_report.md            reporte final
+│   ├── roadmap.md                 entregas, checkpoints y evidencia contra la guía
+│   └── reflections/               reflexión individual de cada integrante
 ├── notebooks/
 │   ├── entregable_1.ipynb         entregable 1: extractores paso a paso
 │   ├── 02_cleaning.ipynb          entregable 2: pipeline y planes de Spark
 │   ├── 03_databricks.ipynb        entregable 2 en Databricks: data lake y tablas Delta
 │   ├── 04_indice_databricks.ipynb índice de inversión en Databricks, con gráficas
-│   └── 04_indice_databricks_ejecutado.ipynb   la corrida real, con sus salidas
+│   ├── 04_indice_databricks_ejecutado.ipynb   la corrida real, con sus salidas
+│   └── 05_modelo_potencial_databricks.ipynb   pipeline completo y modelo
 ├── src/
-│   ├── ingestion/                 siap, sniim, denue y comtrade extractors, download_data, muestra
+│   ├── ingestion/                 siap, sniim, denue y comtrade extractors, download_data, muestra, muestra_indice
 │   ├── processing/                siap, sniim, canalizacion, denue, metropolis, comtrade, build_dataset, benchmark
 │   ├── validation/                reglas, reglas_indice, validate_dataset
-│   ├── analysis/                  indice_inversion, graficas
+│   ├── pipeline.py                leer_configuracion, ejecutar_etapa, ejecutar_pipeline
+│   ├── analysis/                  indice_inversion, modelo_potencial, mapa_potencial, graficas, run_analysis
 │   └── utils/                     rutas, config, registro, spark
-├── tests/                         test_ingestion, test_processing, test_validation, test_indice
+├── tests/                         test_ingestion, test_processing, test_validation, test_indice, test_modelo
 └── reports/
     ├── figures/
     └── tables/
@@ -330,5 +402,12 @@ datos-masivos-mccain-papa/
   marca cada partición que toque el límite; la validación falla si alguna lo toca.
 - **Los portales del gobierno se caen con frecuencia.** Por eso la caché, los reintentos
   con espera creciente y la opción `--muestra`.
-- **El volumen actual no exige Spark.** Lo usamos para que el pipeline escale sin
+- **El DENUE cuenta locales, no ventas.** Un McDonald's y una fonda pesan igual en el
+  crecimiento; por eso las cadenas tienen su propio componente.
+- **El potencial en US$ es tamaño de mercado, no utilidad.** Supone que el consumo por
+  restaurante y el precio por kilo se mantienen y que todo el mercado es papa importada.
+- **El modelo aprende de tres periodos**, uno de ellos con la pandemia en medio. Lo
+  comparamos contra referencias simples en un periodo que no vio y reportamos el resultado
+  tal cual.
+- **El volumen actual del E1 no exige Spark.** Lo usamos para que el pipeline escale sin
   reescribirse; la comparación de desempeño lo documenta.

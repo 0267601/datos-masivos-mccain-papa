@@ -48,3 +48,19 @@ Copia de los dos CSV de *Las metrópolis de México 2020* (CONAPO), tal como los
 datos.gob.mx: `municipios_poblacion.csv` (421 municipios) y `metropolis_caracteristicas.csv`
 (92 metrópolis). datos.gob.mx respondió 403 a Databricks; si la descarga falla,
 `download_data` usa esta copia y lo anota en el manifiesto.
+
+## `indice/`
+
+Muestra **real** del índice de inversión, generada en Databricks por el notebook 05
+(`src/ingestion/muestra_indice.py`):
+
+- `denue/<versión>/muestra_denue_<versión>.zip`: los establecimientos del sector 72 de tres
+  metrópolis, en el formato original de cada versión (2015: encabezados largos y UTF-8;
+  2019 en adelante: encabezados cortos, Latin-1, CSV en `conjunto_de_datos/`). Solo trae las
+  columnas que usa el pipeline.
+- `comtrade/<YYYYMM>.json`: los 132 meses de importaciones (HS 200410), solo con los campos
+  que usamos.
+
+`python main.py --muestra` copia esta carpeta y `conapo/` a `data/raw/` y corre todo sin
+internet. Con tan pocas metrópolis las reglas de volumen fallan (es lo esperado) y el modelo
+solo sirve para comprobar que el código corre, no para sacar conclusiones.

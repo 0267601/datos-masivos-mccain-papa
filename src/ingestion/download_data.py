@@ -458,8 +458,10 @@ def copiar_muestra(forzar=False):
         MANIFIESTO.unlink(missing_ok=True)
 
     conteo = construir_muestra()
+    indice = conteo.get("indice", {"denue": 0, "comtrade": 0, "metropolis": 0})
     log.info(f"Muestra escrita en {RAW}: {conteo['siap']} CSV SIAP, "
-             f"{conteo['sniim']} HTML SNIIM")
+             f"{conteo['sniim']} HTML SNIIM, {indice['denue']} zip DENUE, "
+             f"{indice['comtrade']} meses Comtrade, {indice['metropolis']} CSV CONAPO")
     return conteo
 
 

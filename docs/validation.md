@@ -152,3 +152,16 @@ orígenes principales queda entre 0.69 y 1.84 US$/kg.
 En la primera corrida salió una FALLA en "particiones truncadas o con error" del SNIIM que en
 realidad eran los dos CSV de CONAPO (datos.gob.mx respondió 403 a Databricks). Corregimos la
 regla para que solo cuente errores del SNIIM y subimos los CSV de CONAPO a mano al Volume.
+
+## Conciliación, rechazos y validación del modelo
+
+| Dónde | Regla | Si no se cumple |
+|---|---|---|
+| `construir_silver` (DENUE) | interim = silver + rechazos + duplicados | Error: la etapa se detiene |
+| `reglas_rechazos` | Rechazos ≤ 1% de los establecimientos, con su motivo | AVISO |
+| `validar_potencial` | Una fila por metrópoli; restaurantes de hoy = suma del panel; incremental = proyectado − hoy; crecimiento dentro de los límites; sin negativos | Error: no se publica el potencial |
+| `evaluar_modelo` | XGBoost contra persistencia y promedio en 2022→2026 | Se reporta en `modelo_metricas.csv` y en el heatmap |
+
+Con la muestra del repositorio (`python main.py --muestra`), las reglas de volumen fallan por
+diseño (son pocas filas); en ese modo el pipeline sigue después de la validación y lo marca
+como `OK_CON_FALLAS` en el registro.
