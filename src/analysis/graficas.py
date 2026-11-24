@@ -182,6 +182,25 @@ def mapa_oportunidad(indice, top=10):
     return fig
 
 
+def importancia_variables(importancia):
+    """Barras horizontales: cuanto aporta cada variable al modelo (ganancia)."""
+    datos = importancia.sort_values()
+    fig, ax = plt.subplots(figsize=(8, 4.6), facecolor=FONDO)
+    colores = [AZUL if i == len(datos) - 1 else GRIS_CLARO for i in range(len(datos))]
+    ax.barh(datos.index, datos.values * 100, color=colores, height=0.6)
+    for y, valor in enumerate(datos.values):
+        ax.text(valor * 100 + 0.6, y, f"{valor * 100:.0f}%", va="center",
+                fontsize=8.5, color=TEXTO)
+    _estilo(ax)
+    ax.set_xlim(0, datos.max() * 100 * 1.18)
+    ax.set_xlabel("Participación en la ganancia del modelo (%)",
+                  color=TEXTO_SECUNDARIO, fontsize=9)
+    ax.set_title(f"Lo que más predice el crecimiento: {datos.index[-1].lower()}",
+                 loc="left", fontsize=12, color=TEXTO)
+    fig.tight_layout()
+    return fig
+
+
 def generar_todas(spark, pesos=None):
     """Leemos las tablas procesadas, generamos las tres graficas y las guardamos."""
     from src.utils.config import cargar_config
