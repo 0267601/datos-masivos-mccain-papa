@@ -206,6 +206,27 @@ Suma de la tabla anterior, más `margen_proy_pct` (contribución / ventas 2030),
 `ranking_utilidad` (1 = mayor contribución 2030), y `ranking` / `ranking_potencial` para
 compararla con el índice y el potencial.
 
+## `inversion_metropolis` y `inversion_curva` (reports/tables)
+
+`inversion_metropolis`: una fila por metrópoli con el reparto óptimo del presupuesto de la
+configuración (`inversion.presupuesto_usd`).
+
+| Variable | Descripción | Unidad |
+|---|---|---|
+| kg_hoy, kg_proy | kg del mercado ganables con inversión local (sin cadenas), hoy y 2030 | kg al año |
+| margen_ponderado | Margen por kg de esos segmentos, ponderado por sus kg 2030 | US$/kg |
+| tope_usd | Margen de contribución extra máximo: margen × (tope existente × kg hoy + tope nuevo × kg nuevos) | US$ al año |
+| mitad_usd, escala_usd | Inversión que gana la mitad del tope; escala = mitad ÷ ln 2 | US$ |
+| rendimiento_primer_dolar | Tope ÷ escala: lo que deja el primer dólar | US$ por US$ |
+| inversion_usd | Inversión asignada | US$ |
+| contribucion_extra_usd | Tope × (1 − e^(−inversión/escala)) | US$ al año |
+| anios_recuperacion | Inversión ÷ contribución extra | años |
+| pct_tope, ranking_inversion | Parte del tope ganada; lugar por inversión | %, — |
+
+`inversion_curva`: para cada presupuesto de `inversion.curva_presupuestos_usd`, la contribución
+extra total, los años de recuperación, el retorno anual, las ciudades con inversión y el retorno
+del tramo adicional (cuánto rinde cada dólar extra respecto al presupuesto anterior).
+
 ## `modelo_segmentos_metricas` (reports/tables)
 
 Una fila por segmento (y `Todos`) y modelo (`XGBoost compartido`, `XGBoost por segmento`,

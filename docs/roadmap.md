@@ -14,7 +14,7 @@ integramos, analizamos y comunicamos.
 | **Correcciones con datos reales** | 403 de CONAPO, autoservicio fuera del cálculo, resultados reales, evidencia de Databricks | PR #22, #24, #26, #28 | Hecho |
 | **Final — Integración** | `main.py` con `ejecutar_pipeline`, rechazos y conciliación, muestra real del índice | `src/pipeline.py`, `data/sample/indice/`, `reports/tables/registro_pipeline.json` | Hecho (PR #30) |
 | **Final — Análisis** | Modelo XGBoost con validación temporal, potencial en US$; heatmap interactivo como entregable aparte | `src/analysis/modelo_potencial.py`, notebook 05, `reports/figures/mapa_potencial.html` | Hecho (PR #30 y resultados reales) |
-| **Final — Rentabilidad (escenario)** | XGBoost por segmento (compartido vs separado), matriz de supuestos, margen de contribución, Excel con fórmulas | `src/analysis/modelo_segmentos.py`, `src/analysis/rentabilidad.py`, `reports/rentabilidad_escenario.xlsx` | En PR |
+| **Final — Rentabilidad e inversión (escenario)** | XGBoost por segmento (compartido vs separado), matriz de supuestos, margen de contribución, reparto óptimo de X millones con rendimientos decrecientes y años de recuperación, Excel con fórmulas y simulador | `src/analysis/modelo_segmentos.py`, `src/analysis/rentabilidad.py`, `src/analysis/inversion.py`, `reports/rentabilidad_escenario.xlsx` | En PR |
 | **Final — Comunicación** | Reporte final, presentación, reflexiones | `docs/final_report.md`, `docs/reflections/` | Pendiente: presentación y reflexiones |
 
 ## Pasos para cerrar

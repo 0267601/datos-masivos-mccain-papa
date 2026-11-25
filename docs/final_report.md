@@ -118,6 +118,20 @@ por 100 mil habitantes y número de restaurantes objetivo.
    producto − costo de importación − costo de servir). El flete lo paga el cliente. No incluye
    costos fijos, inversión ni impuestos.
 
+**Si McCain tuviera X millones (escenario simulado).** El XGBoost predice cuánto crece cada
+mercado por sí solo; no sabe qué hace McCain. Para repartir un presupuesto agregamos una curva de
+respuesta por ciudad:
+
+1. **Tope:** con inversión se ganan hasta 5 puntos de participación en los clientes que ya existen
+   y 20 en los locales nuevos que proyecta el modelo. Las cadenas no cuentan: se negocian como
+   cuenta nacional. Tope = margen por kg de la ciudad × kg ganables.
+2. **Rendimientos decrecientes:** con el monto *mitad* (US$0.05 por kg anual de mercado) se gana
+   50% del tope; con el doble, 75%; con el triple, 87.5%.
+3. **Reparto óptimo:** cada dólar va a la ciudad donde deja más margen de contribución extra; en
+   el óptimo, el último dólar rinde lo mismo en todas las ciudades con inversión.
+4. **Recuperación:** años = inversión ÷ margen de contribución extra al año, por ciudad y para el
+   portafolio. Una curva con 5, 10, 20, 50 y 100 millones muestra cómo baja el rendimiento.
+
 ## Procesamiento
 
 | Etapa | Resultado |
@@ -226,6 +240,11 @@ Costo del producto: US$1.30/kg (Comtrade 2025) + US$0.20 de importación. Partic
 McCain: 30%.
 
 *Resultados por metrópoli: pendientes de la corrida en Databricks.*
+
+### Si McCain tuviera X millones, ¿dónde los pondría?
+
+*Escenario simulado. Se cambia X en la hoja `Inversion` de `reports/rentabilidad_escenario.xlsx` o
+en el simulador del heatmap. Resultados pendientes de la corrida en Databricks.*
 
 ### ¿Contra quién competimos?
 

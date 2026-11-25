@@ -188,3 +188,60 @@ def test_html_con_utilidad(escenario, tmp_path):
     metro = datos["metros"][0]
     assert metro["util_proy"] is not None and len(metro["segmentos"]) == len(ms.SEGMENTOS)
     assert any(s.startswith("Escenario simulado") for s in metro["insights"])
+
+
+# ---------------------------------------------------------------------------
+# Si tuviera X millones
+# ---------------------------------------------------------------------------
+
+from src.analysis import inversion as inv  # noqa: E402
+
+CFG_INV = CONFIG["inversion"]
+
+
+def test_capacidad_sin_cadenas(escenario):
+    *_, detalle, _ = escenario
+    cap = inv.capacidades(detalle, CFG_INV)
+    assert len(cap) == 3
+    fila = cap.set_index("clave_metropoli").loc["C"]
+    propios = detalle[(detalle["clave_metropoli"] == "C")
+                      & detalle["segmento"].isin(CFG_INV["segmentos_capturables"])]
+    assert fila["kg_proy"] == pytest.approx(propios["kg_mercado_proy"].sum())
+    assert fila["mitad_usd"] == pytest.approx(CFG_INV["costo_mitad_usd_por_kg"] * fila["kg_proy"])
+
+
+def test_reparto_suma_x_e_iguala_el_ultimo_dolar(escenario):
+    *_, detalle, _ = escenario
+    cap = inv.capacidades(detalle, CFG_INV)
+    x = 0.5 * cap["mitad_usd"].sum()
+    reparto = inv.asignar(cap, x)
+    assert reparto["inversion_usd"].sum() == pytest.approx(x)
+    assert inv.validar(reparto, x)["estado"] == "VALIDADO"
+    # En las ciudades con inversion, el ultimo dolar rinde lo mismo.
+    con = reparto[reparto["inversion_usd"] > 1]
+    marginal = con["tope_usd"] / con["escala_usd"] * np.exp(-con["inversion_usd"] / con["escala_usd"])
+    assert marginal.max() == pytest.approx(marginal.min(), rel=1e-3)
+
+
+def test_rendimientos_decrecientes(escenario):
+    *_, detalle, _ = escenario
+    cap = inv.capacidades(detalle, CFG_INV)
+    base = cap["mitad_usd"].sum()
+    tabla = inv.curva(cap, [base * f for f in (0.25, 0.5, 1, 2, 4)])
+    assert tabla["contribucion_extra_usd"].is_monotonic_increasing
+    assert tabla["retorno_del_tramo"].is_monotonic_decreasing
+    assert tabla["anios_recuperacion"].is_monotonic_increasing
+    assert (tabla["contribucion_extra_usd"] <= cap["tope_usd"].sum() + 1e-6).all()
+
+
+def test_excel_con_hoja_de_inversion(escenario, tmp_path):
+    _, matriz, generales, detalle, resumen = escenario
+    reparto = inv.asignar(inv.capacidades(detalle, CFG_INV), CFG_INV["presupuesto_usd"])
+    ruta = rt.escribir_excel(detalle, resumen, matriz, generales, tmp_path / "r.xlsx",
+                             inversion={"cfg": CFG_INV, "reparto": reparto})
+    libro = load_workbook(ruta)
+    assert libro.sheetnames[1] == "Inversion" and "Rejilla" in libro.sheetnames
+    hoja = libro["Inversion"]
+    assert hoja["B4"].value == CFG_INV["presupuesto_usd"]
+    assert hoja["K31"].value.startswith("=IF(SUM($J$31:")
+    assert libro["Rejilla"]["B4"].value.startswith("=SUMPRODUCT(")

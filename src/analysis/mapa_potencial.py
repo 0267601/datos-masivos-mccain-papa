@@ -184,6 +184,19 @@ def generar(tabla, metricas, mercado, importancia, ruta=None, rentabilidad=None)
                         "kg_local": round(float(s.kg_por_local), 0)}
                        for s in rentabilidad["matriz"].itertuples()],
         }
+    if rentabilidad is not None and rentabilidad.get("capacidad") is not None:
+        cap = rentabilidad["capacidad"].set_index("clave_metropoli")
+        for m in metros:
+            if m["clave"] in cap.index:
+                m["tope"] = round(float(cap.loc[m["clave"], "tope_usd"]), 2)
+                m["escala"] = round(float(cap.loc[m["clave"], "escala_usd"]), 2)
+        cfg_inv = rentabilidad["cfg_inversion"]
+        contexto["inversion"] = {
+            "presupuesto": float(cfg_inv["presupuesto_usd"]),
+            "tope_existente": cfg_inv["tope_participacion_existente"],
+            "tope_nuevo": cfg_inv["tope_participacion_nuevo"],
+            "costo_mitad": cfg_inv["costo_mitad_usd_por_kg"],
+        }
     datos = json.dumps({"metros": metros, "contexto": contexto,
                         "contorno": CONTORNO_MEXICO},
                        ensure_ascii=False).replace("</", "<\\/")
@@ -234,6 +247,15 @@ h1{font-size:22px;margin:0 0 6px;letter-spacing:-.01em}
 .grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px}
 @media (max-width:820px){.grid{grid-template-columns:1fr}}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+#simulador{margin:16px 0}
+#simulador .fila{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0 12px}
+#simulador input{width:110px;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+#simulador .res{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:10px}
+#simulador .res div{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+#simulador .res b{display:block;font-size:18px}
+#simulador table td,#simulador table th{background:none;border-bottom:1px solid var(--grid);border-radius:0}
+#simulador tbody tr{cursor:pointer}
+#simulador td:nth-child(2),#simulador th:nth-child(2){text-align:left}
 .panel h2{font-size:14px;margin:0 0 8px}
 svg text{fill:var(--ink2);font-size:11px}
 .punto{cursor:pointer;stroke:var(--surface);stroke-width:1.5}
@@ -289,6 +311,7 @@ td.nombre{font-weight:500;color:var(--ink)}
     </div>
     <div class="panel" id="detalle" aria-live="polite"></div>
   </div>
+  <div class="panel" id="simulador" hidden></div>
   <div class="panel tabla">
     <h2>Heatmap: cada celda coloreada por su percentil dentro de la columna</h2>
     <table id="heat"><thead></thead><tbody></tbody></table>
@@ -518,7 +541,52 @@ document.getElementById("tema").addEventListener("click", () => {
   const oscuro = raiz.dataset.theme ? raiz.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
   raiz.dataset.theme = oscuro ? "light" : "dark"; todo();
 });
-encabezado(); todo();
+// --- Si tuviera X millones: reparto optimo con rendimientos decrecientes ---
+// Cada ciudad recibe dinero hasta que el ultimo dolar rinde lo mismo en todas.
+const fmtD = v => v == null ? "—" : (Math.abs(v) < 1e6 ? "US$" + Math.round(v / 1e3).toLocaleString("es-MX") + " mil" : fmtM(v));
+function asignar(X) {
+  const ms = D.metros.filter(m => m.tope > 0 && m.escala > 0);
+  const inv = lam => ms.map(m => m.tope / (m.escala * lam) > 1 ? m.escala * Math.log(m.tope / (m.escala * lam)) : 0);
+  const suma = a => a.reduce((x, y) => x + y, 0);
+  const max = Math.max(...ms.map(m => m.tope / m.escala));
+  let bajo = Math.log(max) - 40, alto = Math.log(max);
+  for (let i = 0; i < 100; i++) { const med = (bajo + alto) / 2; if (suma(inv(Math.exp(med))) > X) bajo = med; else alto = med; }
+  let I = inv(Math.exp(alto)); const t = suma(I); if (t > 0) I = I.map(v => v * X / t);
+  return ms.map((m, k) => {
+    const pct = 1 - Math.exp(-I[k] / m.escala), extra = m.tope * pct;
+    return {m, inv: I[k], extra, pct, anios: extra > 0 ? I[k] / extra : null};
+  }).sort((a, b) => b.inv - a.inv);
+}
+
+function simulador() {
+  const S = C.inversion, caja = document.getElementById("simulador");
+  if (!S) return;
+  caja.hidden = false;
+  if (!caja.dataset.listo) {
+    caja.innerHTML = `<h2>Si McCain tuviera X millones, ¿dónde los pone?*</h2>
+      <div class="fila"><label for="presupuesto">Presupuesto (US$ millones)</label>
+      <input id="presupuesto" type="number" min="0" step="1" value="${S.presupuesto / 1e6}">
+      <span class="tipo">Cada millón va a la ciudad donde deja más margen de contribución extra; los rendimientos bajan al invertir más en la misma ciudad.</span></div>
+      <div class="res" id="simRes"></div>
+      <table><thead><tr><th>#</th><th>Metrópoli</th><th>Inversión</th><th>Contribución extra al año</th><th>Años para recuperar</th><th>% del tope ganado</th></tr></thead><tbody id="simTabla"></tbody></table>
+      <p class="nota">* Escenario simulado: con inversión se ganan hasta ${Math.round(S.tope_existente * 100)} puntos de participación en clientes existentes y ${Math.round(S.tope_nuevo * 100)} en los locales nuevos que proyecta el modelo (sin cadenas, que se negocian como cuenta nacional). Con US$${S.costo_mitad.toFixed(2)} por kg anual de mercado se gana la mitad del tope; con el doble, 75%. Supuestos editables en la hoja Inversion del Excel.</p>`;
+    caja.dataset.listo = "1";
+    document.getElementById("presupuesto").addEventListener("input", simulador);
+  }
+  const X = Math.max(0, Number(document.getElementById("presupuesto").value) || 0) * 1e6;
+  const r = asignar(X), extra = r.reduce((a, x) => a + x.extra, 0), con = r.filter(x => x.inv > 1);
+  document.getElementById("simRes").innerHTML = [
+    [fmtD(extra), "Margen de contribución extra al año"],
+    [extra > 0 ? fmt1(X / extra) + " años" : "—", "Para recuperar la inversión"],
+    [extra > 0 ? fmtP(100 * extra / X) : "—", "Retorno anual"],
+    [String(con.length), "Ciudades con inversión"],
+  ].map(([b, t]) => `<div><b>${b}</b><span class="tipo">${t}</span></div>`).join("");
+  document.getElementById("simTabla").innerHTML = con.slice(0, 15).map((x, k) =>
+    `<tr data-c="${x.m.clave}"><td>${k + 1}</td><td>${x.m.nombre}</td><td>${fmtD(x.inv)}</td><td>${fmtD(x.extra)}</td><td>${x.anios == null ? "—" : fmt1(x.anios)}</td><td>${fmtP(100 * x.pct)}</td></tr>`).join("");
+  document.querySelectorAll("#simTabla tr").forEach(tr => tr.addEventListener("click", () => seleccionar(tr.dataset.c)));
+}
+
+encabezado(); todo(); simulador();
 </script>
 </body>
 </html>

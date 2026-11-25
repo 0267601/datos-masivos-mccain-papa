@@ -287,6 +287,11 @@ descuento, costo de servir y participación). Es un **escenario simulado**, no d
 al cambiar una celda azul de la hoja *Supuestos*, todo el libro se recalcula. Detalle en
 [`docs/final_report.md`](docs/final_report.md).
 
+**Si McCain tuviera X millones, ¿dónde los pone?** La hoja *Inversion* del mismo Excel (y un
+simulador en el heatmap) reparte el presupuesto que escribas entre las metrópolis: cada dólar va
+a donde deja más margen de contribución extra, con rendimientos decrecientes (invertir el doble en
+una ciudad no da el doble), y calcula en cuántos años se recupera cada inversión.
+
 El paso a paso, qué hacer si Databricks no alcanza los portales del gobierno y cómo consultar
 las tablas está en [`docs/databricks.md`](docs/databricks.md).
 

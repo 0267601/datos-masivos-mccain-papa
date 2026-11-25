@@ -472,3 +472,28 @@ los hoteles crecen a otro ritmo).
 menos de 30 ejemplos de entrenamiento usa el modelo compartido aunque gane el separado. La etiqueta
 de cadenas y hoteles exige al menos 5 locales al inicio del periodo; la de independientes, 10.
 
+---
+
+## Decisión
+Responder "si McCain tuviera X millones" con una curva de respuesta por ciudad y un reparto óptimo.
+
+## Razón
+El XGBoost proyecta cuánto crece cada mercado sin importar lo que haga McCain; no sabe que invertir
+el doble en Querétaro no da el doble. Hace falta una curva con rendimientos decrecientes: con
+inversión se gana participación hasta un tope (más alto en los locales nuevos, que aún no tienen
+proveedor), y cada monto adicional gana menos que el anterior (con la inversión *mitad* se gana 50%
+del tope, con el doble 75%). Con curvas así, el mejor reparto es mandar cada dólar a la ciudad donde
+rinde más, lo que equivale a invertir en cada ciudad hasta que el último dólar rinda lo mismo en
+todas. El modelo alimenta la curva: el tamaño del mercado y cuántos locales nuevos habrá en 2030.
+
+## Alternativas consideradas
+Repartir proporcional al potencial (ignora que el dinero rinde menos donde ya se invirtió mucho);
+un optimizador con solver (no se puede usar desde el Excel sin complementos).
+
+## Consecuencias
+Topes y costo de la mitad son supuestos (`inversion` en la configuración y hoja `Inversion` del
+Excel). El Excel resuelve el reparto con una rejilla de 1,000 valores del rendimiento del último
+dólar, sin macros ni Solver; Python lo resuelve exacto y los dos coinciden. La recuperación supone
+que la contribución extra llega completa desde el primer año y no descuenta el dinero en el tiempo.
+Las cadenas quedan fuera porque se negocian como cuenta nacional.
+
