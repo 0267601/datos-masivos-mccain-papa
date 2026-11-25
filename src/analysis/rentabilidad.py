@@ -436,7 +436,17 @@ def escribir_excel(detalle, resumen, matriz, generales, ruta, inversion=None):
             "anchos": anchos, "USD": USD, "USD2": USD2, "PCT": PCT, "NUM": NUM})
 
     wb.calculation.fullCalcOnLoad = True
-    wb.save(ruta)
+    # Un .xlsx es un zip y openpyxl necesita moverse dentro del archivo; los
+    # Volumes de Databricks no lo permiten (Errno 5). Lo armamos en el disco
+    # local y despues lo copiamos.
+    import shutil
+    import tempfile
+    from pathlib import Path
+
+    with tempfile.TemporaryDirectory() as carpeta:
+        local = Path(carpeta) / Path(ruta).name
+        wb.save(local)
+        shutil.copyfile(local, ruta)
     return ruta
 
 
