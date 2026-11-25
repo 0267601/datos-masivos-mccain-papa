@@ -159,6 +159,7 @@ Origen: UN Comtrade, HS 200410. Llave (`periodo`, `pais_codigo`).
 | version, fecha_corte | string, date | Versión del DENUE |
 | objetivo | long | Restaurantes objetivo (comida rápida + a la carta) |
 | comida_rapida, cadenas, hoteles, bares | long | Conteos por categoría; `cadenas` = sucursales de cadena entre los objetivo |
+| comida_rapida_ind, a_la_carta_ind | long | Comida rápida y a la carta **sin** cadena (segmentos de la rentabilidad) |
 | personal_promedio | double | Límite inferior promedio del estrato de personal de los restaurantes objetivo |
 | sector_72 | long | Todos los establecimientos del sector 72 |
 
@@ -175,6 +176,41 @@ Origen: UN Comtrade, HS 200410. Llave (`periodo`, `pais_codigo`).
 | impulsores | string (JSON) | Las dos variables que más mueven la predicción, con su aporte | pp |
 | latitud, longitud | double | Centroide de los establecimientos de la metrópoli | grados |
 | ranking, indice, … | | Columnas del índice de inversión, para compararlos | |
+
+---
+
+# Tablas de la rentabilidad (escenario simulado)
+
+Los locales hoy y proyectados son datos reales del DENUE y del modelo por segmento; los precios,
+descuentos, costos y la participación son **supuestos** (`config/config.example.yaml`,
+`rentabilidad`). Las cantidades en US$ son **margen de contribución**, no utilidad neta.
+
+## `rentabilidad_segmentos` — una fila por metrópoli y segmento
+
+| Variable | Tipo | Descripción | Unidad |
+|---|---|---|---|
+| clave_metropoli, metropoli | string | Metrópoli | — |
+| segmento, nombre | string | `cadenas`, `comida_rapida_ind`, `a_la_carta_ind` u `hoteles` | — |
+| locales_hoy, locales_proyectados | double | Locales del segmento en mayo 2026 y en el año de proyección (XGBoost por segmento) | — |
+| crecimiento_esperado | double | Crecimiento anual compuesto proyectado | % |
+| kg_por_local | double | Consumo relativo × kg por unidad de consumo (calibrado con Comtrade) | kg al año |
+| precio_neto, margen_usd_kg, margen_pct | double | Lista × (1 − descuento); precio neto − costos variables; margen / precio neto | US$/kg, % |
+| kg_mercado_hoy, kg_mercado_proy | double | Locales × kg por local | kg al año |
+| ventas_hoy_usd, ventas_proy_usd | double | kg × participación × precio neto | US$ al año |
+| utilidad_hoy_usd, utilidad_proy_usd, utilidad_incremental_usd | double | Margen de contribución: kg × participación × margen por kg | US$ al año |
+
+## `rentabilidad_metropolis` — una fila por metrópoli
+
+Suma de la tabla anterior, más `margen_proy_pct` (contribución / ventas 2030),
+`utilidad_proy_<segmento>_usd` (contribución 2030 de cada segmento), `segmento_principal`,
+`ranking_utilidad` (1 = mayor contribución 2030), y `ranking` / `ranking_potencial` para
+compararla con el índice y el potencial.
+
+## `modelo_segmentos_metricas` (reports/tables)
+
+Una fila por segmento (y `Todos`) y modelo (`XGBoost compartido`, `XGBoost por segmento`,
+`Persistencia`, `Promedio`) con MAE y RMSE ponderados en el periodo de prueba, ejemplos de
+entrenamiento y prueba, y `ganador` (el XGBoost con menor MAE en `Todos`).
 
 ## `denue_rechazos` — establecimientos que no pasaron las reglas de Silver
 

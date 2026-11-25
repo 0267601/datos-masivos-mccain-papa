@@ -128,11 +128,14 @@ Tablas que registra en `workspace.mccain_papa`: `indice_inversion`, `serie_metro
 1. En el Git folder: **Pull**.
 2. Abrir `notebooks/05_modelo_potencial_databricks.ipynb`, **Serverless** y **Run all**
    (unos 5 minutos). Corre el pipeline completo con `ejecutar_pipeline`, entrena el modelo,
-   genera el heatmap como archivo aparte y registra `potencial_metropolis`, `panel_municipios` y
-   `denue_rechazos` como tablas Delta.
+   proyecta los locales por segmento, calcula el escenario de rentabilidad, genera el heatmap
+   como archivo aparte y registra `potencial_metropolis`, `panel_municipios`, `denue_rechazos`,
+   `rentabilidad_metropolis` y `rentabilidad_segmentos` como tablas Delta.
 3. Descargar **Catalog → workspace → mccain_papa → datalake → reports → entrega_final.zip →
    Download**. Trae las tablas, las gráficas, el heatmap interactivo
-   (`mapa_potencial.html`, entregable aparte) y la muestra real para `data/sample/indice/`.
+   (`mapa_potencial.html`), el Excel del escenario (`rentabilidad_escenario.xlsx`) y la muestra
+   real para `data/sample/indice/`. El Excel se calcula al abrirlo en Excel (Databricks no tiene
+   un motor de hojas de cálculo para dejar los valores guardados).
 
 ### Como Job
 

@@ -103,6 +103,21 @@ por 100 mil habitantes y número de restaurantes objetivo.
 5. Potencial = restaurantes × kg de papa congelada importada por restaurante × US$/kg
    (último año completo de Comtrade).
 
+**Rentabilidad por segmento (escenario simulado).**
+
+1. Separamos cuatro segmentos del DENUE: cadenas (cuentas nacionales), comida rápida
+   independiente, a la carta independiente y hoteles.
+2. Proyectamos los locales de cada segmento a 2030 con XGBoost. Pusimos a competir un modelo
+   compartido (el segmento entra como variable) contra uno por segmento, en la misma prueba
+   2022→2026 y contra persistencia y promedio; proyecta el que menos se equivoca.
+3. Una matriz de supuestos (no son datos de McCain) da a cada segmento su consumo relativo por
+   local, descuento sobre lista y costo de servir. El costo del producto es el precio real de
+   importación de Comtrade, y el consumo por local se calibra para que el país sume los kilos
+   reales importados.
+4. Margen de contribución = locales × kg por local × participación × (precio neto − costo del
+   producto − costo de importación − costo de servir). El flete lo paga el cliente. No incluye
+   costos fijos, inversión ni impuestos.
+
 ## Procesamiento
 
 | Etapa | Resultado |
@@ -194,6 +209,23 @@ La Laguna, Cuernavaca, León, Saltillo, Tuxtla Gutiérrez, Pachuca y Oaxaca.
 El heatmap interactivo (`reports/figures/mapa_potencial.html`, entregable aparte) muestra las
 92 metrópolis en el mapa y en la tabla; al hacer clic en una aparecen sus números, su lugar en
 el índice y qué variables movieron su predicción.
+
+### ¿Cuánto le dejaría a McCain? Escenario de rentabilidad
+
+*Escenario simulado: los locales por segmento son datos reales proyectados; precio, descuentos,
+costos y participación son supuestos editables en `reports/rentabilidad_escenario.xlsx`.*
+
+| Segmento | Consumo relativo | Descuento | Costo de servir | Margen por kg con lista US$2.20 |
+|---|---|---|---|---|
+| Cadenas (cuenta nacional) | 6.0× | 25% | US$0.05 | US$0.10 (6%) |
+| Comida rápida independiente | 1.0× | 0% | US$0.25 | US$0.45 (20%) |
+| A la carta independiente | 0.7× | 0% | US$0.30 | US$0.40 (18%) |
+| Hoteles (contrato) | 1.5× | 15% | US$0.15 | US$0.22 (12%) |
+
+Costo del producto: US$1.30/kg (Comtrade 2025) + US$0.20 de importación. Participación de
+McCain: 30%.
+
+*Resultados por metrópoli: pendientes de la corrida en Databricks.*
 
 ### ¿Contra quién competimos?
 
