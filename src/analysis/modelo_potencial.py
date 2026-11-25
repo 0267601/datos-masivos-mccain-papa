@@ -97,6 +97,11 @@ def construir_panel(denue, municipios, categorias_objetivo):
             F.sum(es_objetivo.cast("int")).alias("objetivo"),
             F.sum((F.col("categoria") == "comida_rapida").cast("int")).alias("comida_rapida"),
             F.sum((es_objetivo & F.col("cadena").isNotNull()).cast("int")).alias("cadenas"),
+            # Segmentos para la rentabilidad: cadenas aparte de los independientes.
+            F.sum(((F.col("categoria") == "comida_rapida") & F.col("cadena").isNull())
+                  .cast("int")).alias("comida_rapida_ind"),
+            F.sum(((F.col("categoria") == "a_la_carta") & F.col("cadena").isNull())
+                  .cast("int")).alias("a_la_carta_ind"),
             F.sum((F.col("categoria") == "hoteles").cast("int")).alias("hoteles"),
             F.sum((F.col("categoria") == "bares").cast("int")).alias("bares"),
             F.avg(F.when(es_objetivo, F.col("personal_min"))).alias("personal_promedio"),

@@ -108,8 +108,41 @@ def preparar_datos(tabla, mercado):
     return filas
 
 
-def generar(tabla, metricas, mercado, importancia, ruta=None):
-    """Regresamos el HTML; si damos ruta, ademas lo escribimos."""
+def datos_rentabilidad(rentabilidad):
+    """Por metropoli: utilidad del escenario y su reparto por segmento."""
+    resumen, detalle = rentabilidad["resumen"], rentabilidad["detalle"]
+    por_metro = {}
+    for fila in resumen.itertuples(index=False):
+        segmentos = detalle[detalle["clave_metropoli"] == fila.clave_metropoli]
+        por_metro[fila.clave_metropoli] = {
+            "util_hoy": round(float(fila.utilidad_hoy_usd), 0),
+            "util_proy": round(float(fila.utilidad_proy_usd), 0),
+            "util_inc": round(float(fila.utilidad_incremental_usd), 0),
+            "ventas_proy": round(float(fila.ventas_proy_usd), 0),
+            "margen": round(float(fila.margen_proy_pct) * 100, 2),
+            "rank_utilidad": int(fila.ranking_utilidad),
+            "segmentos": [{"nombre": s.nombre, "util": round(float(s.utilidad_proy_usd), 0),
+                           "locales_hoy": round(float(s.locales_hoy), 0),
+                           "locales_proy": round(float(s.locales_proyectados), 0)}
+                          for s in segmentos.sort_values("utilidad_proy_usd",
+                                                          ascending=False).itertuples()],
+        }
+    return por_metro
+
+
+def frase_rentabilidad(r, total):
+    principal = r["segmentos"][0]["nombre"].lower() if r["segmentos"] else "—"
+    return (f"Escenario simulado: margen de contribución para McCain de {millones(r['util_proy'])} al año "
+            f"en 2030 (margen {r['margen']:.0f}%, puesto {r['rank_utilidad']} de {total}); "
+            f"el segmento que más deja es {principal}.")
+
+
+def generar(tabla, metricas, mercado, importancia, ruta=None, rentabilidad=None):
+    """Regresamos el HTML; si damos ruta, ademas lo escribimos.
+
+    rentabilidad (opcional): salida de src.analysis.rentabilidad. Si viene,
+    el heatmap agrega la utilidad del escenario simulado.
+    """
     xgb = metricas.set_index("modelo")
     anio = int(tabla["anio_proyeccion"].mode().iloc[0])
     contexto = {
@@ -126,7 +159,45 @@ def generar(tabla, metricas, mercado, importancia, ruta=None):
         "importancia": [{"variable": k, "valor": round(float(v), 3)}
                         for k, v in importancia.head(5).items()],
     }
-    datos = json.dumps({"metros": preparar_datos(tabla, mercado), "contexto": contexto,
+    metros = preparar_datos(tabla, mercado)
+    if rentabilidad is not None:
+        por_metro = datos_rentabilidad(rentabilidad)
+        for m in metros:
+            r = por_metro.get(m["clave"])
+            if r:
+                m.update(r)
+                m["insights"].append(frase_rentabilidad(r, len(por_metro)))
+        g = rentabilidad["generales"]
+        resumen = rentabilidad["resumen"]
+        mt = rentabilidad["metricas"]
+        todos = mt[mt["segmento"] == "Todos"].set_index("modelo")["mae"]
+        contexto["rentabilidad"] = {
+            "util_proy": float(resumen["utilidad_proy_usd"].sum()),
+            "util_hoy": float(resumen["utilidad_hoy_usd"].sum()),
+            "margen": round(100 * float(resumen["utilidad_proy_usd"].sum()
+                                        / max(resumen["ventas_proy_usd"].sum(), 1)), 1),
+            "participacion": g["participacion_mccain"],
+            "precio_lista": g["precio_lista_usd_kg"],
+            "ganador": rentabilidad["ganador"],
+            "mae": {k: round(float(v), 2) for k, v in todos.items()},
+            "matriz": [{"nombre": s.nombre, "margen": round(float(s.margen_pct) * 100, 1),
+                        "kg_local": round(float(s.kg_por_local), 0)}
+                       for s in rentabilidad["matriz"].itertuples()],
+        }
+    if rentabilidad is not None and rentabilidad.get("capacidad") is not None:
+        cap = rentabilidad["capacidad"].set_index("clave_metropoli")
+        for m in metros:
+            if m["clave"] in cap.index:
+                m["tope"] = round(float(cap.loc[m["clave"], "tope_usd"]), 2)
+                m["escala"] = round(float(cap.loc[m["clave"], "escala_usd"]), 2)
+        cfg_inv = rentabilidad["cfg_inversion"]
+        contexto["inversion"] = {
+            "presupuesto": float(cfg_inv["presupuesto_usd"]),
+            "tope_existente": cfg_inv["tope_participacion_existente"],
+            "tope_nuevo": cfg_inv["tope_participacion_nuevo"],
+            "costo_mitad": cfg_inv["costo_mitad_usd_por_kg"],
+        }
+    datos = json.dumps({"metros": metros, "contexto": contexto,
                         "contorno": CONTORNO_MEXICO},
                        ensure_ascii=False).replace("</", "<\\/")
     html = PLANTILLA.replace("/*__DATOS__*/null", datos)
@@ -176,6 +247,15 @@ h1{font-size:22px;margin:0 0 6px;letter-spacing:-.01em}
 .grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px}
 @media (max-width:820px){.grid{grid-template-columns:1fr}}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+#simulador{margin:16px 0}
+#simulador .fila{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:6px 0 12px}
+#simulador input{width:110px;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+#simulador .res{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:10px}
+#simulador .res div{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+#simulador .res b{display:block;font-size:18px}
+#simulador table td,#simulador table th{background:none;border-bottom:1px solid var(--grid);border-radius:0}
+#simulador tbody tr{cursor:pointer}
+#simulador td:nth-child(2),#simulador th:nth-child(2){text-align:left}
 .panel h2{font-size:14px;margin:0 0 8px}
 svg text{fill:var(--ink2);font-size:11px}
 .punto{cursor:pointer;stroke:var(--surface);stroke-width:1.5}
@@ -195,6 +275,8 @@ th{position:sticky;top:0;background:var(--surface);color:var(--ink2);font-weight
   text-align:right;padding:6px 8px;cursor:pointer;white-space:nowrap}
 th:first-child,td:first-child,th.izq,td.nombre{text-align:left}
 td{padding:6px 8px;text-align:right;border-radius:4px;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.seg{margin:10px 0 4px;font-size:12px}
+table.seg th,table.seg td{padding:4px 6px;background:none;border-bottom:1px solid var(--grid);border-radius:0}
 tr{cursor:pointer} tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--sel)}
 td.nombre{font-weight:500;color:var(--ink)}
 .nota{color:var(--muted);font-size:12px;margin-top:14px}
@@ -229,6 +311,7 @@ td.nombre{font-weight:500;color:var(--ink)}
     </div>
     <div class="panel" id="detalle" aria-live="polite"></div>
   </div>
+  <div class="panel" id="simulador" hidden></div>
   <div class="panel tabla">
     <h2>Heatmap: cada celda coloreada por su percentil dentro de la columna</h2>
     <table id="heat"><thead></thead><tbody></tbody></table>
@@ -249,6 +332,10 @@ const COLUMNAS = [
   {k: "nombre", t: "Metrópoli", f: v => v, heat: false},
   {k: "pot_inc", t: "Potencial incremental", f: fmtM, heat: true},
   {k: "pot_proy", t: "Mercado " + C.anio, f: fmtM, heat: true},
+  ...(C.rentabilidad ? [
+    {k: "util_proy", t: "Contribución " + C.anio + "*", f: fmtM, heat: true},
+    {k: "margen", t: "Margen*", f: fmtP, heat: true},
+  ] : []),
   {k: "crec_esp", t: "Crec. esperado", f: fmtP, heat: true},
   {k: "crec_hist", t: "Crec. 2019–26", f: fmtP, heat: true},
   {k: "rest_hoy", t: "Restaurantes hoy", f: fmtN, heat: true},
@@ -290,22 +377,35 @@ function encabezado() {
     `Cada metrópoli se mide por cuánto crecería su mercado de papa congelada al ${C.anio}. ` +
     `Un modelo XGBoost proyecta los restaurantes de comida rápida y a la carta; cada restaurante ` +
     `vale ${fmt1(C.kg_por_restaurante)} kg al año a US$${C.usd_kg} por kg (importaciones ${C.anio_importaciones}, UN Comtrade). ` +
-    `Es tamaño de mercado, no utilidad.`;
+    `Es tamaño de mercado, no utilidad.` +
+    (C.rentabilidad ? ` Las columnas con * agregan el margen de contribución de un escenario simulado (supuestos editables, no datos de McCain; sin costos fijos ni inversión).` : "");
   const top = D.metros[0];
   const mejora = C.mae.Persistencia ? (100 * (1 - C.mae.XGBoost / C.mae.Persistencia)) : null;
+  const R = C.rentabilidad;
+  if (R && !document.querySelector('#metrica option[value="util_proy"]')) {
+    const o = document.createElement("option");
+    o.value = "util_proy"; o.textContent = "Color: contribución " + C.anio + " (escenario)";
+    document.getElementById("metrica").appendChild(o);
+  }
   document.getElementById("kpis").innerHTML = [
     [fmtM(C.total_inc), `Mercado nuevo en ${D.metros.length} metrópolis al ${C.anio}`],
     [top ? top.nombre : "—", "Mayor potencial incremental"],
     [C.mae.XGBoost + " pp", `Error medio del modelo (prueba ${C.periodo_prueba})`],
     [mejora == null ? "—" : (mejora >= 0 ? "−" : "+") + Math.abs(mejora).toFixed(0) + "%",
      "Error del modelo frente a repetir el crecimiento anterior"],
+    ...(R ? [[fmtM(R.util_proy), `Margen de contribución McCain ${C.anio} · escenario simulado (${fmtP(R.margen)} de las ventas)`]] : []),
   ].map(([b, s]) => `<div class="kpi"><b>${b}</b><span>${s}</span></div>`).join("");
   document.getElementById("nota").textContent =
     `Potencial = restaurantes objetivo × kg importados por restaurante × US$/kg. ` +
     `Supone que el consumo por restaurante y el precio se mantienen; no incluye márgenes, costos ni papa nacional. ` +
     `Validación temporal: entrenado con 2015→2019 y 2019→2022, probado con ${C.periodo_prueba}. ` +
     `Contorno: Natural Earth. ` +
-    `Spearman entre metrópolis (prueba): XGBoost ${C.spearman.XGBoost ?? "—"}, persistencia ${C.spearman.Persistencia ?? "—"}.`;
+    `Spearman entre metrópolis (prueba): XGBoost ${C.spearman.XGBoost ?? "—"}, persistencia ${C.spearman.Persistencia ?? "—"}.` +
+    (R ? ` * Escenario simulado, no datos de McCain: precio de lista US$${R.precio_lista.toFixed(2)}/kg, ` +
+         `participación ${Math.round(R.participacion * 100)}%, márgenes por segmento ` +
+         R.matriz.map(x => `${x.nombre.toLowerCase()} ${x.margen}%`).join(", ") +
+         `. Locales por segmento proyectados con XGBoost (${R.ganador === "compartido" ? "un modelo compartido" : "un modelo por segmento"}, ` +
+         `el que menos se equivocó en la prueba). Supuestos editables en reports/rentabilidad_escenario.xlsx.` : "");
 }
 
 function filtrados() {
@@ -420,7 +520,13 @@ function dibujarDetalle() {
       <dt>Crecimiento 2019–2026</dt><dd>${fmtP(m.crec_hist)} anual</dd>
       <dt>Índice de inversión</dt><dd>${fmt1(m.indice)}${m.rank_indice ? " (#" + m.rank_indice + ")" : ""}</dd>
       <dt>Población 2020</dt><dd>${fmtN(m.poblacion)}</dd>
+      ${m.util_proy != null ? `
+      <dt>Contribución hoy → ${C.anio}*</dt><dd><b>${fmtM(m.util_hoy)} → ${fmtM(m.util_proy)}</b></dd>
+      <dt>Ventas McCain ${C.anio}*</dt><dd>${fmtM(m.ventas_proy)} · margen ${fmtP(m.margen)}</dd>` : ""}
     </dl>
+    ${m.segmentos ? `<table class="seg"><thead><tr><th class="izq">Segmento*</th><th>Locales hoy → ${C.anio}</th><th>Contribución ${C.anio}</th></tr></thead><tbody>` +
+      m.segmentos.map(s => `<tr><td class="izq">${s.nombre}</td><td>${fmtN(s.locales_hoy)} → ${fmtN(s.locales_proy)}</td><td>${fmtM(s.util)}</td></tr>`).join("") +
+      `</tbody></table>` : ""}
     <ul>${m.insights.map(s => `<li>${s}</li>`).join("")}</ul>`;
 }
 
@@ -435,7 +541,52 @@ document.getElementById("tema").addEventListener("click", () => {
   const oscuro = raiz.dataset.theme ? raiz.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
   raiz.dataset.theme = oscuro ? "light" : "dark"; todo();
 });
-encabezado(); todo();
+// --- Si tuviera X millones: reparto optimo con rendimientos decrecientes ---
+// Cada ciudad recibe dinero hasta que el ultimo dolar rinde lo mismo en todas.
+const fmtD = v => v == null ? "—" : (Math.abs(v) < 1e6 ? "US$" + Math.round(v / 1e3).toLocaleString("es-MX") + " mil" : fmtM(v));
+function asignar(X) {
+  const ms = D.metros.filter(m => m.tope > 0 && m.escala > 0);
+  const inv = lam => ms.map(m => m.tope / (m.escala * lam) > 1 ? m.escala * Math.log(m.tope / (m.escala * lam)) : 0);
+  const suma = a => a.reduce((x, y) => x + y, 0);
+  const max = Math.max(...ms.map(m => m.tope / m.escala));
+  let bajo = Math.log(max) - 40, alto = Math.log(max);
+  for (let i = 0; i < 100; i++) { const med = (bajo + alto) / 2; if (suma(inv(Math.exp(med))) > X) bajo = med; else alto = med; }
+  let I = inv(Math.exp(alto)); const t = suma(I); if (t > 0) I = I.map(v => v * X / t);
+  return ms.map((m, k) => {
+    const pct = 1 - Math.exp(-I[k] / m.escala), extra = m.tope * pct;
+    return {m, inv: I[k], extra, pct, anios: extra > 0 ? I[k] / extra : null};
+  }).sort((a, b) => b.inv - a.inv);
+}
+
+function simulador() {
+  const S = C.inversion, caja = document.getElementById("simulador");
+  if (!S) return;
+  caja.hidden = false;
+  if (!caja.dataset.listo) {
+    caja.innerHTML = `<h2>Si McCain tuviera X millones, ¿dónde los pone?*</h2>
+      <div class="fila"><label for="presupuesto">Presupuesto (US$ millones)</label>
+      <input id="presupuesto" type="number" min="0" step="1" value="${S.presupuesto / 1e6}">
+      <span class="tipo">Cada millón va a la ciudad donde deja más margen de contribución extra; los rendimientos bajan al invertir más en la misma ciudad.</span></div>
+      <div class="res" id="simRes"></div>
+      <table><thead><tr><th>#</th><th>Metrópoli</th><th>Inversión</th><th>Contribución extra al año</th><th>Años para recuperar</th><th>% del tope ganado</th></tr></thead><tbody id="simTabla"></tbody></table>
+      <p class="nota">* Escenario simulado: con inversión se ganan hasta ${Math.round(S.tope_existente * 100)} puntos de participación en clientes existentes y ${Math.round(S.tope_nuevo * 100)} en los locales nuevos que proyecta el modelo (sin cadenas, que se negocian como cuenta nacional). Con US$${S.costo_mitad.toFixed(2)} por kg anual de mercado se gana la mitad del tope; con el doble, 75%. Supuestos editables en la hoja Inversion del Excel.</p>`;
+    caja.dataset.listo = "1";
+    document.getElementById("presupuesto").addEventListener("input", simulador);
+  }
+  const X = Math.max(0, Number(document.getElementById("presupuesto").value) || 0) * 1e6;
+  const r = asignar(X), extra = r.reduce((a, x) => a + x.extra, 0), con = r.filter(x => x.inv > 1);
+  document.getElementById("simRes").innerHTML = [
+    [fmtD(extra), "Margen de contribución extra al año"],
+    [extra > 0 ? fmt1(X / extra) + " años" : "—", "Para recuperar la inversión"],
+    [extra > 0 ? fmtP(100 * extra / X) : "—", "Retorno anual"],
+    [String(con.length), "Ciudades con inversión"],
+  ].map(([b, t]) => `<div><b>${b}</b><span class="tipo">${t}</span></div>`).join("");
+  document.getElementById("simTabla").innerHTML = con.slice(0, 15).map((x, k) =>
+    `<tr data-c="${x.m.clave}"><td>${k + 1}</td><td>${x.m.nombre}</td><td>${fmtD(x.inv)}</td><td>${fmtD(x.extra)}</td><td>${x.anios == null ? "—" : fmt1(x.anios)}</td><td>${fmtP(100 * x.pct)}</td></tr>`).join("");
+  document.querySelectorAll("#simTabla tr").forEach(tr => tr.addEventListener("click", () => seleccionar(tr.dataset.c)));
+}
+
+encabezado(); todo(); simulador();
 </script>
 </body>
 </html>

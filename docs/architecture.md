@@ -161,9 +161,12 @@ DENUE (7 zip)        CONAPO (2 CSV)        UN Comtrade (132 JSON)
                                                                            ▼
                                   indice_inversion (broadcast, window) GOLD: indice_inversion, serie_metropolis, cadenas_metropolis
                                   modelo_potencial (XGBoost)            GOLD: panel_municipios, potencial_metropolis
+                                  rentabilidad (XGBoost por segmento    GOLD: rentabilidad_segmentos, rentabilidad_metropolis
+                                  + supuestos del escenario)                  (ESCENARIO SIMULADO)
                                                                            │
                                                                            ▼
-                                                                       reports/    tablas CSV, gráficas PNG, mapa_potencial.html
+                                                                       reports/    tablas CSV, gráficas PNG, mapa_potencial.html,
+                                                                                   rentabilidad_escenario.xlsx
                                                                        Unity Catalog: tablas Delta en workspace.mccain_papa
 ```
 
@@ -189,7 +192,7 @@ piezas de la clase de automatización:
 |---|---|
 | `leer_configuracion` | Parámetros explícitos: `--fuente`, `--sin-descarga`, `--muestra` (widgets en Databricks) |
 | `ejecutar_etapa` | Corre una etapa, mide su duración y registra `OK`, `OK_CON_FALLAS` o `ERROR` en JSON |
-| `ejecutar_pipeline` | Encadena 01 adquisición → 02 Silver → 03 validación → 04 Gold → 05 modelo; si una falla, las siguientes no corren |
+| `ejecutar_pipeline` | Encadena 01 adquisición → 02 Silver → 03 validación → 04 Gold → 05 modelo → 06 rentabilidad (escenario); si una falla, las siguientes no corren |
 
 Cada corrida queda en `reports/tables/registro_pipeline.json` con su `run_id`. Repetir la
 corrida con los mismos insumos da el mismo resultado: las escrituras son `overwrite` y la
@@ -213,6 +216,25 @@ importaciones_anuales ──┴─ parametros_mercado ─► proyectar_potencial
 
 Spark hace todo lo que toca los 2.77 millones de establecimientos; el modelo trabaja sobre el
 panel agregado (unos 1,700 renglones), donde pandas y XGBoost en un solo nodo bastan.
+
+### La rentabilidad dentro de la arquitectura
+
+```
+panel_municipios (4 segmentos) ─► ejemplos_segmentos (municipio × periodo × segmento)
+                                        │
+                     evaluar: XGBoost compartido vs uno por segmento vs persistencia y promedio (2022→2026)
+                                        │ gana el de menor MAE
+                     proyectar (2026→2030) ─► locales por metrópoli y segmento   ◄── DATO REAL PROYECTADO
+                                        │
+config: rentabilidad ─► matriz_supuestos (calibrada con los kg de Comtrade)      ◄── SUPUESTOS SIMULADOS
+                                        │
+                     calcular ─► validar ─► rentabilidad_* (Gold) · rentabilidad_escenario.xlsx · heatmap
+```
+
+La frontera entre lo que se predice y lo que se supone es deliberada: el modelo solo aprende de
+datos reales (locales del DENUE); los números de la empresa, que no tenemos, son supuestos
+editables que multiplican esa proyección. El Excel repite el cálculo con fórmulas vivas para que
+cualquiera cambie un supuesto sin tocar código.
 
 ### Colaboración
 

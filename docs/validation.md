@@ -162,6 +162,8 @@ regla para que solo cuente errores del SNIIM y subimos los CSV de CONAPO a mano 
 | `reglas_rechazos` | Rechazos ≤ 1% de los establecimientos, con su motivo | AVISO |
 | `validar_potencial` | Una fila por metrópoli; restaurantes de hoy = suma del panel; incremental = proyectado − hoy; crecimiento dentro de los límites; sin negativos | Error: no se publica el potencial |
 | `evaluar_modelo` | XGBoost contra persistencia y promedio en 2022→2026 | Se reporta en `modelo_metricas.csv` y en el heatmap |
+| `modelo_segmentos.evaluar` | XGBoost compartido vs por segmento vs persistencia y promedio, por segmento | Se reporta en `modelo_segmentos_metricas.csv`; proyecta el de menor MAE |
+| `rentabilidad.validar` | Una fila por metrópoli; locales de hoy = los del modelo; resumen = suma del detalle; todo segmento con supuestos | Error: no se publica el escenario |
 
 Con la muestra del repositorio (`python main.py --muestra`), las reglas de volumen fallan por
 diseño (son pocas filas); en ese modo el pipeline sigue después de la validación y lo marca

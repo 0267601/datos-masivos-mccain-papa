@@ -14,6 +14,7 @@ integramos, analizamos y comunicamos.
 | **Correcciones con datos reales** | 403 de CONAPO, autoservicio fuera del cálculo, resultados reales, evidencia de Databricks | PR #22, #24, #26, #28 | Hecho |
 | **Final — Integración** | `main.py` con `ejecutar_pipeline`, rechazos y conciliación, muestra real del índice | `src/pipeline.py`, `data/sample/indice/`, `reports/tables/registro_pipeline.json` | Hecho (PR #30) |
 | **Final — Análisis** | Modelo XGBoost con validación temporal, potencial en US$; heatmap interactivo como entregable aparte | `src/analysis/modelo_potencial.py`, notebook 05, `reports/figures/mapa_potencial.html` | Hecho (PR #30 y resultados reales) |
+| **Final — Rentabilidad e inversión (escenario)** | XGBoost por segmento (compartido vs separado), matriz de supuestos, margen de contribución, reparto óptimo de X millones con rendimientos decrecientes y años de recuperación, Excel con fórmulas y simulador | `src/analysis/modelo_segmentos.py`, `src/analysis/rentabilidad.py`, `src/analysis/inversion.py`, `reports/rentabilidad_escenario.xlsx` | En PR |
 | **Final — Comunicación** | Reporte final, presentación, reflexiones | `docs/final_report.md`, `docs/reflections/` | Pendiente: presentación y reflexiones |
 
 ## Pasos para cerrar
@@ -24,8 +25,8 @@ integramos, analizamos y comunicamos.
 | 2 | Revisar, aprobar y hacer merge | Diego Pérez | Web: *Files changed* → *Approve* → *Merge* | Hecho |
 | 3 | Correr el notebook 05 en Databricks | Diego Zamora | Git folder → **Pull** → **Run all** | Hecho (23 nov, 2 min 26 s) |
 | 4 | Descargar `entrega_final.zip` | Diego Zamora | Catalog → datalake → reports → **Download** | Hecho |
-| 5 | Subir resultados reales, muestra y arreglo del zip | Diego Zamora | PR con `final_report.md`, `reports/`, `data/sample/indice/` | En PR |
-| 6 | Repetir **Pull** y **Run all** para que el notebook quede limpio | Diego Zamora | Todas las celdas en verde | Pendiente |
+| 5 | Subir resultados reales, muestra y arreglo del zip | Diego Zamora | PR #32 | Hecho |
+| 6 | Escenario de rentabilidad por segmento: PR, **Pull** y **Run all** | Diego Zamora | Etapa 06 en verde y `rentabilidad_escenario.xlsx` en el zip | En PR |
 | 7 | Escribir las reflexiones | Cada uno | `docs/reflections/diego-zamora.md` y `docs/reflections/diego-perez.md` | Pendiente |
 | 8 | Presentación de 12 a 15 minutos | Los dos | Estructura de la guía: problema, pregunta, datos, arquitectura, desafío técnico, procesamiento, resultados, limitaciones, conclusión | Pendiente |
 | 9 | Comprobar desde una instalación limpia | Los dos | Clonar, `pip install -r requirements.txt`, `pytest`, `python main.py --muestra` | Probado en local (≈1 min) |

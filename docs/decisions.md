@@ -426,3 +426,74 @@ duplicados es reproducible.
 Nueva tabla `denue_rechazos` con `motivos_rechazo`, regla de conciliación
 (interim = silver + rechazos + duplicados) y regla de validación sobre la proporción de
 rechazos.
+
+---
+
+## Decisión
+Agregar un escenario de rentabilidad por segmento con supuestos simulados, separado del modelo.
+
+## Razón
+El potencial dice cuánto vale el mercado, no cuánto le deja a McCain. A cada tipo de cliente se le
+vende distinto: a las cadenas (cuentas nacionales) con descuento por volumen y margen bajo, a los
+independientes a precio de lista con margen alto, a los hoteles por contrato. No tenemos esos
+números de la empresa, y un modelo no puede aprender algo que nosotros inventamos. Por eso el
+XGBoost solo predice lo que sí está en los datos (locales por segmento) y los precios, descuentos,
+costos y participación van como supuestos editables que multiplican esa proyección.
+
+## Alternativas consideradas
+Entrenar el XGBoost con márgenes simulados (aprendería nuestros supuestos, no la realidad); usar
+datos internos de McCain (no van en un repositorio público).
+
+## Consecuencias
+La tabla y el Excel se rotulan siempre como **escenario simulado**. Lo que calculamos es **margen de
+contribución** (ventas menos costos variables por kilo), no utilidad neta: no incluye costos fijos,
+la inversión para entrar a cada ciudad ni impuestos. El flete lo paga el cliente. El consumo por
+local se calibra para que el país sume los kilos reales que importa México; solo la proporción entre
+segmentos es supuesto. Con los números reales se cambia la hoja Supuestos y todo se recalcula.
+
+---
+
+## Decisión
+Proyectar los locales por segmento con el XGBoost que gane entre uno compartido y uno por segmento.
+
+## Razón
+Un modelo por segmento es más fácil de explicar, pero las cadenas tienen pocas sucursales por
+municipio (unas 2,400 en todo el país) y un modelo solo con ellas aprendería ruido. Uno compartido,
+con el segmento como variable, aprende lo común (saturación, población) con todos los datos y se
+divide por segmento donde los datos lo sostienen. En vez de elegir por intuición, los ponemos a
+competir en el mismo periodo de prueba (2022→2026), por segmento, contra persistencia y promedio.
+
+## Alternativas consideradas
+Repartir el crecimiento total según la mezcla actual de cada ciudad (no distingue que las cadenas o
+los hoteles crecen a otro ritmo).
+
+## Consecuencias
+`reports/tables/modelo_segmentos_metricas.csv` guarda la comparación y el ganador. Un segmento con
+menos de 30 ejemplos de entrenamiento usa el modelo compartido aunque gane el separado. La etiqueta
+de cadenas y hoteles exige al menos 5 locales al inicio del periodo; la de independientes, 10.
+
+---
+
+## Decisión
+Responder "si McCain tuviera X millones" con una curva de respuesta por ciudad y un reparto óptimo.
+
+## Razón
+El XGBoost proyecta cuánto crece cada mercado sin importar lo que haga McCain; no sabe que invertir
+el doble en Querétaro no da el doble. Hace falta una curva con rendimientos decrecientes: con
+inversión se gana participación hasta un tope (más alto en los locales nuevos, que aún no tienen
+proveedor), y cada monto adicional gana menos que el anterior (con la inversión *mitad* se gana 50%
+del tope, con el doble 75%). Con curvas así, el mejor reparto es mandar cada dólar a la ciudad donde
+rinde más, lo que equivale a invertir en cada ciudad hasta que el último dólar rinda lo mismo en
+todas. El modelo alimenta la curva: el tamaño del mercado y cuántos locales nuevos habrá en 2030.
+
+## Alternativas consideradas
+Repartir proporcional al potencial (ignora que el dinero rinde menos donde ya se invirtió mucho);
+un optimizador con solver (no se puede usar desde el Excel sin complementos).
+
+## Consecuencias
+Topes y costo de la mitad son supuestos (`inversion` en la configuración y hoja `Inversion` del
+Excel). El Excel resuelve el reparto con una rejilla de 1,000 valores del rendimiento del último
+dólar, sin macros ni Solver; Python lo resuelve exacto y los dos coinciden. La recuperación supone
+que la contribución extra llega completa desde el primer año y no descuenta el dinero en el tiempo.
+Las cadenas quedan fuera porque se negocian como cuenta nacional.
+

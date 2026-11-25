@@ -185,12 +185,13 @@ pytest                                       # pruebas
 python -m src.ingestion.download_data --fuente indice    # DENUE, CONAPO, Comtrade (~15 min)
 python -m src.processing.build_dataset --fuente indice   # → processed/denue_establecimientos, metropolis, importaciones
 python -m src.validation.validate_dataset                # valida lo que exista: E1 e índice
-python -m src.analysis.run_analysis                      # índice + modelo XGBoost + heatmap
+python -m src.analysis.run_analysis                      # índice + modelo XGBoost + rentabilidad + heatmap
 ```
 
 `run_analysis` corre `src.analysis.indice_inversion` (índice y 3 gráficas) y
 `src.analysis.modelo_potencial` (modelo, potencial en US$, importancia de variables y
-`mapa_potencial.html`).
+`mapa_potencial.html`) y `src.analysis.rentabilidad` (XGBoost por segmento, escenario de
+rentabilidad y `reports/rentabilidad_escenario.xlsx`).
 
 `--fuente e1` hace solo SIAP y SNIIM; sin `--fuente` se hace todo.
 
@@ -277,6 +278,19 @@ Pasos:
 muestra en el notebook; es un archivo propio que se abre en cualquier navegador: mapa de
 México con todas las metrópolis, heatmap por percentil y, al hacer clic en una metrópoli, sus
 números e insights. Lo genera el pipeline y viaja también en la raíz de `entrega_final.zip`.
+
+**Entregable aparte: escenario de rentabilidad en Excel.** `reports/rentabilidad_escenario.xlsx`
+reparte el mercado en cuatro segmentos (cadenas, comida rápida independiente, a la carta
+independiente y hoteles), proyecta sus locales a 2030 con un XGBoost por segmento y calcula el
+**margen de contribución** de McCain con una matriz de supuestos editable (precio de lista,
+descuento, costo de servir y participación). Es un **escenario simulado**, no datos de McCain:
+al cambiar una celda azul de la hoja *Supuestos*, todo el libro se recalcula. Detalle en
+[`docs/final_report.md`](docs/final_report.md).
+
+**Si McCain tuviera X millones, ¿dónde los pone?** La hoja *Inversion* del mismo Excel (y un
+simulador en el heatmap) reparte el presupuesto que escribas entre las metrópolis: cada dólar va
+a donde deja más margen de contribución extra, con rendimientos decrecientes (invertir el doble en
+una ciudad no da el doble), y calcula en cuántos años se recupera cada inversión.
 
 El paso a paso, qué hacer si Databricks no alcanza los portales del gobierno y cómo consultar
 las tablas está en [`docs/databricks.md`](docs/databricks.md).
