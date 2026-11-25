@@ -51,5 +51,180 @@
         "duracion_segundos": 12.608
       }
     ]
+  },
+  {
+    "run_id": "c5acc8e662654a9f",
+    "estado": "OK",
+    "parametros": {
+      "fuente": "indice",
+      "sin_descarga": false,
+      "muestra": false,
+      "permitir_fallas": false
+    },
+    "fin_utc": "2026-11-24T01:40:41.926718+00:00",
+    "etapas": [
+      {
+        "etapa": "01_adquisicion",
+        "inicio_utc": "2026-11-24T01:38:20.947776+00:00",
+        "estado": "OK",
+        "codigo": 0,
+        "error": null,
+        "duracion_segundos": 6.534
+      },
+      {
+        "etapa": "02_construir_silver",
+        "inicio_utc": "2026-11-24T01:38:27.481732+00:00",
+        "estado": "OK",
+        "codigo": 0,
+        "error": null,
+        "duracion_segundos": 70.295
+      },
+      {
+        "etapa": "03_validar_silver",
+        "inicio_utc": "2026-11-24T01:39:37.777256+00:00",
+        "estado": "OK",
+        "codigo": 0,
+        "error": null,
+        "duracion_segundos": 33.339
+      },
+      {
+        "etapa": "04_construir_gold",
+        "inicio_utc": "2026-11-24T01:40:11.116520+00:00",
+        "estado": "OK",
+        "codigo": 0,
+        "error": null,
+        "duracion_segundos": 17.662
+      },
+      {
+        "etapa": "05_modelo_potencial",
+        "inicio_utc": "2026-11-24T01:40:28.778261+00:00",
+        "estado": "OK",
+        "codigo": 0,
+        "error": null,
+        "duracion_segundos": 13.148
+      }
+    ]
+  },
+  {
+    "run_id": "5c83cf50c12f4c8c",
+    "estado": "ERROR",
+    "parametros": {
+      "fuente": "indice",
+      "sin_descarga": false,
+      "muestra": false,
+      "permitir_fallas": false
+    },
+    "fin_utc": "2026-11-25T19:48:25.895502+00:00",
+    "etapas": [
+      {
+        "etapa": "01_adquisicion",
+        "inicio_utc": "2026-11-25T19:45:43.721022+00:00",
+        "estado": "OK",
+        "codigo": 0,
+        "error": null,
+        "duracion_segundos": 8.829
+      },
+      {
+        "etapa": "02_construir_silver",
+        "inicio_utc": "2026-11-25T19:45:52.550399+00:00",
+        "estado": "OK",
+        "codigo": 0,
+        "error": null,
+        "duracion_segundos": 75.536
+      },
+      {
+        "etapa": "03_validar_silver",
+        "inicio_utc": "2026-11-25T19:47:08.087011+00:00",
+        "estado": "OK",
+        "codigo": 0,
+        "error": null,
+        "duracion_segundos": 34.09
+      },
+      {
+        "etapa": "04_construir_gold",
+        "inicio_utc": "2026-11-25T19:47:42.177304+00:00",
+        "estado": "OK",
+        "codigo": 0,
+        "error": null,
+        "duracion_segundos": 18.237
+      },
+      {
+        "etapa": "05_modelo_potencial",
+        "inicio_utc": "2026-11-25T19:48:00.414843+00:00",
+        "estado": "OK",
+        "codigo": 0,
+        "error": null,
+        "duracion_segundos": 14.733
+      },
+      {
+        "etapa": "06_rentabilidad_escenario",
+        "inicio_utc": "2026-11-25T19:48:15.148028+00:00",
+        "estado": "ERROR",
+        "codigo": null,
+        "error": "OSError: [Errno 5] Input/output error",
+        "duracion_segundos": 10.747
+      }
+    ]
+  },
+  {
+    "run_id": "f5526a748cca4e70",
+    "estado": "OK",
+    "parametros": {
+      "fuente": "indice",
+      "sin_descarga": false,
+      "muestra": false,
+      "permitir_fallas": false
+    },
+    "fin_utc": "2026-11-25T19:55:13.067108+00:00",
+    "etapas": [
+      {
+        "etapa": "01_adquisicion",
+        "inicio_utc": "2026-11-25T19:53:20.649304+00:00",
+        "estado": "OK",
+        "codigo": 0,
+        "error": null,
+        "duracion_segundos": 4.072
+      },
+      {
+        "etapa": "02_construir_silver",
+        "inicio_utc": "2026-11-25T19:53:24.721136+00:00",
+        "estado": "OK",
+        "codigo": 0,
+        "error": null,
+        "duracion_segundos": 42.693
+      },
+      {
+        "etapa": "03_validar_silver",
+        "inicio_utc": "2026-11-25T19:54:07.414570+00:00",
+        "estado": "OK",
+        "codigo": 0,
+        "error": null,
+        "duracion_segundos": 28.046
+      },
+      {
+        "etapa": "04_construir_gold",
+        "inicio_utc": "2026-11-25T19:54:35.460244+00:00",
+        "estado": "OK",
+        "codigo": 0,
+        "error": null,
+        "duracion_segundos": 14.416
+      },
+      {
+        "etapa": "05_modelo_potencial",
+        "inicio_utc": "2026-11-25T19:54:49.876409+00:00",
+        "estado": "OK",
+        "codigo": 0,
+        "error": null,
+        "duracion_segundos": 11.701
+      },
+      {
+        "etapa": "06_rentabilidad_escenario",
+        "inicio_utc": "2026-11-25T19:55:01.577822+00:00",
+        "estado": "OK",
+        "codigo": 0,
+        "error": null,
+        "duracion_segundos": 11.489
+      }
+    ]
   }
 ]

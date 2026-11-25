@@ -14,7 +14,7 @@ integramos, analizamos y comunicamos.
 | **Correcciones con datos reales** | 403 de CONAPO, autoservicio fuera del cálculo, resultados reales, evidencia de Databricks | PR #22, #24, #26, #28 | Hecho |
 | **Final — Integración** | `main.py` con `ejecutar_pipeline`, rechazos y conciliación, muestra real del índice | `src/pipeline.py`, `data/sample/indice/`, `reports/tables/registro_pipeline.json` | Hecho (PR #30) |
 | **Final — Análisis** | Modelo XGBoost con validación temporal, potencial en US$; heatmap interactivo como entregable aparte | `src/analysis/modelo_potencial.py`, notebook 05, `reports/figures/mapa_potencial.html` | Hecho (PR #30 y resultados reales) |
-| **Final — Rentabilidad e inversión (escenario)** | XGBoost por segmento (compartido vs separado), matriz de supuestos, margen de contribución, reparto óptimo de X millones con rendimientos decrecientes y años de recuperación, Excel con fórmulas y simulador | `src/analysis/modelo_segmentos.py`, `src/analysis/rentabilidad.py`, `src/analysis/inversion.py`, `reports/rentabilidad_escenario.xlsx` | En PR |
+| **Final — Rentabilidad e inversión (escenario)** | XGBoost por segmento (compartido vs separado), matriz de supuestos, margen de contribución, reparto óptimo de X millones con rendimientos decrecientes y años de recuperación, penetración por ciudad, costo de entrada proporcional al mercado; todo en el heatmap con tres vistas y supuestos editables; Excel con fórmulas para la rentabilidad | `src/analysis/modelo_segmentos.py`, `src/analysis/rentabilidad.py`, `src/analysis/inversion.py`, `reports/figures/mapa_potencial.html`, `reports/rentabilidad_escenario.xlsx` | Hecho (resultados reales) |
 | **Final — Comunicación** | Reporte final, presentación, reflexiones | `docs/final_report.md`, `docs/reflections/` | Pendiente: presentación y reflexiones |
 
 ## Pasos para cerrar
@@ -66,7 +66,7 @@ integramos, analizamos y comunicamos.
 | Validaciones (8 categorías) | `src/validation/`, `docs/validation.md` |
 | Comparación de desempeño | `src/processing/benchmark.py`, `docs/desempeno.md` |
 | Decisiones técnicas | `docs/decisions.md` |
-| Pruebas | `tests/` (68 pruebas) |
+| Pruebas | `tests/` (82 pruebas) |
 | Issues, ramas, PR revisados, integración | GitHub: 13 PR con merge en `main`, cada uno aprobado por el otro integrante; ramas `1-estructura` a `7-readme-notebook` conservadas |
 
 ### Participación individual

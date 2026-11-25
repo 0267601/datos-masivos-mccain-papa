@@ -129,20 +129,23 @@ def datos_rentabilidad(rentabilidad):
         "precio_lista": g["precio_lista_usd_kg"],
         "costo_producto": g["costo_producto_usd_kg"],
         "costo_importacion": g["costo_importacion_usd_kg"],
-        "participacion": g["participacion_mccain"],
+        "part_ciudad": dict(g.get("participacion_por_ciudad") or {}),
         "kg_importados": g["kg_importados"],
         "segmentos": [{"clave": s.segmento, "nombre": s.nombre, "locales_pais": int(s.locales_pais),
                        "consumo_relativo": float(s.consumo_relativo), "descuento": float(s.descuento),
-                       "costo_servir": float(s.costo_servir_usd_kg)}
+                       "costo_servir": float(s.costo_servir_usd_kg),
+                       "participacion": float(s.participacion)}
                       for s in rentabilidad["matriz"].itertuples()],
     }
     cfg_inv = rentabilidad.get("cfg_inversion")
     if cfg_inv:
         supuestos.update({
             "presupuesto": float(cfg_inv["presupuesto_usd"]),
-            "tope_existente": cfg_inv["tope_participacion_existente"],
-            "tope_nuevo": cfg_inv["tope_participacion_nuevo"],
+            "techo_existente": cfg_inv["techo_participacion_existente"],
+            "techo_nuevo": cfg_inv["techo_participacion_nuevo"],
             "costo_mitad": cfg_inv["costo_mitad_usd_por_kg"],
+            "entrada_fija": float(cfg_inv["costo_entrada_fijo_usd"]),
+            "entrada_pct": float(cfg_inv["costo_entrada_pct_mercado"]),
             "capturables": list(cfg_inv["segmentos_capturables"]),
             "curva": [float(x) for x in cfg_inv["curva_presupuestos_usd"]],
         })
@@ -251,6 +254,9 @@ table.matriz th,table.matriz td{background:none;border-bottom:1px solid var(--gr
 table.matriz tr{cursor:default}
 .tipo{color:var(--ink2);font-size:12px}
 #detalle h3{font-size:13px;margin:14px 0 6px;color:var(--ink2)}
+td.editable{padding:2px 4px} td.editable input{width:64px}
+td.editable.fija input{border-color:var(--sel);font-weight:600}
+.cifra{display:block;font-size:18px;padding-top:4px}
 #detalle dl dt{min-width:0} #detalle .frase{margin:0 0 8px;font-size:13px}
 .panel h2{font-size:14px;margin:0 0 8px}
 svg text{fill:var(--ink2);font-size:11px}
@@ -331,20 +337,52 @@ const suma = a => a.reduce((x, y) => x + y, 0);
 // ---------------------------------------------------------------------------
 const ORIGINAL = R ? JSON.stringify(R.supuestos) : null;
 let S = R ? JSON.parse(ORIGINAL) : null;
+if (S) S.part_ciudad = S.part_ciudad || {};
 const tieneInversion = () => S && S.presupuesto != null;
 
-function asignar(ms, X) {
-  ms = ms.filter(m => m.tope > 0 && m.escala > 0);
-  if (!ms.length || X <= 0) return new Map();
+function repartir(ms, X) {
+  // Sin costo de entrada: invertir hasta que el ultimo dolar rinda lo mismo en todas.
   const inv = lam => ms.map(m => m.tope / (m.escala * lam) > 1 ? m.escala * Math.log(m.tope / (m.escala * lam)) : 0);
   const max = Math.max(...ms.map(m => m.tope / m.escala));
+  if (!(max > 0) || X <= 0) return {I: ms.map(() => 0), lam: max};
   let bajo = Math.log(max) - 40, alto = Math.log(max);
   for (let i = 0; i < 120; i++) { const med = (bajo + alto) / 2; if (suma(inv(Math.exp(med))) > X) bajo = med; else alto = med; }
   let I = inv(Math.exp(alto)); const t = suma(I); if (t > 0) I = I.map(v => v * X / t);
+  return {I, lam: Math.exp(alto)};
+}
+
+function umbral(m) {
+  // Rendimiento del ultimo dolar al que la ciudad empieza a valer la pena:
+  // valor(lam) = contribucion - lam * (inversion + entrada) = 0.
+  const tasa = m.tope / m.escala, F = m.entrada || 0;
+  let bajo = Math.log(tasa) - 40, alto = Math.log(tasa);
+  for (let i = 0; i < 100; i++) {
+    const lam = Math.exp((bajo + alto) / 2), inv = m.escala * Math.log(tasa / lam);
+    if (m.tope - lam * m.escala - lam * (inv + F) > 0) bajo = Math.log(lam); else alto = Math.log(lam);
+  }
+  return Math.exp(bajo);
+}
+
+function asignar(ms, X) {
+  // Ordenamos por umbral y probamos entrar a las primeras 1, 2, 3...;
+  // gana el grupo que mas contribucion extra deja.
+  const orden = ms.filter(m => m.tope > 0 && m.escala > 0)
+    .map(m => ({m, u: umbral(m)})).sort((a, b) => b.u - a.u).map(x => x.m);
+  let mejor = {total: -1, elegidas: [], I: []};
+  for (let k = 1; k <= orden.length; k++) {
+    const elegidas = orden.slice(0, k);
+    const disponible = X - suma(elegidas.map(m => m.entrada || 0));
+    if (disponible <= 0) break;
+    const r = repartir(elegidas, disponible);
+    const total = suma(elegidas.map((m, j) => m.tope * (1 - Math.exp(-r.I[j] / m.escala))));
+    if (total > mejor.total + 1e-9) mejor = {total, elegidas, I: r.I};
+  }
   const salida = new Map();
-  ms.forEach((m, k) => {
-    const pct = 1 - Math.exp(-I[k] / m.escala), extra = m.tope * pct;
-    salida.set(m.clave, {inv: I[k], extra, pct, anios: extra > 0 ? I[k] / extra : null});
+  mejor.elegidas.forEach((m, k) => {
+    const v = mejor.I[k] || 0;
+    if (v <= 1e-6) return;
+    const pct = 1 - Math.exp(-v / m.escala), extra = m.tope * pct, total = v + (m.entrada || 0);
+    salida.set(m.clave, {inv: total, variable: v, extra, pct, anios: extra > 0 ? total / extra : null});
   });
   return salida;
 }
@@ -362,25 +400,40 @@ function recalcular() {
   });
   const capturables = new Set(S.capturables || []);
   for (const m of D.metros) {
-    let vh = 0, vp = 0, uh = 0, up = 0, kch = 0, kcp = 0, mxk = 0;
+    // Penetracion: la de cada segmento; si la ciudad trae una fija, escalamos
+    // sus segmentos para que el promedio ponderado por kg de hoy sea esa.
+    let kgTot = 0, kgPart = 0;
+    for (const s of segs) { const [h] = (m.seg && m.seg[s.clave]) || [0, 0]; kgTot += h * s.kg_local; kgPart += h * s.kg_local * s.participacion; }
+    const mezcla = kgTot > 0 ? kgPart / kgTot : 0;
+    const fija = S.part_ciudad && S.part_ciudad[m.clave] != null ? S.part_ciudad[m.clave] : null;
+    const factor = fija != null && mezcla > 0 ? fija / mezcla : 1;
+    m.part_actual = 100 * Math.min(1, mezcla * factor);
+    m.part_fija = fija != null;
+    let vh = 0, vp = 0, uh = 0, up = 0, kch = 0, kcp = 0, mxk = 0, pxk = 0;
     m.segmentos = [];
     for (const s of segs) {
       const [h, p] = (m.seg && m.seg[s.clave]) || [0, 0];
       const kgh = h * s.kg_local, kgp = p * s.kg_local;
-      vh += kgh * S.participacion * s.neto; vp += kgp * S.participacion * s.neto;
-      const uhs = kgh * S.participacion * s.margen_kg, ups = kgp * S.participacion * s.margen_kg;
+      const part = Math.min(1, Math.max(0, s.participacion * factor));
+      vh += kgh * part * s.neto; vp += kgp * part * s.neto;
+      const uhs = kgh * part * s.margen_kg, ups = kgp * part * s.margen_kg;
       uh += uhs; up += ups;
       m["u_" + s.clave] = ups;
-      m.segmentos.push({nombre: s.nombre, hoy: h, proy: p, util: ups});
-      if (capturables.has(s.clave)) { kch += kgh; kcp += kgp; mxk += kgp * s.margen_kg; }
+      m.segmentos.push({nombre: s.nombre, hoy: h, proy: p, util: ups, part});
+      if (capturables.has(s.clave)) { kch += kgh; kcp += kgp; mxk += kgp * s.margen_kg; pxk += kgh * part; }
     }
     m.segmentos.sort((a, b) => b.util - a.util);
     Object.assign(m, {util_hoy: uh, util_proy: up, util_inc: up - uh, ventas_proy: vp,
                       margen: vp > 0 ? 100 * up / vp : null});
     if (tieneInversion()) {
       const margenPond = kcp > 0 ? mxk / kcp : 0;
-      m.tope = Math.max(margenPond, 0) * (S.tope_existente * kch + S.tope_nuevo * Math.max(kcp - kch, 0));
+      const pCap = kch > 0 ? pxk / kch : 0;
+      m.hueco = 100 * Math.max(S.techo_nuevo - pCap, 0);
+      m.tope = Math.max(margenPond, 0) * (Math.max(S.techo_existente - pCap, 0) * kch
+                                         + Math.max(S.techo_nuevo - pCap, 0) * Math.max(kcp - kch, 0));
       m.mitad = Math.max(S.costo_mitad * kcp, 1);
+      m.mercado = kch * S.costo_producto;
+      m.entrada = (S.entrada_fija || 0) + (S.entrada_pct || 0) * m.mercado;
       m.escala = m.mitad / Math.LN2;
     }
   }
@@ -418,25 +471,29 @@ const VISTAS = {
   },
   rentabilidad: {
     nombre: "Rentabilidad*", rank: "rank_util",
-    metricas: [["util_proy", "Color: contribución " + C.anio], ["util_inc", "Color: contribución nueva"], ["margen", "Color: margen %"]],
+    metricas: [["util_proy", "Color: contribución " + C.anio], ["util_inc", "Color: contribución nueva"], ["margen", "Color: margen %"], ["part_actual", "Color: participación actual"]],
     columnas: () => [
       {k: "rank_util", t: "#"}, {k: "nombre", t: "Metrópoli"},
       {k: "util_proy", t: "Contribución " + C.anio, f: fmtD, heat: true},
       {k: "util_inc", t: "Contribución nueva", f: fmtD, heat: true},
       {k: "ventas_proy", t: "Ventas McCain " + C.anio, f: fmtM, heat: true},
       {k: "margen", t: "Margen", f: fmtP, heat: true},
+      {k: "part_actual", t: "Participación actual", f: fmtP, heat: true},
       ...S.segmentos.map(s => ({k: "u_" + s.clave, t: s.nombre.replace(" (cuenta nacional)", "").replace(" (contrato)", ""), f: fmtD, heat: true})),
       {k: "crec_esp", t: "Crec. esperado", f: fmtP, heat: true}],
   },
   inversion: {
     nombre: "Inversión*", rank: "rank_inv",
-    metricas: [["inv", "Color: inversión asignada"], ["extra", "Color: contribución extra al año"], ["pct_tope", "Color: % del tope ganado"]],
+    metricas: [["inv", "Color: inversión asignada"], ["extra", "Color: contribución extra al año"], ["hueco", "Color: hueco hasta el techo"], ["part_actual", "Color: participación actual"]],
     columnas: () => [
       {k: "rank_inv", t: "#"}, {k: "nombre", t: "Metrópoli"},
-      {k: "inv", t: "Inversión", f: fmtD, heat: true},
+      {k: "part_actual", t: "Participación actual (editable)", editable: true},
+      {k: "inv", t: "Inversión (con entrada)", f: fmtD, heat: true},
+      {k: "entrada", t: "Costo de entrada", f: fmtD, heat: true},
       {k: "extra", t: "Contribución extra al año", f: fmtD, heat: true},
       {k: "anios", t: "Años para recuperar", f: fmtA, heat: false},
-      {k: "pct_tope", t: "% del tope ganado", f: fmtP, heat: true},
+      {k: "pct_tope", t: "% del hueco ganado", f: fmtP, heat: true},
+      {k: "hueco", t: "Hueco hasta el techo (pts)", f: fmt1, heat: true},
       {k: "util_proy", t: "Contribución " + C.anio, f: fmtD, heat: true},
       {k: "crec_esp", t: "Crec. esperado", f: fmtP, heat: true}],
   },
@@ -542,7 +599,7 @@ function nota() {
       `Margen de contribución = ventas menos costos variables por kilo (producto, importación y servicio); no incluye costos fijos, inversión ni impuestos. El flete lo paga el cliente.`;
   }
   if (vista === "inversion") {
-    texto += ` Reparto: cada dólar va a la ciudad donde deja más contribución extra; las cadenas no cuentan (se negocian como cuenta nacional). ` +
+    texto += ` Reparto: cada dólar va a la ciudad donde deja más contribución extra, partiendo de la participación actual de cada ciudad y pagando una entrada que crece con el tamaño de su mercado; las cadenas no cuentan (se negocian como cuenta nacional). ` +
       `La recuperación supone que la contribución extra llega completa desde el primer año y no descuenta el dinero en el tiempo.`;
   }
   document.getElementById("nota").textContent = texto;
@@ -564,22 +621,26 @@ function panelSupuestos() {
       <div><span class="tipo">Precio de lista (US$/kg)</span>${campo("precio_lista", S.precio_lista, 0.05, "US$")}</div>
       <div><span class="tipo">Costo del producto (US$/kg, Comtrade ${R.anio_importaciones})</span>${campo("costo_producto", S.costo_producto.toFixed(2), 0.05, "US$", "Precio real de importación; cámbialo para simular otro precio")}</div>
       <div><span class="tipo">Costo de importación (US$/kg)</span>${campo("costo_importacion", S.costo_importacion, 0.05, "US$")}</div>
-      <div><span class="tipo">Participación de McCain</span>${campo("participacion", pc(S.participacion), 1, "%")}</div>
+      <div><span class="tipo">Participación promedio de McCain (resultado)</span><b id="partProm" class="cifra"></b></div>
     </div>
-    <div class="desliza"><table class="matriz"><thead><tr><th class="izq">Segmento</th><th>Consumo relativo</th><th>Descuento</th><th>Costo de servir (US$/kg)</th><th>kg por local al año</th><th>Precio neto</th><th>Margen por kg</th><th>Margen</th></tr></thead><tbody>
+    <div class="desliza"><table class="matriz"><thead><tr><th class="izq">Segmento</th><th>Consumo relativo</th><th>Descuento</th><th>Costo de servir (US$/kg)</th><th>Participación McCain</th><th>kg por local al año</th><th>Precio neto</th><th>Margen por kg</th><th>Margen</th></tr></thead><tbody>
     ${S.segmentos.map((s, i) => `<tr><td class="izq">${s.nombre}</td>
       <td>${campo("seg." + i + ".consumo_relativo", s.consumo_relativo, 0.1, "×")}</td>
       <td>${campo("seg." + i + ".descuento", pc(s.descuento), 1, "%")}</td>
       <td>${campo("seg." + i + ".costo_servir", s.costo_servir, 0.05, "US$")}</td>
+      <td>${campo("seg." + i + ".participacion", pc(s.participacion), 1, "%")}</td>
       <td data-c="kg${i}"></td><td data-c="neto${i}"></td><td data-c="mkg${i}"></td><td data-c="mpct${i}"></td></tr>`).join("")}
     </tbody></table></div>
-    <p class="tipo">Consumo relativo: kg que compra un local del segmento respecto a un independiente de comida rápida (1.0×). El consumo por local se calibra para que el país sume los kilos que importa México.</p>`;
+    <p class="tipo">Consumo relativo: kg que compra un local del segmento respecto a un independiente de comida rápida (1.0×). El consumo por local se calibra para que el país sume los kilos que importa México. La participación de McCain cambia por segmento, así que cada ciudad tiene su propia penetración según su mezcla; en la vista Inversión puedes fijar la de una ciudad si conoces la real.</p>`;
   caja.querySelectorAll("input[data-s]").forEach(el => el.addEventListener("input", () => leerCampo(el)));
-  document.getElementById("restablecer").addEventListener("click", () => { S = JSON.parse(ORIGINAL); panelSupuestos(); panelInversion(); refrescar(); });
+  document.getElementById("restablecer").addEventListener("click", () => { S = JSON.parse(ORIGINAL); S.part_ciudad = S.part_ciudad || {}; panelSupuestos(); panelInversion(); refrescar(); });
   matrizCalculada();
 }
 
 function matrizCalculada() {
+  const tot = suma(S.segmentos.map(s => s.locales_pais * (s.kg_local || 0)));
+  const prom = tot > 0 ? suma(S.segmentos.map(s => s.locales_pais * (s.kg_local || 0) * s.participacion)) / tot : 0;
+  const el = document.getElementById("partProm"); if (el) el.textContent = fmtP(100 * prom);
   S.segmentos.forEach((s, i) => {
     const pon = (k, v) => { const el = document.querySelector(`#supuestos [data-c="${k}${i}"]`); if (el) el.textContent = v; };
     pon("kg", fmtN(s.kg_local)); pon("neto", "US$" + (s.neto || 0).toFixed(2));
@@ -591,8 +652,9 @@ function leerCampo(el) {
   const v = Number(el.value);
   if (el.value === "" || isNaN(v)) return;
   const partes = el.dataset.s.split(".");
-  const porcentaje = ["participacion", "descuento", "tope_existente", "tope_nuevo"].includes(partes[partes.length - 1]);
-  const valor = porcentaje ? v / 100 : partes[partes.length - 1] === "presupuesto" ? v * 1e6 : v;
+  const porcentaje = ["participacion", "descuento", "techo_existente", "techo_nuevo", "entrada_pct"].includes(partes[partes.length - 1]);
+  const ultimo = partes[partes.length - 1];
+  const valor = porcentaje ? v / 100 : ultimo === "presupuesto" ? v * 1e6 : ultimo === "entrada_fija" ? v * 1e3 : v;
   if (partes[0] === "seg") S.segmentos[+partes[1]][partes[2]] = valor; else S[partes[0]] = valor;
   refrescar();
 }
@@ -604,11 +666,13 @@ function panelInversion() {
   caja.innerHTML = `<h2>Si McCain tuviera X millones, ¿dónde los pone?*</h2>
     <div class="generales">
       <div><span class="tipo">Presupuesto (US$ millones)</span><label class="campo grande"><span>US$</span><input data-s="presupuesto" type="number" min="0" step="1" value="${S.presupuesto / 1e6}"><span>M</span></label></div>
-      <div><span class="tipo">Tope en clientes existentes (puntos)</span>${campo("tope_existente", pc(S.tope_existente), 1, "%")}</div>
-      <div><span class="tipo">Tope en locales nuevos (puntos)</span>${campo("tope_nuevo", pc(S.tope_nuevo), 1, "%")}</div>
-      <div><span class="tipo">Inversión para ganar la mitad (US$ por kg anual)</span>${campo("costo_mitad", S.costo_mitad, 0.01, "US$")}</div>
+      <div><span class="tipo">Techo de participación en clientes existentes</span>${campo("techo_existente", pc(S.techo_existente), 1, "%")}</div>
+      <div><span class="tipo">Techo de participación en locales nuevos</span>${campo("techo_nuevo", pc(S.techo_nuevo), 1, "%")}</div>
+      <div><span class="tipo">Inversión para ganar la mitad del hueco (US$ por kg anual)</span>${campo("costo_mitad", S.costo_mitad, 0.01, "US$")}</div>
+      <div><span class="tipo">Entrada: monto fijo por ciudad (US$ miles)</span><label class="campo"><span>US$</span><input data-s="entrada_fija" type="number" min="0" step="10" value="${(S.entrada_fija || 0) / 1e3}"><span>mil</span></label></div>
+      <div><span class="tipo">Entrada: % del mercado anual de la ciudad</span>${campo("entrada_pct", pc(S.entrada_pct || 0), 0.5, "%")}</div>
     </div>
-    <p class="tipo">Con la inversión "mitad" se gana 50% del tope de una ciudad; con el doble, 75%; con el triple, 87.5%. Por eso el siguiente millón rinde más en otra ciudad que en la misma.</p>
+    <p class="tipo">Cada ciudad parte de su participación actual: lo que se puede ganar es el hueco hasta el techo. Con la inversión "mitad" se gana 50% del hueco; con el doble, 75%; con el triple, 87.5%. Entrar a una ciudad cuesta un fijo más un % de su mercado anual (barrera de entrada): una ciudad grande pide más para empezar, así que solo se entra donde lo que deja paga esa entrada. Fija la participación real de una ciudad en la tabla de abajo.</p>
     <h2>Curva: lo que rinde invertir más</h2>
     <div class="desliza"><table class="matriz"><thead><tr><th class="izq">Presupuesto</th><th>Contribución extra al año</th><th>Años para recuperar</th><th>Retorno anual</th><th>Retorno del tramo</th><th>Ciudades</th></tr></thead><tbody id="curva"></tbody></table></div>`;
   caja.querySelectorAll("input[data-s]").forEach(el => el.addEventListener("input", () => leerCampo(el)));
@@ -719,11 +783,20 @@ function dibujarTabla() {
   tbody.innerHTML = filas.map(m => `<tr data-clave="${m.clave}" class="${m.clave === seleccion ? "sel" : ""}">` +
     cols.map(c => {
       const f = c.f || (v => v);
+      if (c.editable) return `<td class="editable${m.part_fija ? " fija" : ""}"><label class="campo"><input data-ciudad="${m.clave}" type="number" step="1" min="0" max="100" value="${(+m[c.k]).toFixed(1)}"><span>%</span></label></td>`;
       if (!c.heat) return `<td class="${c.k === "nombre" ? "nombre" : ""}">${f(m[c.k])}</td>`;
       const t = pct[c.k] ? pct[c.k](m[c.k]) : null;
       return `<td style="background:${t == null ? "transparent" : rampa(t)};color:${t == null ? "var(--muted)" : tinta(t)}">${f(m[c.k])}</td>`;
     }).join("") + "</tr>").join("");
-  tbody.querySelectorAll("tr").forEach(tr => tr.addEventListener("click", () => seleccionar(tr.dataset.clave)));
+  tbody.querySelectorAll("tr").forEach(tr => tr.addEventListener("click", ev => {
+    if (ev.target.tagName !== "INPUT") seleccionar(tr.dataset.clave);
+  }));
+  tbody.querySelectorAll("input[data-ciudad]").forEach(el => el.addEventListener("change", () => {
+    const v = Number(el.value);
+    if (el.value === "" || isNaN(v)) { delete S.part_ciudad[el.dataset.ciudad]; }
+    else { S.part_ciudad[el.dataset.ciudad] = Math.min(Math.max(v, 0), 100) / 100; }
+    refrescar();
+  }));
   thead.querySelectorAll("th").forEach(th => th.addEventListener("click", () => {
     const k = th.dataset.k;
     orden = {k, asc: orden.k === k ? !orden.asc : (k.startsWith("rank") || k === "nombre")};
@@ -742,9 +815,10 @@ function dibujarDetalle() {
     rentab = `<h3>Escenario simulado*</h3><dl>
       <dt>Contribución hoy → ${C.anio}</dt><dd><b>${fmtD(m.util_hoy)} → ${fmtD(m.util_proy)}</b></dd>
       <dt>Ventas McCain ${C.anio}</dt><dd>${fmtD(m.ventas_proy)} · margen ${fmtP(m.margen)}</dd>
+      <dt>Participación de McCain hoy</dt><dd>${fmtP(m.part_actual)}${m.part_fija ? " (fijada)" : " (por su mezcla)"}</dd>
       <dt>Lugar por contribución</dt><dd>${m.rank_util} de ${total}</dd>
     </dl>
-    ${tieneInversion() ? `<p class="frase">Con un presupuesto de ${fmtM(S.presupuesto)}: ${(m.inv || 0) > 1 ? `recibe <b>${fmtD(m.inv)}</b>, deja +${fmtD(m.extra)} al año y se recupera en ${fmtA(m.anios)} años.` : "no recibe inversión."}</p>` : ""}
+    ${tieneInversion() ? `<p class="frase">Con un presupuesto de ${fmtM(S.presupuesto)}: ${(m.inv || 0) > 1 ? `recibe <b>${fmtD(m.inv)}</b> (incluye ${fmtD(m.entrada)} de entrada), deja +${fmtD(m.extra)} al año y se recupera en ${fmtA(m.anios)} años.` : "no recibe inversión."}</p>` : ""}
     <table class="seg"><thead><tr><th class="izq">Segmento</th><th>Locales hoy → ${C.anio}</th><th>Contribución ${C.anio}</th></tr></thead><tbody>` +
       m.segmentos.map(s => `<tr><td class="izq">${s.nombre}</td><td>${fmtN(s.hoy)} → ${fmtN(s.proy)}</td><td>${fmtD(s.util)}</td></tr>`).join("") +
       `</tbody></table><p class="tipo">El segmento que más deja: ${principal}.</p>`;

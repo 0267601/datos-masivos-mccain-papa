@@ -228,13 +228,22 @@ panel_municipios (4 segmentos) ─► ejemplos_segmentos (municipio × periodo �
                                         │
 config: rentabilidad ─► matriz_supuestos (calibrada con los kg de Comtrade)      ◄── SUPUESTOS SIMULADOS
                                         │
-                     calcular ─► validar ─► rentabilidad_* (Gold) · rentabilidad_escenario.xlsx · heatmap
+                     calcular ─► validar ─► rentabilidad_* (Gold) · rentabilidad_escenario.xlsx
+                                        │
+config: inversion ─► inversion.capacidades (hueco, curva, entrada por ciudad)
+                     inversion.asignar (umbral + mejor grupo) ─► inversion_metropolis · inversion_curva
+                                        │
+                     mapa_potencial.html: vistas Mercado | Rentabilidad | Inversión, supuestos editables
 ```
+
+`python -m src.analysis.rentabilidad --solo-escenario` recalcula rentabilidad, reparto y heatmap
+a partir de las tablas ya guardadas (`proyeccion_segmentos.csv`, `conteo_nacional_segmentos.json`),
+sin Spark ni reentrenar: sirve para probar supuestos nuevos en segundos.
 
 La frontera entre lo que se predice y lo que se supone es deliberada: el modelo solo aprende de
 datos reales (locales del DENUE); los números de la empresa, que no tenemos, son supuestos
-editables que multiplican esa proyección. El Excel repite el cálculo con fórmulas vivas para que
-cualquiera cambie un supuesto sin tocar código.
+editables que multiplican esa proyección. El heatmap repite el cálculo en JavaScript y el Excel
+con fórmulas vivas, para que cualquiera cambie un supuesto sin tocar código.
 
 ### Colaboración
 

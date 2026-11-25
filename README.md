@@ -9,8 +9,11 @@ las 92 metrópolis al 2030. En dólares, ese crecimiento está en Ciudad de Méx
 Monterrey (29%); donde la oportunidad de hoy (índice de inversión) y el crecimiento esperado
 coinciden es en ciudades medianas: **Querétaro, La Laguna, Mérida, Saltillo y
 Puebla-Tlaxcala**. Las turísticas que encabezan el índice (Los Cabos, Acapulco) ya tienen
-muchos restaurantes por habitante y el modelo espera que se frenen. Se explora en el heatmap
-interactivo `reports/figures/mapa_potencial.html` (entregable aparte). Reporte completo en
+muchos restaurantes por habitante y el modelo espera que se frenen. En un **escenario simulado**
+(supuestos, no datos de McCain), McCain dejaría US$25.1 M de margen de contribución en 2030, y
+con **US$10 M** para crecer convendría entrar a Monterrey, Guadalajara y Ciudad de México
+(+US$1.5 M al año, 6.6 años para recuperar). Todo se explora en el heatmap interactivo
+`reports/figures/mapa_potencial.html` (entregable aparte). Reporte completo en
 [`docs/final_report.md`](docs/final_report.md).
 
 ## Integrantes
@@ -274,23 +277,28 @@ Pasos:
    `panel_municipios` y `denue_rechazos` y arma `reports/entrega_final.zip`. Se puede
    programar como **Job**: sus widgets son los parámetros.
 
-**Entregable aparte: heatmap interactivo.** `reports/figures/mapa_potencial.html` no se
-muestra en el notebook; es un archivo propio que se abre en cualquier navegador: mapa de
-México con todas las metrópolis, heatmap por percentil y, al hacer clic en una metrópoli, sus
-números e insights. Lo genera el pipeline y viaja también en la raíz de `entrega_final.zip`.
+**Entregable principal aparte: heatmap interactivo.** `reports/figures/mapa_potencial.html` no
+se muestra en el notebook; es un archivo propio que se abre en cualquier navegador: mapa de
+México con todas las metrópolis y un selector de tres vistas:
+
+- **Mercado:** potencial al 2030, índice y crecimiento; al hacer clic en una metrópoli, sus
+  números e insights.
+- **Rentabilidad\*:** margen de contribución por ciudad y segmento, con la matriz de supuestos
+  editable (precio, descuentos, costos, participación).
+- **Inversión\*:** "si McCain tuviera X millones": reparto con rendimientos decrecientes, costo
+  de entrada por ciudad (fijo + % de su mercado), años de recuperación y la participación actual
+  de cada ciudad editable.
+
+\* Escenario simulado, no datos de McCain. Todo se recalcula en la página al cambiar un
+supuesto. Lo genera el pipeline y viaja también en la raíz de `entrega_final.zip`.
 
 **Entregable aparte: escenario de rentabilidad en Excel.** `reports/rentabilidad_escenario.xlsx`
 reparte el mercado en cuatro segmentos (cadenas, comida rápida independiente, a la carta
 independiente y hoteles), proyecta sus locales a 2030 con un XGBoost por segmento y calcula el
 **margen de contribución** de McCain con una matriz de supuestos editable (precio de lista,
 descuento, costo de servir y participación). Es un **escenario simulado**, no datos de McCain:
-al cambiar una celda azul de la hoja *Supuestos*, todo el libro se recalcula. Detalle en
-[`docs/final_report.md`](docs/final_report.md).
-
-**Si McCain tuviera X millones, ¿dónde los pone?** La hoja *Inversion* del mismo Excel (y un
-simulador en el heatmap) reparte el presupuesto que escribas entre las metrópolis: cada dólar va
-a donde deja más margen de contribución extra, con rendimientos decrecientes (invertir el doble en
-una ciudad no da el doble), y calcula en cuántos años se recupera cada inversión.
+al cambiar una celda azul de la hoja *Supuestos*, todo el libro se recalcula. El reparto de
+X millones vive solo en el heatmap. Detalle en [`docs/final_report.md`](docs/final_report.md).
 
 El paso a paso, qué hacer si Databricks no alcanza los portales del gobierno y cómo consultar
 las tablas está en [`docs/databricks.md`](docs/databricks.md).
@@ -340,6 +348,12 @@ industrial, es 99.6% importada. Ver [`docs/hallazgos.md`](docs/hallazgos.md).
 está en ciudades medianas turísticas o industriales; las tres grandes no entran al top 15. La
 papa congelada importada se triplicó desde 2019 (US$455 M en 2025) y Canadá pasó de 10% a 39%
 del valor importado. Ver [`docs/indice_inversion.md`](docs/indice_inversion.md).
+
+**Rentabilidad e inversión (escenario simulado, no datos de McCain).** Margen de contribución de
+US$23.0 M hoy a US$25.1 M en 2030 (ventas de US$140 M, margen de 18%); la comida rápida
+independiente deja 56%. Con US$10 M: Monterrey, Guadalajara y Ciudad de México, +US$1.5 M al
+año, 6.6 años para recuperar; pasados US$50 M el dinero rinde poco (el tramo de 50 a 100 millones
+recupera en 14 años). Ver [`docs/final_report.md`](docs/final_report.md).
 
 **Modelo de potencial** (Databricks, 23 de noviembre de 2026). Validación temporal: entrena
 2015→2019 y 2019→2022 y prueba 2022→2026 en 359 municipios.
