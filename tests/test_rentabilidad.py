@@ -182,12 +182,16 @@ def test_html_con_utilidad(escenario, tmp_path):
         pd.Series({"Hoteles": 1.0}), tmp_path / "m.html",
         rentabilidad={"resumen": resumen, "detalle": detalle, "matriz": matriz,
                       "generales": generales, "metricas": metricas_seg,
-                      "ganador": "compartido"})
+                      "ganador": "compartido", "cfg_inversion": CONFIG["inversion"]})
     datos = json.loads(html.split("const D = ")[1].split(";\nconst C")[0].replace("<\\/", "</"))
-    assert datos["contexto"]["rentabilidad"]["ganador"] == "compartido"
+    r = datos["contexto"]["rentabilidad"]
+    assert r["ganador"] == "compartido"
+    # La pagina recibe los insumos crudos y los supuestos editables.
+    assert len(r["supuestos"]["segmentos"]) == len(ms.SEGMENTOS)
+    assert r["supuestos"]["presupuesto"] == CONFIG["inversion"]["presupuesto_usd"]
     metro = datos["metros"][0]
-    assert metro["util_proy"] is not None and len(metro["segmentos"]) == len(ms.SEGMENTOS)
-    assert any(s.startswith("Escenario simulado") for s in metro["insights"])
+    assert set(metro["seg"]) == set(ms.SEGMENTOS)
+    assert 'id="vistas"' in html and 'id="supuestos"' in html
 
 
 # ---------------------------------------------------------------------------
