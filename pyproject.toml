@@ -17,6 +17,7 @@ dependencies = [
     "pyspark>=3.5,<5",
     "pyyaml>=6,<7",
     "xgboost>=2,<4",
+    "openpyxl>=3.1,<4",
 ]
 
 [project.optional-dependencies]

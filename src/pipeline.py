@@ -1,6 +1,6 @@
 """
 Pipeline completo en una sola llamada: adquisicion -> Silver -> validacion
--> Gold -> modelo.
+-> Gold -> modelo -> rentabilidad (escenario).
 
 Ejecucion desde la raiz del repositorio:
 
@@ -22,7 +22,7 @@ El registro de cada corrida queda en reports/tables/registro_pipeline.json.
 
 Pipeline:
     01_adquisicion -> 02_construir_silver -> 03_validar_silver
-        -> 04_construir_gold -> 05_modelo_potencial
+        -> 04_construir_gold -> 05_modelo_potencial -> 06_rentabilidad_escenario
 """
 
 import argparse
@@ -77,7 +77,7 @@ def ejecutar_etapa(nombre, funcion, registro, permitir_fallas=False):
 
 def etapas(cfg):
     """Lista ordenada (nombre, funcion). Importamos adentro para arrancar rapido."""
-    from src.analysis import indice_inversion, modelo_potencial
+    from src.analysis import indice_inversion, modelo_potencial, rentabilidad
     from src.ingestion import download_data
     from src.processing import build_dataset
     from src.validation import validate_dataset
@@ -97,6 +97,7 @@ def etapas(cfg):
     elif fuente in ("indice", "todas"):
         lista.append(("04_construir_gold", indice_inversion.main))
         lista.append(("05_modelo_potencial", modelo_potencial.main))
+        lista.append(("06_rentabilidad_escenario", rentabilidad.main))
     return lista
 
 
