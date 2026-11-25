@@ -156,3 +156,47 @@ modelo:
     tree_method: hist
     random_state: 42
     n_jobs: 1            # un hilo: mismo resultado en cada corrida
+
+# Modelo por segmento: el mismo XGBoost, pero prediciendo el crecimiento de
+# cada segmento (cadenas, comida rapida independiente, a la carta
+# independiente y hoteles). Competimos un modelo compartido contra uno por
+# segmento en el mismo periodo de prueba y nos quedamos con el que menos se
+# equivoca.
+modelo_segmentos:
+  min_establecimientos:      # base minima para usar la tasa como etiqueta
+    cadenas: 5
+    comida_rapida_ind: 10
+    a_la_carta_ind: 10
+    hoteles: 5
+  min_ejemplos_por_segmento: 30   # con menos, el modelo separado usa el compartido
+
+# Rentabilidad: ESCENARIO SIMULADO. No son datos de McCain; son supuestos
+# editables (aqui y en reports/rentabilidad_escenario.xlsx).
+#   utilidad = locales x kg por local x participacion x
+#              (precio neto - costo del producto - costo de servir)
+# El flete lo paga el cliente: no entra al costo.
+rentabilidad:
+  precio_lista_usd_kg: 2.20       # precio de lista al cliente
+  costo_importacion_usd_kg: 0.20  # aranceles, agente aduanal y almacen
+  participacion_mccain: 0.30      # parte del mercado que vende McCain
+  segmentos:
+    cadenas:
+      nombre: "Cadenas (cuenta nacional)"
+      consumo_relativo: 6.0       # kg por local respecto a un independiente
+      descuento: 0.25             # descuento sobre lista por volumen
+      costo_servir_usd_kg: 0.05   # entrega directa a centro de distribucion
+    comida_rapida_ind:
+      nombre: "Comida rápida independiente"
+      consumo_relativo: 1.0
+      descuento: 0.0
+      costo_servir_usd_kg: 0.25   # distribuidor, pedidos chicos
+    a_la_carta_ind:
+      nombre: "A la carta independiente"
+      consumo_relativo: 0.7
+      descuento: 0.0
+      costo_servir_usd_kg: 0.30
+    hoteles:
+      nombre: "Hoteles (contrato)"
+      consumo_relativo: 1.5
+      descuento: 0.15
+      costo_servir_usd_kg: 0.15
