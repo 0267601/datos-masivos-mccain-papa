@@ -138,11 +138,13 @@ def test_utilidad_y_resumen(escenario):
     proyeccion, matriz, generales, detalle, resumen = escenario
     fila = detalle.iloc[0]
     esperado = (fila["locales_proyectados"] * fila["kg_por_local"]
-                * generales["participacion_mccain"] * fila["margen_usd_kg"])
+                * fila["participacion"] * fila["margen_usd_kg"])
     assert fila["utilidad_proy_usd"] == pytest.approx(esperado)
     assert resumen["utilidad_proy_usd"].sum() == pytest.approx(detalle["utilidad_proy_usd"].sum())
     assert list(resumen["ranking_utilidad"]) == [1, 2, 3]
     assert rt.validar(detalle, resumen, proyeccion)["estado"] == "VALIDADO"
+    # Cada ciudad tiene su propia participacion segun su mezcla de segmentos.
+    assert resumen["participacion_actual"].between(0.25, 0.5).all()
 
 
 def test_excel_con_formulas(escenario, tmp_path):
@@ -182,12 +184,16 @@ def test_html_con_utilidad(escenario, tmp_path):
         pd.Series({"Hoteles": 1.0}), tmp_path / "m.html",
         rentabilidad={"resumen": resumen, "detalle": detalle, "matriz": matriz,
                       "generales": generales, "metricas": metricas_seg,
-                      "ganador": "compartido"})
+                      "ganador": "compartido", "cfg_inversion": CONFIG["inversion"]})
     datos = json.loads(html.split("const D = ")[1].split(";\nconst C")[0].replace("<\\/", "</"))
-    assert datos["contexto"]["rentabilidad"]["ganador"] == "compartido"
+    r = datos["contexto"]["rentabilidad"]
+    assert r["ganador"] == "compartido"
+    # La pagina recibe los insumos crudos y los supuestos editables.
+    assert len(r["supuestos"]["segmentos"]) == len(ms.SEGMENTOS)
+    assert r["supuestos"]["presupuesto"] == CONFIG["inversion"]["presupuesto_usd"]
     metro = datos["metros"][0]
-    assert metro["util_proy"] is not None and len(metro["segmentos"]) == len(ms.SEGMENTOS)
-    assert any(s.startswith("Escenario simulado") for s in metro["insights"])
+    assert set(metro["seg"]) == set(ms.SEGMENTOS)
+    assert 'id="vistas"' in html and 'id="supuestos"' in html
 
 
 # ---------------------------------------------------------------------------
@@ -201,7 +207,7 @@ CFG_INV = CONFIG["inversion"]
 
 def test_capacidad_sin_cadenas(escenario):
     *_, detalle, _ = escenario
-    cap = inv.capacidades(detalle, CFG_INV)
+    cap = inv.capacidades(detalle.assign(costo_producto_usd_kg=1.3), CFG_INV)
     assert len(cap) == 3
     fila = cap.set_index("clave_metropoli").loc["C"]
     propios = detalle[(detalle["clave_metropoli"] == "C")
@@ -212,10 +218,11 @@ def test_capacidad_sin_cadenas(escenario):
 
 def test_reparto_suma_x_e_iguala_el_ultimo_dolar(escenario):
     *_, detalle, _ = escenario
-    cap = inv.capacidades(detalle, CFG_INV)
+    cap = inv.capacidades(detalle.assign(costo_producto_usd_kg=1.3), CFG_INV)
     x = 0.5 * cap["mitad_usd"].sum()
-    reparto = inv.asignar(cap, x)
+    reparto = inv.asignar(cap, x, con_entrada=False)
     assert reparto["inversion_usd"].sum() == pytest.approx(x)
+    assert (reparto["participacion_actual"] > 0).all()
     assert inv.validar(reparto, x)["estado"] == "VALIDADO"
     # En las ciudades con inversion, el ultimo dolar rinde lo mismo.
     con = reparto[reparto["inversion_usd"] > 1]
@@ -225,23 +232,49 @@ def test_reparto_suma_x_e_iguala_el_ultimo_dolar(escenario):
 
 def test_rendimientos_decrecientes(escenario):
     *_, detalle, _ = escenario
-    cap = inv.capacidades(detalle, CFG_INV)
+    cap = inv.capacidades(detalle.assign(costo_producto_usd_kg=1.3), CFG_INV)
     base = cap["mitad_usd"].sum()
-    tabla = inv.curva(cap, [base * f for f in (0.25, 0.5, 1, 2, 4)])
+    tabla = inv.curva(cap, [base * f for f in (0.25, 0.5, 1, 2, 4)], con_entrada=False)
     assert tabla["contribucion_extra_usd"].is_monotonic_increasing
     assert tabla["retorno_del_tramo"].is_monotonic_decreasing
     assert tabla["anios_recuperacion"].is_monotonic_increasing
     assert (tabla["contribucion_extra_usd"] <= cap["tope_usd"].sum() + 1e-6).all()
 
 
-def test_excel_con_hoja_de_inversion(escenario, tmp_path):
-    _, matriz, generales, detalle, resumen = escenario
-    reparto = inv.asignar(inv.capacidades(detalle, CFG_INV), CFG_INV["presupuesto_usd"])
-    ruta = rt.escribir_excel(detalle, resumen, matriz, generales, tmp_path / "r.xlsx",
-                             inversion={"cfg": CFG_INV, "reparto": reparto})
-    libro = load_workbook(ruta)
-    assert libro.sheetnames[1] == "Inversion" and "Rejilla" in libro.sheetnames
-    hoja = libro["Inversion"]
-    assert hoja["B4"].value == CFG_INV["presupuesto_usd"]
-    assert hoja["K31"].value.startswith("=IF(SUM($J$31:")
-    assert libro["Rejilla"]["B4"].value.startswith("=SUMPRODUCT(")
+def test_participacion_fija_por_ciudad(escenario):
+    proyeccion, matriz, generales, _, _ = escenario
+    fijas = {**generales, "participacion_por_ciudad": {"A": 0.40}}
+    detalle = rt.calcular(proyeccion, matriz, fijas)
+    kg = detalle["locales_hoy"] * detalle["kg_por_local"]
+    de_a = detalle["clave_metropoli"] == "A"
+    promedio = (kg[de_a] * detalle.loc[de_a, "participacion_efectiva"]).sum() / kg[de_a].sum()
+    assert promedio == pytest.approx(0.40)
+    # Las demas ciudades no cambian.
+    assert (detalle.loc[~de_a, "participacion_efectiva"] == detalle.loc[~de_a, "participacion"]).all()
+
+
+def test_entrada_crece_con_el_mercado_y_concentra(escenario):
+    *_, detalle, _ = escenario
+    cfg = {**CFG_INV, "costo_entrada_fijo_usd": 1000.0, "costo_entrada_pct_mercado": 0.05}
+    cap = inv.capacidades(detalle.assign(costo_producto_usd_kg=1.3), cfg)
+    assert np.allclose(cap["entrada_usd"], 1000.0 + 0.05 * cap["kg_hoy"] * 1.3)
+    x = 0.3 * cap["mitad_usd"].sum()
+    sin = inv.asignar(cap, x, con_entrada=False)
+    con = inv.asignar(cap.assign(entrada_usd=x / 3), x)
+    assert (con["inversion_usd"] > 1).sum() < (sin["inversion_usd"] > 1).sum()
+    assert con["inversion_usd"].sum() == pytest.approx(x)
+    entran = con[con["inversion_usd"] > 1]
+    assert np.allclose(entran["costo_entrada_usd"], x / 3)
+    # La recuperacion incluye lo que costo entrar.
+    assert np.allclose(entran["anios_recuperacion"],
+                       entran["inversion_usd"] / entran["contribucion_extra_usd"])
+    assert inv.validar(con, x)["estado"] == "VALIDADO"
+
+
+def test_penetracion_alta_deja_menos_por_ganar(escenario):
+    proyeccion, matriz, generales, _, _ = escenario
+    base = inv.capacidades(rt.calcular(proyeccion, matriz, generales).assign(costo_producto_usd_kg=1.3), CFG_INV).set_index("clave_metropoli")
+    alta = {**generales, "participacion_por_ciudad": {"A": 0.40}}
+    otra = inv.capacidades(rt.calcular(proyeccion, matriz, alta).assign(costo_producto_usd_kg=1.3), CFG_INV).set_index("clave_metropoli")
+    assert otra.loc["A", "tope_usd"] < base.loc["A", "tope_usd"]
+    assert otra.loc["B", "tope_usd"] == pytest.approx(base.loc["B", "tope_usd"])

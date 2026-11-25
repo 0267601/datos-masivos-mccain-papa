@@ -172,42 +172,54 @@ modelo_segmentos:
 
 # Rentabilidad: ESCENARIO SIMULADO. No son datos de McCain; son supuestos
 # editables (aqui y en reports/rentabilidad_escenario.xlsx).
-#   utilidad = locales x kg por local x participacion x
-#              (precio neto - costo del producto - costo de servir)
+#   contribucion = locales x kg por local x participacion del segmento x
+#                  (precio neto - costo del producto - costo de servir)
+# La participacion (penetracion) de McCain cambia por segmento, asi que cada
+# ciudad tiene la suya segun su mezcla; participacion_por_ciudad la fija a
+# mano (por ejemplo, con datos internos): {clave_metropoli: 0.35}.
 # El flete lo paga el cliente: no entra al costo.
 rentabilidad:
   precio_lista_usd_kg: 2.20       # precio de lista al cliente
   costo_importacion_usd_kg: 0.20  # aranceles, agente aduanal y almacen
-  participacion_mccain: 0.30      # parte del mercado que vende McCain
+  participacion_por_ciudad: {}    # opcional: {"22.1.01": 0.35}
   segmentos:
     cadenas:
       nombre: "Cadenas (cuenta nacional)"
       consumo_relativo: 6.0       # kg por local respecto a un independiente
       descuento: 0.25             # descuento sobre lista por volumen
       costo_servir_usd_kg: 0.05   # entrega directa a centro de distribucion
+      participacion: 0.50       # McCain fuerte en cuentas nacionales
     comida_rapida_ind:
       nombre: "Comida rápida independiente"
       consumo_relativo: 1.0
       descuento: 0.0
       costo_servir_usd_kg: 0.25   # distribuidor, pedidos chicos
+      participacion: 0.25
     a_la_carta_ind:
       nombre: "A la carta independiente"
       consumo_relativo: 0.7
       descuento: 0.0
       costo_servir_usd_kg: 0.30
+      participacion: 0.25
     hoteles:
       nombre: "Hoteles (contrato)"
       consumo_relativo: 1.5
       descuento: 0.15
       costo_servir_usd_kg: 0.15
+      participacion: 0.30
 
 # Si McCain tuviera X millones: reparto y recuperacion. ESCENARIO SIMULADO.
-# Curva de respuesta por ciudad: con la inversion "mitad" se gana la mitad
-# del tope; con el doble, 75%; con el triple, 87.5% (rendimientos decrecientes).
+# Curva de respuesta por ciudad: lo que se puede ganar es lo que le falta a la
+# participacion actual de la ciudad para llegar al techo. Con la inversion
+# "mitad" se gana la mitad de eso; con el doble, 75%; con el triple, 87.5%
+# (rendimientos decrecientes). Entrar a una ciudad cuesta mas mientras mas
+# grande es su mercado (barrera de entrada).
 inversion:
   presupuesto_usd: 10000000           # X: lo que se quiere invertir
-  tope_participacion_existente: 0.05  # puntos de participacion ganables en clientes que ya existen
-  tope_participacion_nuevo: 0.20      # ... en los locales nuevos que proyecta el modelo
-  costo_mitad_usd_por_kg: 0.05        # US$ por kg anual de mercado para ganar la mitad del tope
+  techo_participacion_existente: 0.32 # participacion maxima en clientes que ya existen
+  techo_participacion_nuevo: 0.45     # ... en los locales nuevos que proyecta el modelo
+  costo_mitad_usd_por_kg: 0.05        # US$ por kg anual de mercado para ganar la mitad
+  costo_entrada_fijo_usd: 50000       # entrar a una ciudad: un monto fijo (vendedor, distribuidor)...
+  costo_entrada_pct_mercado: 0.05     # ... mas este % del mercado anual de la ciudad (kg ganables x US$/kg)
   segmentos_capturables: [comida_rapida_ind, a_la_carta_ind, hoteles]  # cadenas: cuenta nacional
   curva_presupuestos_usd: [5000000, 10000000, 20000000, 50000000, 100000000]

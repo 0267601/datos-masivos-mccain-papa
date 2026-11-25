@@ -164,6 +164,15 @@ regla para que solo cuente errores del SNIIM y subimos los CSV de CONAPO a mano 
 | `evaluar_modelo` | XGBoost contra persistencia y promedio en 2022→2026 | Se reporta en `modelo_metricas.csv` y en el heatmap |
 | `modelo_segmentos.evaluar` | XGBoost compartido vs por segmento vs persistencia y promedio, por segmento | Se reporta en `modelo_segmentos_metricas.csv`; proyecta el de menor MAE |
 | `rentabilidad.validar` | Una fila por metrópoli; locales de hoy = los del modelo; resumen = suma del detalle; todo segmento con supuestos | Error: no se publica el escenario |
+| `inversion.validar` | El reparto no gasta más que el presupuesto; ninguna ciudad rebasa su tope; sin inversiones negativas | Error: no se publica el reparto |
+| Python vs HTML | El heatmap recalcula rentabilidad y reparto en JavaScript con los datos crudos | Verificado: mismos totales y mismas ciudades que Python |
+| Python vs Excel | `rentabilidad_escenario.xlsx` recalculado con LibreOffice | 6,015 fórmulas, 0 errores, mismo total que Python |
+
+**Resultado del modelo por segmento** (prueba 2022→2026, MAE en pp): en total gana el XGBoost
+compartido (4.11) sobre el separado (4.13), el promedio (4.26) y la persistencia (4.76). Por
+segmento, el XGBoost gana en independientes, pero en hoteles (3.19 vs 3.56) y cadenas (6.70 vs
+7.04) el promedio simple se equivoca menos. Lo reportamos tal cual; esos dos segmentos pesan 10%
+de la contribución del escenario.
 
 Con la muestra del repositorio (`python main.py --muestra`), las reglas de volumen fallan por
 diseño (son pocas filas); en ese modo el pipeline sigue después de la validación y lo marca

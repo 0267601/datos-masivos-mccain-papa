@@ -18,6 +18,13 @@ importaciones de UN Comtrade, construimos:
    las 92 metrópolis al 2030 (de US$313 M a US$345 M al año).
 3. Una lectura de la **competencia**: la papa congelada importada se triplicó desde 2019
    (US$148 M → US$455 M en 2025) y Canadá pasó de 10% a 39% del valor importado.
+4. Un **escenario de rentabilidad** (supuestos simulados, no datos de McCain): un segundo XGBoost
+   proyecta los locales de cuatro segmentos y una matriz de precios, descuentos y costos los
+   convierte en **margen de contribución**: US$23.0 M hoy → US$25.1 M en 2030.
+5. La respuesta a **"si McCain tuviera X millones"**: un reparto con rendimientos decrecientes,
+   penetración por ciudad y costo de entrada que crece con el tamaño de cada mercado. Con
+   **US$10 M**: Monterrey, Guadalajara y Ciudad de México, **+US$1.5 M al año** y recuperación en
+   **6.6 años**.
 
 **Respuesta corta.** En dólares, el mercado nuevo está donde ya hay más restaurantes: Ciudad
 de México, Guadalajara y Monterrey juntan 29% del crecimiento. Para crecer donde la
@@ -28,9 +35,11 @@ Puebla-Tlaxcala están en el top 20 de las dos mediciones. Las turísticas que e
 que se frenen.
 
 Todo corre con un comando (`python main.py`, unos 2.5 minutos en Databricks con caché), con
-el data lake en Unity Catalog, 70 reglas de validación (67 OK, 3 AVISO, 0 FALLA) y 68 pruebas
-automáticas. El heatmap interactivo (`reports/figures/mapa_potencial.html`) es un entregable
-aparte: al hacer clic en cualquiera de las 92 metrópolis muestra sus números e insights.
+el data lake en Unity Catalog, 70 reglas de validación (67 OK, 3 AVISO, 0 FALLA) y 82 pruebas
+automáticas. El entregable principal es el heatmap interactivo
+(`reports/figures/mapa_potencial.html`): tres vistas (Mercado, Rentabilidad e Inversión), los
+supuestos editables en la página y todo recalculado en vivo; al hacer clic en cualquiera de las
+92 metrópolis muestra sus números e insights.
 
 ## Problema
 
@@ -111,10 +120,12 @@ por 100 mil habitantes y número de restaurantes objetivo.
    compartido (el segmento entra como variable) contra uno por segmento, en la misma prueba
    2022→2026 y contra persistencia y promedio; proyecta el que menos se equivoca.
 3. Una matriz de supuestos (no son datos de McCain) da a cada segmento su consumo relativo por
-   local, descuento sobre lista y costo de servir. El costo del producto es el precio real de
-   importación de Comtrade, y el consumo por local se calibra para que el país sume los kilos
-   reales importados.
-4. Margen de contribución = locales × kg por local × participación × (precio neto − costo del
+   local, descuento sobre lista, costo de servir y **participación de McCain**. El costo del
+   producto es el precio real de importación de Comtrade, y el consumo por local se calibra para
+   que el país sume los kilos reales importados.
+4. Como la participación cambia por segmento, **cada ciudad tiene su propia penetración** según su
+   mezcla; si se conoce la real de una ciudad, se fija a mano y sus segmentos se escalan.
+5. Margen de contribución = locales × kg por local × participación × (precio neto − costo del
    producto − costo de importación − costo de servir). El flete lo paga el cliente. No incluye
    costos fijos, inversión ni impuestos.
 
@@ -122,15 +133,21 @@ por 100 mil habitantes y número de restaurantes objetivo.
 mercado por sí solo; no sabe qué hace McCain. Para repartir un presupuesto agregamos una curva de
 respuesta por ciudad:
 
-1. **Tope:** con inversión se ganan hasta 5 puntos de participación en los clientes que ya existen
-   y 20 en los locales nuevos que proyecta el modelo. Las cadenas no cuentan: se negocian como
-   cuenta nacional. Tope = margen por kg de la ciudad × kg ganables.
+1. **Hueco por ganar:** cada ciudad parte de su participación actual; con inversión se puede
+   llegar a un techo de 32% en los clientes que ya existen y de 45% en los locales nuevos que
+   proyecta el modelo. Donde McCain ya vende mucho, queda poco por ganar. Las cadenas no
+   cuentan: se negocian como cuenta nacional. Tope = margen por kg × kg del hueco.
 2. **Rendimientos decrecientes:** con el monto *mitad* (US$0.05 por kg anual de mercado) se gana
-   50% del tope; con el doble, 75%; con el triple, 87.5%.
-3. **Reparto óptimo:** cada dólar va a la ciudad donde deja más margen de contribución extra; en
-   el óptimo, el último dólar rinde lo mismo en todas las ciudades con inversión.
-4. **Recuperación:** años = inversión ÷ margen de contribución extra al año, por ciudad y para el
-   portafolio. Una curva con 5, 10, 20, 50 y 100 millones muestra cómo baja el rendimiento.
+   50% del hueco; con el doble, 75%; con el triple, 87.5%.
+3. **Barrera de entrada:** entrar a una ciudad cuesta US$50 mil más 5% de su mercado anual. Una
+   ciudad grande pide más para empezar (vendedores, distribución, promoción).
+4. **Reparto óptimo:** cada dólar va a la ciudad donde deja más margen de contribución extra
+   (el último dólar rinde lo mismo en todas las ciudades con inversión), y solo se entra a una
+   ciudad si lo que deja paga su entrada. Se ordenan las ciudades por el rendimiento al que
+   empiezan a valer la pena y gana el grupo que más contribución extra deja.
+5. **Recuperación:** años = (entrada + inversión) ÷ margen de contribución extra al año, por
+   ciudad y para el portafolio. Una curva con 5, 10, 20, 50 y 100 millones muestra cómo baja el
+   rendimiento.
 
 ## Procesamiento
 
@@ -227,24 +244,82 @@ el índice y qué variables movieron su predicción.
 ### ¿Cuánto le dejaría a McCain? Escenario de rentabilidad
 
 *Escenario simulado: los locales por segmento son datos reales proyectados; precio, descuentos,
-costos y participación son supuestos editables en `reports/rentabilidad_escenario.xlsx`.*
+costos y participación son supuestos que se editan en vivo en el heatmap (o en
+`reports/rentabilidad_escenario.xlsx`).*
 
-| Segmento | Consumo relativo | Descuento | Costo de servir | Margen por kg con lista US$2.20 |
+**El modelo por segmento.** Probado con 2022→2026 (843 municipios-segmento):
+
+| Segmento | XGBoost compartido | XGBoost por segmento | Persistencia | Promedio |
 |---|---|---|---|---|
-| Cadenas (cuenta nacional) | 6.0× | 25% | US$0.05 | US$0.10 (6%) |
-| Comida rápida independiente | 1.0× | 0% | US$0.25 | US$0.45 (20%) |
-| A la carta independiente | 0.7× | 0% | US$0.30 | US$0.40 (18%) |
-| Hoteles (contrato) | 1.5× | 15% | US$0.15 | US$0.22 (12%) |
+| **Todos** | **4.11** | 4.13 | 4.76 | 4.26 |
+| Comida rápida independiente | 3.99 | **3.97** | 4.70 | 4.14 |
+| A la carta independiente | 4.28 | **4.26** | 4.68 | 4.65 |
+| Hoteles | 3.56 | 3.75 | 4.41 | **3.19** |
+| Cadenas | 7.04 | 7.38 | 9.07 | **6.70** |
 
-Costo del producto: US$1.30/kg (Comtrade 2025) + US$0.20 de importación. Participación de
-McCain: 30%.
+*MAE en puntos de crecimiento anual.* En total gana el **compartido**, que es el que proyecta. Le
+gana a persistencia en todos los segmentos, pero en hoteles y cadenas el promedio simple se
+equivoca menos: tienen pocos locales por municipio (las cadenas, 741 sucursales en comida rápida y
+a la carta en las 92 metrópolis) y el modelo aprende poco de ellos. En esos dos segmentos la
+proyección es la parte menos confiable del escenario.
 
-*Resultados por metrópoli: pendientes de la corrida en Databricks.*
+**La matriz y el resultado.**
+
+| Segmento | Consumo por local | Descuento | Costo de servir | Participación | Margen por kg | Contribución 2030 |
+|---|---|---|---|---|---|---|
+| Comida rápida independiente | 2,166 kg | 0% | US$0.25 | 25% | US$0.45 (21%) | US$14.2 M (56%) |
+| A la carta independiente | 1,516 kg | 0% | US$0.30 | 25% | US$0.40 (18%) | US$8.4 M (33%) |
+| Hoteles (contrato) | 3,249 kg | 15% | US$0.15 | 30% | US$0.22 (12%) | US$2.1 M (8%) |
+| Cadenas (cuenta nacional) | 12,997 kg | 25% | US$0.05 | 50% | US$0.10 (6%) | US$0.5 M (2%) |
+
+Precio de lista US$2.20/kg; costo del producto US$1.30/kg (Comtrade 2025) + US$0.20 de
+importación. Con estos supuestos, McCain vendería **US$140 M** en las 92 metrópolis en 2030 y
+dejaría **US$25.1 M** de margen de contribución (18% de las ventas; hoy US$23.0 M). La
+participación promedio queda en 26.6%, y por ciudad entre 25% y 29% según su mezcla.
+
+| # | Metrópoli | Contribución 2030 | Nueva al 2030 | Margen | Lugar en el índice |
+|---|---|---|---|---|---|
+| 1 | Ciudad de México | US$5.2 M | +US$0.38 M | 17% | #36 |
+| 2 | Monterrey | US$1.5 M | +US$0.17 M | 18% | #30 |
+| 3 | Guadalajara | US$1.4 M | +US$0.13 M | 18% | #31 |
+| 4 | Puebla-Tlaxcala | US$0.9 M | +US$0.07 M | 18% | #19 |
+| 5 | Toluca | US$0.6 M | +US$0.06 M | 18% | #62 |
+
+En todas las ciudades el segmento que más deja es la comida rápida independiente: tiene el mejor
+margen y el mayor volumen. Las cadenas mueven mucho volumen, pero con 6% de margen casi no dejan.
 
 ### Si McCain tuviera X millones, ¿dónde los pondría?
 
-*Escenario simulado. Se cambia X en la hoja `Inversion` de `reports/rentabilidad_escenario.xlsx` o
-en el simulador del heatmap. Resultados pendientes de la corrida en Databricks.*
+*Escenario simulado. Se cambia X, los techos, la entrada y la participación de cada ciudad en la
+vista Inversión del heatmap.*
+
+| Presupuesto | Ciudades | Contribución extra al año | Años para recuperar | Retorno del tramo |
+|---|---|---|---|---|
+| US$5 M | 2 | US$0.73 M | 6.9 | 14.6% |
+| **US$10 M** | **3** | **US$1.50 M** | **6.6** | 15.5% |
+| US$20 M | 17 | US$2.90 M | 6.9 | 14.0% |
+| US$50 M | 87 | US$6.00 M | 8.3 | 10.3% |
+| US$100 M | 92 | US$7.13 M | 14.0 | 2.2% |
+
+Con **US$10 M**:
+
+| Metrópoli | Entrada | Inversión | Total | Contribución extra al año | Recupera en |
+|---|---|---|---|---|---|
+| Ciudad de México | US$2.93 M | US$3.36 M | US$6.30 M | US$0.93 M | 6.8 años |
+| Monterrey | US$0.85 M | US$1.06 M | US$1.91 M | US$0.31 M | 6.2 años |
+| Guadalajara | US$0.84 M | US$0.95 M | US$1.79 M | US$0.26 M | 6.8 años |
+
+Con US$20 M se suman Puebla-Tlaxcala, Toluca, Tijuana, Mérida, Querétaro, Tuxtla Gutiérrez, La
+Laguna, Morelia, San Luis Potosí, Chihuahua, Mexicali, Saltillo, Pachuca y Tepic. Pasados los
+US$50 M, cada dólar extra rinde poco: el siguiente tramo de US$50 M recupera en 14 años.
+
+**Cómo leerlo.** Con márgenes y penetración parecidos en todas las ciudades, cada dólar rinde
+casi igual en todas; lo que decide es cuántos locales nuevos tendrá cada ciudad y el monto fijo de
+entrada, que pesa menos en las grandes. Monterrey es la primera porque combina tamaño con
+crecimiento (13% más kg en 2030 en los segmentos que se ganan). **La penetración real cambia la
+respuesta:** si McCain ya tuviera 31% en Ciudad de México (en vez de 25%), el hueco ahí se
+achica, la ciudad sale del reparto y el dinero se va a ciudades medianas. Por eso la vista
+Inversión deja escribir la participación de cada ciudad.
 
 ### ¿Contra quién competimos?
 
@@ -268,29 +343,39 @@ en el simulador del heatmap. Resultados pendientes de la corrida en Databricks.*
   queda corto.
 - La competencia es nacional: Comtrade no separa por ciudad ni por empresa.
 - Pesos iguales en el índice es una decisión, no un hallazgo.
+- La rentabilidad y el reparto son un **escenario**: precios, descuentos, costos, participación,
+  techos y entrada son supuestos. Sin la penetración real de McCain por ciudad, la diferencia
+  entre ciudades viene solo de su mezcla de segmentos (25% a 29%).
+- La recuperación supone que la contribución extra llega completa desde el primer año y no
+  descuenta el dinero en el tiempo.
+- En hoteles y cadenas el modelo por segmento no le gana al promedio simple.
 
 ## Conclusiones
 
 1. **El tamaño está en las grandes; el crecimiento relativo, en las medianas.** Ciudad de
    México, Guadalajara y Monterrey aportan 29% del mercado nuevo en dólares, pero crecen
    entre 1.9% y 2.9% anual.
-2. **Si McCain tuviera X millones para crecer, los pondría primero donde coinciden el índice
-   y el modelo:** Querétaro, La Laguna, Mérida, Saltillo y Puebla-Tlaxcala. Tienen más de
-   1,000 restaurantes objetivo, están en el top 20 del índice y del mercado nuevo, y el
-   modelo espera que crezcan entre 2.1% y 3.7% anual.
-3. **Las turísticas ya están muy servidas.** Los Cabos, Acapulco y Tapachula encabezan el
+2. **Dónde coinciden el índice y el modelo:** Querétaro, La Laguna, Mérida, Saltillo y
+   Puebla-Tlaxcala tienen más de 1,000 restaurantes objetivo, están en el top 20 del índice y
+   del mercado nuevo, y el modelo espera que crezcan entre 2.1% y 3.7% anual.
+3. **Si McCain tuviera X millones (escenario):** con US$10 M conviene entrar a Monterrey,
+   Guadalajara y Ciudad de México (+US$1.5 M al año, 6.6 años para recuperar); con US$20 M se
+   suman 14 ciudades medianas, entre ellas las cinco anteriores. Pasados US$50 M el dinero rinde
+   poco. La penetración real de McCain en cada ciudad puede mover esta respuesta.
+4. **Las turísticas ya están muy servidas.** Los Cabos, Acapulco y Tapachula encabezan el
    índice por su crecimiento pasado y su turismo, pero tienen tantos restaurantes por
    habitante que el modelo espera que se frenen: son para atender bien, no para apostar a
    crecimiento.
-4. **El mercado importado crece más rápido que los restaurantes** (se triplicó desde 2019
+5. **El mercado importado crece más rápido que los restaurantes** (se triplicó desde 2019
    contra +25% de restaurantes objetivo): cada restaurante usa más papa congelada.
-5. **La competencia cambió:** Canadá ganó participación y es el origen más barato en 2025;
+6. **La competencia cambió:** Canadá ganó participación y es el origen más barato en 2025;
    Bélgica ya tiene 12%.
 
 ## Trabajo futuro
 
-- Calibrar los pesos del índice y el potencial con ventas internas por ciudad, fuera del
-  repositorio público.
+- Calibrar los pesos del índice, el potencial y la participación real por ciudad con ventas
+  internas, fuera del repositorio público: se escriben en la vista Inversión o en
+  `rentabilidad.participacion_por_ciudad`.
 - Seguir cada establecimiento por `id` entre versiones para separar aperturas y cierres.
 - Carga incremental (`MERGE`) cuando INEGI publique la siguiente versión del DENUE.
 - Agregar distancia logística (aduanas, centros de distribución) como costo de llegar a

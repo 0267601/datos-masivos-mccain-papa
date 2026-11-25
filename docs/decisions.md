@@ -491,9 +491,54 @@ Repartir proporcional al potencial (ignora que el dinero rinde menos donde ya se
 un optimizador con solver (no se puede usar desde el Excel sin complementos).
 
 ## Consecuencias
-Topes y costo de la mitad son supuestos (`inversion` en la configuración y hoja `Inversion` del
-Excel). El Excel resuelve el reparto con una rejilla de 1,000 valores del rendimiento del último
-dólar, sin macros ni Solver; Python lo resuelve exacto y los dos coinciden. La recuperación supone
-que la contribución extra llega completa desde el primer año y no descuenta el dinero en el tiempo.
-Las cadenas quedan fuera porque se negocian como cuenta nacional.
+Techos, costo de la mitad y costo de entrada son supuestos (`inversion` en la configuración) y se
+editan en la vista Inversión del heatmap, que recalcula el reparto en vivo con el mismo algoritmo
+que Python. La recuperación supone que la contribución extra llega completa desde el primer año y
+no descuenta el dinero en el tiempo. Las cadenas quedan fuera porque se negocian como cuenta
+nacional.
 
+---
+
+## Decisión
+La participación de McCain cambia por segmento y por ciudad, y entrar a una ciudad tiene un costo
+proporcional a su mercado: US$50 mil fijos + 5% del mercado anual.
+
+## Razón
+Con una sola participación para todo el país, todas las ciudades tenían el mismo hueco por ganar y
+el reparto solo dependía del tamaño. Con participación por segmento (cadenas 50%, independientes
+25%, hoteles 30%), cada ciudad tiene su propia penetración según su mezcla, y si se conoce la real
+se fija a mano: donde McCain ya vende mucho, queda poco por ganar. El costo de entrada evita
+repartir migajas en 92 ciudades; un monto fijo igual para todas favorecía siempre a las grandes
+(pesaba menos en ellas), así que crece con el mercado: una ciudad grande pide más vendedores,
+distribución y promoción para empezar.
+
+## Alternativas consideradas
+Entrada fija de US$150 mil (las grandes salían siempre primero); una participación única para el
+país (todas las ciudades iguales); elegir ciudades quitando una por una la que menos deja (daba
+resultados distintos según el orden y no coincidía entre Python y el HTML).
+
+## Consecuencias
+Con el costo de entrada el problema deja de ser suave: se ordenan las ciudades por el rendimiento al
+que empiezan a valer la pena (umbral) y se prueba entrar a las primeras 1, 2, 3, ...; gana el grupo
+que más contribución extra deja. Python y el HTML usan el mismo algoritmo y dan el mismo resultado.
+Sin la penetración real de McCain, las ciudades difieren poco (25% a 29%); el resultado cambia en
+cuanto se escriba la real en la vista Inversión o en `rentabilidad.participacion_por_ciudad`.
+
+---
+
+## Decisión
+El heatmap HTML es el entregable principal; el Excel queda solo para la rentabilidad.
+
+## Razón
+Tener mercado, rentabilidad e inversión en tres archivos obligaba a saltar entre ellos. El HTML
+junta las tres vistas con un selector, deja editar los supuestos y recalcula todo en la página,
+sin servidor. El Excel conserva la rentabilidad con fórmulas para quien prefiera revisarla celda por
+celda; el reparto con costo de entrada no cabe en fórmulas sin Solver.
+
+## Alternativas consideradas
+Mantener la hoja de inversión en el Excel con una rejilla de valores (no admite el costo de entrada
+por ciudad sin macros); un tablero en Databricks (no se puede abrir sin cuenta).
+
+## Consecuencias
+El HTML lleva los datos crudos (locales por segmento y supuestos) y repite el cálculo de Python en
+JavaScript; una prueba revisa que lleve esos datos y el resultado se verificó contra Python.

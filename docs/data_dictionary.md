@@ -195,6 +195,8 @@ descuentos, costos y la participación son **supuestos** (`config/config.example
 | crecimiento_esperado | double | Crecimiento anual compuesto proyectado | % |
 | kg_por_local | double | Consumo relativo × kg por unidad de consumo (calibrado con Comtrade) | kg al año |
 | precio_neto, margen_usd_kg, margen_pct | double | Lista × (1 − descuento); precio neto − costos variables; margen / precio neto | US$/kg, % |
+| participacion | double | Participación de McCain supuesta para el segmento | % |
+| participacion_efectiva | double | Participación usada: la del segmento, o escalada si la ciudad tiene una fija en `participacion_por_ciudad` | % |
 | kg_mercado_hoy, kg_mercado_proy | double | Locales × kg por local | kg al año |
 | ventas_hoy_usd, ventas_proy_usd | double | kg × participación × precio neto | US$ al año |
 | utilidad_hoy_usd, utilidad_proy_usd, utilidad_incremental_usd | double | Margen de contribución: kg × participación × margen por kg | US$ al año |
@@ -203,7 +205,7 @@ descuentos, costos y la participación son **supuestos** (`config/config.example
 
 Suma de la tabla anterior, más `margen_proy_pct` (contribución / ventas 2030),
 `utilidad_proy_<segmento>_usd` (contribución 2030 de cada segmento), `segmento_principal`,
-`ranking_utilidad` (1 = mayor contribución 2030), y `ranking` / `ranking_potencial` para
+`participacion_actual` (participación promedio ponderada por kg), `ranking_utilidad` (1 = mayor contribución 2030), y `ranking` / `ranking_potencial` para
 compararla con el índice y el potencial.
 
 ## `inversion_metropolis` y `inversion_curva` (reports/tables)
@@ -214,13 +216,18 @@ configuración (`inversion.presupuesto_usd`).
 | Variable | Descripción | Unidad |
 |---|---|---|
 | kg_hoy, kg_proy | kg del mercado ganables con inversión local (sin cadenas), hoy y 2030 | kg al año |
+| participacion_actual | Participación de McCain hoy en esos segmentos | % |
 | margen_ponderado | Margen por kg de esos segmentos, ponderado por sus kg 2030 | US$/kg |
-| tope_usd | Margen de contribución extra máximo: margen × (tope existente × kg hoy + tope nuevo × kg nuevos) | US$ al año |
+| tope_usd | Margen de contribución extra máximo: margen × ((techo existente − participación) × kg hoy + (techo nuevo − participación) × kg nuevos) | US$ al año |
 | mitad_usd, escala_usd | Inversión que gana la mitad del tope; escala = mitad ÷ ln 2 | US$ |
 | rendimiento_primer_dolar | Tope ÷ escala: lo que deja el primer dólar | US$ por US$ |
-| inversion_usd | Inversión asignada | US$ |
-| contribucion_extra_usd | Tope × (1 − e^(−inversión/escala)) | US$ al año |
-| anios_recuperacion | Inversión ÷ contribución extra | años |
+| mercado_usd | kg de hoy × costo del producto: tamaño del mercado anual | US$ al año |
+| entrada_usd | Costo de entrar: fijo + % del mercado anual | US$ |
+| umbral_entrada | Rendimiento del último dólar al que la ciudad empieza a valer la pena (orden de entrada) | US$ por US$ |
+| inversion_variable_usd, costo_entrada_usd | Inversión que mueve la curva y entrada pagada (0 si no entra) | US$ |
+| inversion_usd | Total: inversión variable + entrada | US$ |
+| contribucion_extra_usd | Tope × (1 − e^(−inversión variable/escala)) | US$ al año |
+| anios_recuperacion | (Inversión + entrada) ÷ contribución extra | años |
 | pct_tope, ranking_inversion | Parte del tope ganada; lugar por inversión | %, — |
 
 `inversion_curva`: para cada presupuesto de `inversion.curva_presupuestos_usd`, la contribución

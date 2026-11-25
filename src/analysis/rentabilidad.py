@@ -20,11 +20,15 @@ El flete lo paga el cliente: no entra al costo.
 Salidas:
     processed/rentabilidad_segmentos              metropoli x segmento
     processed/rentabilidad_metropolis             una fila por metropoli
-    reports/tables/rentabilidad_metropolis.csv
-    reports/tables/rentabilidad_segmentos.csv
+    reports/tables/proyeccion_segmentos.csv       locales hoy y 2030 por segmento (modelo)
     reports/tables/modelo_segmentos_metricas.csv  compartido vs por segmento
-    reports/rentabilidad_escenario.xlsx           supuestos + formulas vivas
-    reports/figures/mapa_potencial.html           con la utilidad del escenario
+    reports/tables/rentabilidad_*.csv, inversion_*.csv
+    reports/rentabilidad_escenario.xlsx           respaldo con formulas vivas
+    reports/figures/mapa_potencial.html           entregable principal: mercado,
+                                                  rentabilidad e inversion
+
+Para cambiar supuestos sin volver a correr el modelo:
+    python -m src.analysis.rentabilidad --solo-escenario
 """
 
 import json
@@ -55,6 +59,7 @@ SALIDAS = {
     "excel": REPORTS / "rentabilidad_escenario.xlsx",
     "inversion": TABLAS / "inversion_metropolis.csv",
     "curva": TABLAS / "inversion_curva.csv",
+    "proyeccion": TABLAS / "proyeccion_segmentos.csv",
 }
 
 
@@ -71,7 +76,8 @@ def matriz_supuestos(cfg, mercado, nacional):
                       "locales_pais": int(nacional.get(clave, 0)),
                       "consumo_relativo": float(s["consumo_relativo"]),
                       "descuento": float(s["descuento"]),
-                      "costo_servir_usd_kg": float(s["costo_servir_usd_kg"])})
+                      "costo_servir_usd_kg": float(s["costo_servir_usd_kg"]),
+                      "participacion": float(s["participacion"])})
     matriz = pd.DataFrame(filas)
     unidades = (matriz["locales_pais"] * matriz["consumo_relativo"]).sum()
     if unidades <= 0:
@@ -86,7 +92,8 @@ def matriz_supuestos(cfg, mercado, nacional):
     generales = {"precio_lista_usd_kg": float(cfg["precio_lista_usd_kg"]),
                  "costo_producto_usd_kg": costo_producto,
                  "costo_importacion_usd_kg": float(cfg["costo_importacion_usd_kg"]),
-                 "participacion_mccain": float(cfg["participacion_mccain"]),
+                 "participacion_por_ciudad": {str(k): float(v) for k, v in
+                                              (cfg.get("participacion_por_ciudad") or {}).items()},
                  "kg_importados": float(mercado["kg_importados"]),
                  "anio_importaciones": int(mercado["anio_importaciones"]),
                  "kg_por_unidad": float(kg_unidad)}
@@ -97,10 +104,31 @@ def matriz_supuestos(cfg, mercado, nacional):
 # 2. Calculo
 # ---------------------------------------------------------------------------
 
+def participacion_efectiva(datos, generales):
+    """Participacion de McCain por metropoli y segmento.
+
+    Por defecto es la del segmento, asi que cada ciudad tiene su propia
+    penetracion segun su mezcla. Si una ciudad trae participacion fija
+    (participacion_por_ciudad), escalamos sus segmentos para que el promedio
+    ponderado por kg de hoy sea ese valor.
+    """
+    part = datos["participacion"].astype(float).copy()
+    fijas = generales.get("participacion_por_ciudad") or {}
+    if fijas:
+        kg = datos["locales_hoy"] * datos["kg_por_local"]
+        mezcla = ((kg * part).groupby(datos["clave_metropoli"]).sum()
+                  / kg.groupby(datos["clave_metropoli"]).sum())
+        factor = datos["clave_metropoli"].map(
+            {c: v / mezcla[c] for c, v in fijas.items() if c in mezcla.index and mezcla[c] > 0})
+        part = (part * factor.fillna(1.0)).clip(0, 1)
+    return part
+
+
 def calcular(proyeccion, matriz, generales):
-    """Utilidad hoy y proyectada por metropoli y segmento (mismas formulas que el Excel)."""
+    """Contribucion hoy y proyectada por metropoli y segmento (mismas formulas que el Excel)."""
     datos = proyeccion.merge(matriz, on="segmento", how="left")
-    part = generales["participacion_mccain"]
+    datos["participacion_efectiva"] = participacion_efectiva(datos, generales)
+    part = datos["participacion_efectiva"]
     for momento, locales in [("hoy", "locales_hoy"), ("proy", "locales_proyectados")]:
         kg_mccain = datos[locales] * datos["kg_por_local"] * part
         datos[f"kg_mercado_{momento}"] = datos[locales] * datos["kg_por_local"]
@@ -119,6 +147,10 @@ def resumir(detalle, potencial):
                                        values="utilidad_proy_usd", aggfunc="sum")
     por_segmento.columns = [f"utilidad_proy_{c}_usd" for c in por_segmento.columns]
     tabla = suma.join(por_segmento).reset_index()
+    kg = detalle["locales_hoy"] * detalle["kg_por_local"]
+    tabla["participacion_actual"] = tabla["clave_metropoli"].map(
+        (kg * detalle["participacion_efectiva"]).groupby(detalle["clave_metropoli"]).sum()
+        / kg.groupby(detalle["clave_metropoli"]).sum().replace(0, np.nan))
     tabla["margen_proy_pct"] = np.where(tabla["ventas_proy_usd"] > 0,
                                         tabla["utilidad_proy_usd"] / tabla["ventas_proy_usd"], 0.0)
     principal = (detalle.sort_values("utilidad_proy_usd", ascending=False)
@@ -148,11 +180,11 @@ def validar(detalle, resumen, proyeccion):
 # 3. Excel con formulas vivas
 # ---------------------------------------------------------------------------
 
-def escribir_excel(detalle, resumen, matriz, generales, ruta, inversion=None):
+def escribir_excel(detalle, resumen, matriz, generales, ruta):
     """Supuestos editables y todo lo demas con formulas que dependen de ellos.
 
-    inversion (opcional): {"cfg": seccion inversion, "reparto": salida de
-    inversion.asignar}. Agrega las hojas Inversion y Rejilla.
+    El reparto de X millones vive en el heatmap (mapa_potencial.html), que es
+    el entregable principal; el Excel queda como respaldo del escenario.
     """
     from openpyxl import Workbook
     from openpyxl.comments import Comment
@@ -200,8 +232,10 @@ def escribir_excel(detalle, resumen, matriz, generales, ruta, inversion=None):
         (f"• Kilos importados y precio por kilo de la papa congelada (UN Comtrade, HS 200410, {generales['anio_importaciones']}).", normal),
         ("", normal),
         ("Qué es supuesto (editable)", negrita),
-        ("• Precio de lista, costo de importación, participación de McCain y, por segmento: consumo relativo, "
-         "descuento y costo de servir. El flete lo paga el cliente.", normal),
+        ("• Precio de lista, costo de importación y, por segmento: consumo relativo, descuento, costo de "
+         "servir y participación de McCain. El flete lo paga el cliente.", normal),
+        ("• La participación cambia por segmento, así que cada ciudad tiene su propia penetración según su "
+         "mezcla; el ajuste por ciudad (columna U de Calculo) la cambia si se conoce la real.", normal),
         ("", normal),
         ("Fórmula", negrita),
         ("Margen de contribución = locales × kg por local × participación × (precio neto − costo del producto − "
@@ -215,6 +249,8 @@ def escribir_excel(detalle, resumen, matriz, generales, ruta, inversion=None):
         ("Hojas", negrita),
         ("Supuestos: la matriz editable · Calculo: metrópoli × segmento con fórmulas · "
          "Resumen: una fila por metrópoli · Sensibilidad: contribución total al mover precio, participación y costo.", normal),
+        ("El reparto de X millones (con costo de entrada y rendimientos decrecientes) está en el heatmap "
+         "mapa_potencial.html, vista Inversión.", normal),
         ("", normal),
         ("Colores", negrita),
         ("Azul: supuesto o dato que puedes cambiar · Negro: fórmula · Verde: liga a otra hoja · "
@@ -237,21 +273,23 @@ def escribir_excel(detalle, resumen, matriz, generales, ruta, inversion=None):
          f"UN Comtrade {generales['anio_importaciones']}, HS 200410: valor ÷ kilos (dato real)", USD2, False),
         ("Costo de importación (aranceles, agente, almacén)", generales["costo_importacion_usd_kg"],
          "US$/kg", "Supuesto del escenario", USD2, True),
-        ("Participación de McCain en el mercado", generales["participacion_mccain"], "%",
-         "Supuesto del escenario", PCT, True),
+        ("Participación promedio de McCain (resultado)", None, "%",
+         "Promedio nacional ponderado por kg de la participación de cada segmento", PCT, False),
         ("Kilos importados en el año", generales["kg_importados"], "kg",
          f"UN Comtrade {generales['anio_importaciones']}, HS 200410 (dato real)", NUM, False),
     ]
     for i, (texto, valor, unidad, fuente, formato, clave) in enumerate(generales_filas, start=5):
         sup.cell(row=i, column=1, value=texto).font = normal
         celda = sup.cell(row=i, column=2, value=valor)
-        celda.font, celda.number_format = entrada, formato
+        celda.font, celda.number_format = (entrada if valor is not None else normal), formato
         if clave:
             celda.fill = amarillo
         sup.cell(row=i, column=3, value=unidad).font = normal
         sup.cell(row=i, column=4, value=fuente).font = gris
     n = len(matriz)
     f0, f1 = 14, 14 + n - 1
+    sup["B8"] = (f"=IF(SUMPRODUCT(C{f0}:C{f1},E{f0}:E{f1})=0,0,"
+                 f"SUMPRODUCT(C{f0}:C{f1},E{f0}:E{f1},K{f0}:K{f1})/SUMPRODUCT(C{f0}:C{f1},E{f0}:E{f1}))")
     sup["A10"] = "kg por unidad de consumo (calibrado)"
     sup["A10"].font = normal
     sup["B10"] = f"=IF(SUMPRODUCT(C{f0}:C{f1},D{f0}:D{f1})=0,0,B9/SUMPRODUCT(C{f0}:C{f1},D{f0}:D{f1}))"
@@ -264,7 +302,8 @@ def escribir_excel(detalle, resumen, matriz, generales, ruta, inversion=None):
     sup["A12"].font = negrita
     encabezados(sup, 13, ["Clave", "Segmento", "Locales en el país (2026)", "Consumo relativo",
                           "kg por local al año", "Descuento sobre lista", "Precio neto (US$/kg)",
-                          "Costo de servir (US$/kg)", "Margen (US$/kg)", "Margen %"])
+                          "Costo de servir (US$/kg)", "Margen (US$/kg)", "Margen %",
+                          "Participación de McCain"])
     for i, fila in enumerate(matriz.itertuples(index=False), start=f0):
         sup.cell(row=i, column=1, value=fila.segmento).font = normal
         sup.cell(row=i, column=2, value=fila.nombre).font = normal
@@ -272,7 +311,7 @@ def escribir_excel(detalle, resumen, matriz, generales, ruta, inversion=None):
         c.font, c.number_format = entrada, NUM
         c.comment = Comment("Dato real: DENUE mayo 2026, todo el país.", "Pipeline")
         for col, valor, formato in [(4, fila.consumo_relativo, '0.0"x"'), (6, fila.descuento, PCT),
-                                    (8, fila.costo_servir_usd_kg, USD2)]:
+                                    (8, fila.costo_servir_usd_kg, USD2), (11, fila.participacion, PCT)]:
             c = sup.cell(row=i, column=col, value=valor)
             c.font, c.number_format, c.fill = entrada, formato, amarillo
         sup.cell(row=i, column=5, value=f"=D{i}*$B$10").number_format = NUM
@@ -284,7 +323,10 @@ def escribir_excel(detalle, resumen, matriz, generales, ruta, inversion=None):
     sup.cell(row=f1 + 2, column=1,
              value="Consumo relativo: kg que compra un local del segmento respecto a un independiente "
                    "de comida rápida (1.0x). Las cadenas compran más por local; a la carta, menos.").font = gris
-    anchos(sup, [44, 30, 16, 14, 14, 14, 14, 14, 14, 12])
+    sup.cell(row=f1 + 3, column=1,
+             value="Participación: parte del mercado del segmento que vende McCain. Como cambia por segmento, "
+                   "cada ciudad tiene su propia penetración según su mezcla (columna T de Calculo).").font = gris
+    anchos(sup, [44, 30, 16, 14, 14, 14, 14, 14, 14, 12, 14])
     sup.freeze_panes = "A5"
 
     # --- Calculo ------------------------------------------------------------
@@ -294,7 +336,8 @@ def escribir_excel(detalle, resumen, matriz, generales, ruta, inversion=None):
                 "kg por local", "kg mercado hoy", "kg mercado 2030", "kg McCain 2030",
                 "Precio neto (US$/kg)", "Margen (US$/kg)", "Ventas McCain hoy (US$)",
                 "Ventas McCain 2030 (US$)", "Contribución hoy (US$)", "Contribución 2030 (US$)",
-                "Contribución incremental (US$)", "Margen × kg mercado 2030 (US$)"]
+                "Contribución incremental (US$)", "Margen × kg mercado 2030 (US$)",
+                "Participación de McCain", "Ajuste por ciudad"]
     encabezados(calc, 1, columnas)
     rango_clave = f"Supuestos!$A${f0}:$A${f1}"
     orden = detalle.merge(resumen[["clave_metropoli", "ranking_utilidad"]], on="clave_metropoli")
@@ -307,24 +350,30 @@ def escribir_excel(detalle, resumen, matriz, generales, ruta, inversion=None):
             calc.cell(row=r, column=col, value=valor).font = normal
         formulas = [
             f"=INDEX(Supuestos!$E${f0}:$E${f1},MATCH(C{r},{rango_clave},0))",
-            f"=E{r}*H{r}", f"=F{r}*H{r}", f"=J{r}*Supuestos!$B$8",
+            f"=E{r}*H{r}", f"=F{r}*H{r}", f"=J{r}*T{r}",
             f"=INDEX(Supuestos!$G${f0}:$G${f1},MATCH(C{r},{rango_clave},0))",
             f"=INDEX(Supuestos!$I${f0}:$I${f1},MATCH(C{r},{rango_clave},0))",
-            f"=I{r}*Supuestos!$B$8*L{r}", f"=K{r}*L{r}",
-            f"=I{r}*Supuestos!$B$8*M{r}", f"=K{r}*M{r}", f"=Q{r}-P{r}", f"=J{r}*M{r}",
+            f"=I{r}*T{r}*L{r}", f"=K{r}*L{r}",
+            f"=I{r}*T{r}*M{r}", f"=K{r}*M{r}", f"=Q{r}-P{r}", f"=J{r}*M{r}",
+            f"=MIN(1,INDEX(Supuestos!$K${f0}:$K${f1},MATCH(C{r},{rango_clave},0))*U{r})",
         ]
         for col, formula in enumerate(formulas, start=8):
             celda = calc.cell(row=r, column=col, value=formula)
             celda.font = liga if "Supuestos!" in formula else normal
         for col, formato in [(5, NUM), (6, NUM), (7, PCT), (8, NUM), (9, NUM), (10, NUM), (11, NUM),
                              (12, USD2), (13, USD2), (14, USD), (15, USD), (16, USD), (17, USD),
-                             (18, USD), (19, USD)]:
+                             (18, USD), (19, USD), (20, PCT)]:
             calc.cell(row=r, column=col).number_format = formato
+        ajuste = (float(fila.participacion_efectiva) / float(fila.participacion)
+                  if float(fila.participacion) > 0 else 1.0)
+        c = calc.cell(row=r, column=21, value=round(ajuste, 6))
+        c.font, c.number_format = entrada, '0.00"x"'
     ultima = len(orden) + 1
     calc.cell(row=ultima + 2, column=1,
               value="Locales hoy y 2030 y el crecimiento esperado vienen del modelo XGBoost por segmento; "
-                    "el resto se calcula con los supuestos.").font = gris
-    anchos(calc, [12, 26, 18, 28] + [14] * 15)
+                    "el resto se calcula con los supuestos. Ajuste por ciudad: 1.00x usa la participación "
+                    "del segmento; cámbialo si conoces la penetración real de McCain en esa ciudad.").font = gris
+    anchos(calc, [12, 26, 18, 28] + [14] * 17)
     calc.freeze_panes = "E2"
 
     # --- Resumen ------------------------------------------------------------
@@ -387,13 +436,14 @@ def escribir_excel(detalle, resumen, matriz, generales, ruta, inversion=None):
     sen = wb.create_sheet("Sensibilidad")
     sen["A1"] = "Sensibilidad: margen de contribución total 2030 (US$ millones)"
     sen["A1"].font = titulo
-    sen["A2"] = "Kilos del mercado 2030 por segmento (de Calculo); el resto de los supuestos sale de Supuestos."
+    sen["A2"] = ("Kilos de McCain 2030 por segmento (de Calculo). Las columnas multiplican la participación "
+                 "actual (1.0x = la de Supuestos); el resto de los supuestos sale de Supuestos.")
     sen["A2"].font = gris
-    encabezados(sen, 3, ["Segmento", "kg mercado 2030"])
+    encabezados(sen, 3, ["Segmento", "kg McCain 2030"])
     for i, s in enumerate(segs, start=4):
         sen.cell(row=i, column=1, value=s.nombre).font = normal
         celda = sen.cell(row=i, column=2,
-                         value=f"=SUMIFS(Calculo!$J$2:$J${ultima},{rc},\"{s.segmento}\")")
+                         value=f"=SUMIFS(Calculo!$K$2:$K${ultima},{rc},\"{s.segmento}\")")
         celda.font, celda.number_format = liga, NUM
     k0, k1 = 4, 3 + n
     desc = f"Supuestos!$F${f0}:$F${f1}"
@@ -402,10 +452,10 @@ def escribir_excel(detalle, resumen, matriz, generales, ruta, inversion=None):
     def rejilla(fila0, titulo_tabla, eje_filas, valores_filas, formato_filas, valores_cols,
                 formula):
         sen.cell(row=fila0, column=1, value=titulo_tabla).font = negrita
-        sen.cell(row=fila0 + 1, column=1, value=f"{eje_filas} ↓ · Participación →").font = gris
+        sen.cell(row=fila0 + 1, column=1, value=f"{eje_filas} ↓ · Participación ×").font = gris
         for j, v in enumerate(valores_cols, start=2):
             c = sen.cell(row=fila0 + 1, column=j, value=v)
-            c.font, c.number_format, c.fill = entrada, PCT, encabezado_fondo
+            c.font, c.number_format, c.fill = entrada, '0.0"x"', encabezado_fondo
         for i, v in enumerate(valores_filas, start=fila0 + 2):
             c = sen.cell(row=i, column=1, value=v)
             c.font, c.number_format, c.fill = entrada, formato_filas, encabezado_fondo
@@ -415,7 +465,7 @@ def escribir_excel(detalle, resumen, matriz, generales, ruta, inversion=None):
                 c.number_format = '#,##0.0;(#,##0.0);"-"'
         return fila0 + 2 + len(valores_filas)
 
-    participaciones = [0.20, 0.25, 0.30, 0.35, 0.40]
+    participaciones = [0.8, 0.9, 1.0, 1.1, 1.2]
     precios = [round(1.80 + 0.10 * i, 2) for i in range(9)]
     siguiente = rejilla(
         k1 + 3, "Precio de lista vs participación", "Precio de lista (US$/kg)", precios, USD2,
@@ -428,12 +478,6 @@ def escribir_excel(detalle, resumen, matriz, generales, ruta, inversion=None):
             lambda c, s: (f"={s}*SUMPRODUCT($B${k0}:$B${k1},Supuestos!$B$5*(1-{desc})-{c}"
                           f"-Supuestos!$B$7-{serv})/1000000"))
     anchos(sen, [34, 16, 12, 12, 12, 12])
-
-    if inversion is not None:
-        hoja_inversion(wb, inversion, ultima, estilos={
-            "titulo": titulo, "negrita": negrita, "normal": normal, "entrada": entrada,
-            "liga": liga, "gris": gris, "amarillo": amarillo, "encabezados": encabezados,
-            "anchos": anchos, "USD": USD, "USD2": USD2, "PCT": PCT, "NUM": NUM})
 
     wb.calculation.fullCalcOnLoad = True
     # Un .xlsx es un zip y openpyxl necesita moverse dentro del archivo; los
@@ -450,146 +494,6 @@ def escribir_excel(detalle, resumen, matriz, generales, ruta, inversion=None):
     return ruta
 
 
-def hoja_inversion(wb, inversion, ultima, estilos, filas_rejilla=1000):
-    """Si tuviera X millones: reparto optimo y recuperacion, con formulas vivas.
-
-    El reparto iguala lo que rinde el ultimo dolar en cada ciudad (lambda). La
-    hoja Rejilla prueba 1,000 valores de lambda y la celda de X elige el que
-    gasta el presupuesto; luego se ajusta para que la suma sea exactamente X.
-    """
-    e = estilos
-    cfg, reparto = inversion["cfg"], inversion["reparto"]
-    hoja = wb.create_sheet("Inversion", 1)
-    hoja["A1"] = "Si tuviera X millones, ¿dónde los pongo? — escenario simulado"
-    hoja["A1"].font = e["titulo"]
-    hoja["A2"] = ("Escribe el presupuesto en la celda amarilla B4. Cada dólar va a la ciudad donde deja "
-                  "más margen de contribución extra, con rendimientos decrecientes.")
-    hoja["A2"].font = e["gris"]
-
-    e["encabezados"](hoja, 3, ["Supuesto", "Valor", "Qué significa"])
-    entradas = [
-        ("Presupuesto X (US$)", cfg["presupuesto_usd"], e["USD"],
-         "Lo que McCain quiere invertir"),
-        ("Tope de participación en clientes existentes", cfg["tope_participacion_existente"], e["PCT"],
-         "Puntos de participación que se pueden ganar a la competencia con inversión"),
-        ("Tope de participación en locales nuevos", cfg["tope_participacion_nuevo"], e["PCT"],
-         "Puntos ganables en los locales nuevos que proyecta el modelo (aún sin proveedor)"),
-        ("Inversión para ganar la mitad del tope (US$ por kg anual)", cfg["costo_mitad_usd_por_kg"],
-         e["USD2"], "Con ese monto se gana 50% del tope; con el doble, 75%; con el triple, 87.5%"),
-    ]
-    for i, (texto, valor, formato, nota) in enumerate(entradas, start=4):
-        hoja.cell(row=i, column=1, value=texto).font = e["normal"]
-        c = hoja.cell(row=i, column=2, value=valor)
-        c.font, c.number_format, c.fill = e["entrada"], formato, e["amarillo"]
-        hoja.cell(row=i, column=3, value=nota).font = e["gris"]
-    nombres = ", ".join(cfg["segmentos_capturables"])
-    hoja["A8"] = f"Segmentos que se ganan invirtiendo en la ciudad: {nombres} (las cadenas se negocian como cuenta nacional)."
-    hoja["A8"].font = e["gris"]
-
-    n = len(reparto)
-    p0, p1 = 31, 31 + n - 1          # filas de metropolis
-    g0, g1 = 4, 4 + filas_rejilla - 1  # filas de la rejilla
-
-    e["encabezados"](hoja, 10, ["Resultado", "Valor"])
-    resultados = [
-        ("Rendimiento del último dólar (lambda)",
-         f"=IFERROR(INDEX(Rejilla!$A${g0}:$A${g1},MATCH($B$4,Rejilla!$B${g0}:$B${g1},1)),Rejilla!$A${g0})",
-         '0.000'),
-        ("Total invertido (US$)", f"=SUM(K{p0}:K{p1})", e["USD"]),
-        ("Margen de contribución extra al año (US$)", f"=SUM(L{p0}:L{p1})", e["USD"]),
-        ("Años para recuperar el portafolio", "=IF(B13=0,\"-\",B12/B13)", '0.0'),
-        ("Retorno anual del portafolio", "=IF(B12=0,0,B13/B12)", e["PCT"]),
-        ("Ciudades con inversión", f"=COUNTIF(K{p0}:K{p1},\">1\")", '0'),
-    ]
-    for i, (texto, formula, formato) in enumerate(resultados, start=11):
-        hoja.cell(row=i, column=1, value=texto).font = e["negrita"]
-        c = hoja.cell(row=i, column=2, value=formula)
-        c.number_format, c.font = formato, e["negrita"]
-
-    hoja["A18"] = "Curva: lo que rinde invertir más (cada tramo rinde menos que el anterior)"
-    hoja["A18"].font = e["negrita"]
-    e["encabezados"](hoja, 19, ["Presupuesto (US$)", "Contribución extra al año (US$)",
-                                "Años para recuperar", "Retorno anual", "Retorno del tramo"])
-    for i, x in enumerate(cfg["curva_presupuestos_usd"], start=20):
-        c = hoja.cell(row=i, column=1, value=x)
-        c.font, c.number_format = e["entrada"], e["USD"]
-        fila_l = f"MATCH(A{i},Rejilla!$B${g0}:$B${g1},1)"
-        # Contribucion de la fila de la rejilla + lo que rinden los dolares que
-        # faltan para llegar a X (a la tasa del ultimo dolar de esa fila).
-        hoja.cell(row=i, column=2,
-                  value=f"=IFERROR(INDEX(Rejilla!$C${g0}:$C${g1},{fila_l})"
-                        f"+(A{i}-INDEX(Rejilla!$B${g0}:$B${g1},{fila_l}))"
-                        f"*INDEX(Rejilla!$A${g0}:$A${g1},{fila_l}),0)").number_format = e["USD"]
-        hoja.cell(row=i, column=3, value=f"=IF(B{i}=0,\"-\",A{i}/B{i})").number_format = '0.0'
-        hoja.cell(row=i, column=4, value=f"=IF(A{i}=0,0,B{i}/A{i})").number_format = e["PCT"]
-        tramo = (f"=IF(A{i}=0,0,B{i}/A{i})" if i == 20
-                 else f"=IF(A{i}=A{i - 1},0,(B{i}-B{i - 1})/(A{i}-A{i - 1}))")
-        hoja.cell(row=i, column=5, value=tramo).number_format = e["PCT"]
-    fin_curva = 20 + len(cfg["curva_presupuestos_usd"]) - 1
-    hoja.cell(row=fin_curva + 1, column=1,
-              value="La curva usa la contribución por dólar del reparto óptimo de cada presupuesto.").font = e["gris"]
-
-    e["encabezados"](hoja, p0 - 1, [
-        "Metrópoli", "Clave", "kg capturables hoy", "kg capturables 2030",
-        "Margen ponderado (US$/kg)", "Tope: contribución extra máxima al año (US$)",
-        "Inversión para ganar la mitad (US$)", "Escala s = mitad ÷ ln 2",
-        "Rendimiento del primer dólar", "Inversión sin ajustar (US$)", "Inversión asignada (US$)",
-        "Contribución extra al año (US$)", "Años de recuperación", "% del tope alcanzado",
-        "Lugar por inversión"])
-    rk, rc = f"Calculo!$A$2:$A${ultima}", f"Calculo!$C$2:$C${ultima}"
-
-    def suma_capturable(col, fila):
-        return "+".join(f"SUMIFS(Calculo!${col}$2:${col}${ultima},{rk},B{fila},{rc},\"{s}\")"
-                        for s in cfg["segmentos_capturables"])
-
-    for r, fila in enumerate(reparto.itertuples(index=False), start=p0):
-        hoja.cell(row=r, column=1, value=fila.metropoli).font = e["normal"]
-        hoja.cell(row=r, column=2, value=fila.clave_metropoli).font = e["normal"]
-        formulas = [
-            (3, "=" + suma_capturable("I", r), e["NUM"], True),
-            (4, "=" + suma_capturable("J", r), e["NUM"], True),
-            (5, f"=IF(D{r}=0,0,({suma_capturable('S', r)})/D{r})", e["USD2"], True),
-            (6, f"=MAX(E{r},0)*($B$5*C{r}+$B$6*MAX(D{r}-C{r},0))", e["USD"], False),
-            (7, f"=MAX($B$7*D{r},1)", e["USD"], False),
-            (8, f"=G{r}/LN(2)", e["USD"], False),
-            (9, f"=F{r}/H{r}", '0.000', False),
-            (10, f"=IF(F{r}/(H{r}*$B$11)>1,H{r}*LN(F{r}/(H{r}*$B$11)),0)", e["USD"], False),
-            (11, f"=IF(SUM($J${p0}:$J${p1})=0,0,J{r}*$B$4/SUM($J${p0}:$J${p1}))", e["USD"], False),
-            (12, f"=F{r}*(1-EXP(-K{r}/H{r}))", e["USD"], False),
-            (13, f"=IF(L{r}<=0,\"-\",K{r}/L{r})", '0.0', False),
-            (14, f"=1-EXP(-K{r}/H{r})", e["PCT"], False),
-            (15, f"=RANK(K{r},$K${p0}:$K${p1})", '0', False),
-        ]
-        for col, formula, formato, es_liga in formulas:
-            c = hoja.cell(row=r, column=col, value=formula)
-            c.number_format, c.font = formato, e["liga"] if es_liga else e["normal"]
-    e["anchos"](hoja, [52, 16, 14, 14, 14, 18, 16, 16, 12, 16, 16, 16, 12, 12, 10])
-    hoja.freeze_panes = hoja.cell(row=p0, column=2)
-
-    # --- Rejilla: 1,000 valores de lambda y lo que gastaria cada uno ---------
-    rej = wb.create_sheet("Rejilla")
-    rej["A1"] = "Rejilla auxiliar del reparto (no hace falta tocarla)"
-    rej["A1"].font = e["titulo"]
-    rej["A2"] = ("Cada fila prueba un rendimiento del último dólar (lambda), de mayor a menor, y calcula "
-                 "cuánto se invertiría y cuánta contribución extra daría. Inversion!B11 elige la fila "
-                 "que gasta el presupuesto.")
-    rej["A2"].font = e["gris"]
-    e["encabezados"](rej, 3, ["Lambda", "Inversión total (US$)", "Contribución extra (US$)"])
-    F = f"Inversion!$F${p0}:$F${p1}"
-    H = f"Inversion!$H${p0}:$H${p1}"
-    rej["E3"] = "Rendimiento máximo del primer dólar"
-    rej["E4"] = f"=MAX(Inversion!$I${p0}:$I${p1})"
-    for i in range(g0, g1 + 1):
-        paso = i - g0
-        rej.cell(row=i, column=1, value=f"=$E$4*10^(-{paso}*8/{filas_rejilla - 1})").number_format = '0.000000'
-        razon = f"({F}+0.000001)/({H}*A{i})"
-        rej.cell(row=i, column=2,
-                 value=f"=SUMPRODUCT(--({F}/({H}*A{i})>1),{H},LN({razon}))").number_format = e["USD"]
-        rej.cell(row=i, column=3,
-                 value=f"=SUMPRODUCT(--({F}/({H}*A{i})>1),{F}-A{i}*{H})").number_format = e["USD"]
-    e["anchos"](rej, [14, 18, 18, 4, 30])
-
-
 # ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
@@ -597,8 +501,7 @@ def hoja_inversion(wb, inversion, ultima, estilos, filas_rejilla=1000):
 def main():
     asegurar_carpetas()
     config = cargar_config()
-    cfg_modelo, cfg_seg, cfg_rent = (config["modelo"], config["modelo_segmentos"],
-                                     config["rentabilidad"])
+    cfg_modelo, cfg_seg = config["modelo"], config["modelo_segmentos"]
     versiones = [v["etiqueta"] for v in config["denue"]["versiones"]]
     inicio = time.perf_counter()
 
@@ -620,7 +523,6 @@ def main():
     potencial = spark.read.parquet(str(necesarios["potencial_metropolis"])).toPandas()
     denue = spark.read.parquet(str(necesarios["denue_establecimientos"]))
     nacional = ms.conteo_nacional(denue, versiones[-1])
-    mercado = json.loads((TABLAS / "mercado_parametros.json").read_text(encoding="utf-8"))
 
     # 1. Modelo por segmento: compartido contra uno por segmento.
     ejemplos = construir_ejemplos(panel, municipios, metropolis, versiones, cfg_modelo)
@@ -635,65 +537,111 @@ def main():
     proyeccion = proyeccion.merge(potencial[["clave_metropoli", "metropoli"]],
                                   on="clave_metropoli", how="left")
 
-    # 2. Rentabilidad del escenario.
+    proyeccion.to_csv(SALIDAS["proyeccion"], index=False, encoding="utf-8")
+    (TABLAS / "conteo_nacional_segmentos.json").write_text(
+        json.dumps({"ganador": ganador, "nacional": nacional}, indent=2), encoding="utf-8")
+    log.info(f"Modelo por segmento en {time.perf_counter() - inicio:.1f} s")
+    cerrar_spark(spark)
+
+    # 2. Rentabilidad e inversion: solo pandas, a partir de lo que acabamos de guardar.
+    return escenario()
+
+
+def escribir_parquet(tabla, carpeta):
+    """Carpeta Parquet (como la deja Spark) para registrarla como tabla Delta.
+
+    Lo escribimos en disco local y lo copiamos, igual que el Excel: asi no
+    dependemos de que el Volume acepte escrituras con movimientos internos.
+    """
+    import shutil
+    import tempfile
+    from pathlib import Path
+
+    shutil.rmtree(carpeta, ignore_errors=True)
+    Path(carpeta).mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        local = Path(tmp) / "part-00000.parquet"
+        tabla.to_parquet(local, index=False)
+        shutil.copyfile(local, Path(carpeta) / local.name)
+
+
+def escenario(config=None):
+    """Rentabilidad, reparto de X millones, Excel y heatmap desde reports/tables.
+
+    No necesita Spark: lee la proyeccion por segmento que dejo el modelo
+    (proyeccion_segmentos.csv), los conteos nacionales y los parametros de
+    mercado. Sirve para cambiar supuestos sin volver a correr el modelo:
+
+        python -m src.analysis.rentabilidad --solo-escenario
+    """
+    config = config or cargar_config()
+    cfg_rent, cfg_inv = config["rentabilidad"], config["inversion"]
+    inicio = time.perf_counter()
+    necesarios = [SALIDAS["proyeccion"], TABLAS / "conteo_nacional_segmentos.json",
+                  TABLAS / "mercado_parametros.json", TABLAS / "potencial_metropolis.csv",
+                  SALIDAS["metricas"], TABLAS / "modelo_metricas.csv"]
+    faltan = [str(r) for r in necesarios if not r.exists()]
+    if faltan:
+        log.error(f"No existe {faltan}. Primero: python -m src.analysis.rentabilidad")
+        return 1
+
+    proyeccion = pd.read_csv(SALIDAS["proyeccion"], dtype={"clave_metropoli": str})
+    modelo = json.loads((TABLAS / "conteo_nacional_segmentos.json").read_text(encoding="utf-8"))
+    nacional, ganador = modelo["nacional"], modelo["ganador"]
+    mercado = json.loads((TABLAS / "mercado_parametros.json").read_text(encoding="utf-8"))
+    potencial = pd.read_csv(TABLAS / "potencial_metropolis.csv", dtype={"clave_metropoli": str})
+    metricas = pd.read_csv(SALIDAS["metricas"])
+
     matriz, generales = matriz_supuestos(cfg_rent, mercado, nacional)
     detalle = calcular(proyeccion, matriz, generales)
     resumen = resumir(detalle, potencial)
     validar(detalle, resumen, proyeccion)
-
     detalle.to_csv(SALIDAS["tabla_segmentos"], index=False, encoding="utf-8")
     resumen.to_csv(SALIDAS["tabla_metropolis"], index=False, encoding="utf-8")
+    escribir_parquet(detalle, SALIDAS["segmentos"])
+    escribir_parquet(resumen, SALIDAS["metropolis"])
     SALIDAS["supuestos"].write_text(json.dumps(
         {"generales": generales, "segmentos": matriz.to_dict(orient="records"),
          "modelo_ganador": ganador, "escenario": "simulado"}, indent=2, ensure_ascii=False),
         encoding="utf-8")
-    spark.createDataFrame(detalle).coalesce(1).write.mode("overwrite").parquet(str(SALIDAS["segmentos"]))
-    spark.createDataFrame(resumen).coalesce(1).write.mode("overwrite").parquet(str(SALIDAS["metropolis"]))
-    # 3. Si tuviera X millones: reparto optimo y recuperacion.
-    cfg_inv = config["inversion"]
-    capacidad = inv.capacidades(detalle, cfg_inv)
-    reparto = inv.asignar(capacidad, float(cfg_inv["presupuesto_usd"]))
-    inv.validar(reparto, float(cfg_inv["presupuesto_usd"]))
+
+    # Si tuviera X millones: reparto optimo, costo de entrada y recuperacion.
+    x = float(cfg_inv["presupuesto_usd"])
+    capacidad = inv.capacidades(detalle.assign(costo_producto_usd_kg=generales["costo_producto_usd_kg"]),
+                                cfg_inv)
+    reparto = inv.asignar(capacidad, x)
+    inv.validar(reparto, x)
     curva = inv.curva(capacidad, cfg_inv["curva_presupuestos_usd"])
     reparto.to_csv(SALIDAS["inversion"], index=False, encoding="utf-8")
     curva.to_csv(SALIDAS["curva"], index=False, encoding="utf-8")
 
-    escribir_excel(detalle, resumen, matriz, generales, SALIDAS["excel"],
-                   inversion={"cfg": cfg_inv, "reparto": reparto})
+    escribir_excel(detalle, resumen, matriz, generales, SALIDAS["excel"])
 
-    # 3. El heatmap con la utilidad del escenario.
     from src.analysis import mapa_potencial
-    potencial_csv = pd.read_csv(TABLAS / "potencial_metropolis.csv")
-    metricas_modelo = pd.read_csv(TABLAS / "modelo_metricas.csv")
     importancia = (pd.read_csv(TABLAS / "modelo_importancia.csv").set_index("variable")["ganancia"]
                    if (TABLAS / "modelo_importancia.csv").exists() else pd.Series(dtype=float))
-    mapa_potencial.generar(potencial_csv, metricas_modelo, mercado, importancia,
-                           FIGURAS / "mapa_potencial.html",
-                           rentabilidad={"resumen": resumen, "detalle": detalle,
-                                         "matriz": matriz, "generales": generales,
-                                         "metricas": metricas, "ganador": ganador,
-                                         "capacidad": capacidad, "cfg_inversion": cfg_inv,
-                                         "curva": curva})
+    mapa_potencial.generar(potencial, pd.read_csv(TABLAS / "modelo_metricas.csv"), mercado,
+                           importancia, FIGURAS / "mapa_potencial.html",
+                           rentabilidad={"detalle": detalle, "matriz": matriz,
+                                         "generales": generales, "metricas": metricas,
+                                         "ganador": ganador, "cfg_inversion": cfg_inv})
 
     for _, s in matriz.iterrows():
         log.info(f"{s.nombre:30s} | {s.kg_por_local:8,.0f} kg/local | margen "
-                 f"US${s.margen_usd_kg:.2f}/kg ({s.margen_pct:.0%})")
-    for _, fila in resumen.head(10).iterrows():
-        log.info(f"{fila.ranking_utilidad:2d}. {fila.metropoli:28s} utilidad 2030 "
+                 f"US${s.margen_usd_kg:.2f}/kg ({s.margen_pct:.0%}) | participacion {s.participacion:.0%}")
+    for _, fila in resumen.head(5).iterrows():
+        log.info(f"{fila.ranking_utilidad:2d}. {fila.metropoli:28s} contribucion 2030 "
                  f"US${fila.utilidad_proy_usd / 1e6:6.2f} M | margen {fila.margen_proy_pct:.0%}")
-    x = cfg_inv["presupuesto_usd"]
+    extra = reparto["contribucion_extra_usd"].sum()
     log.info(f"Con US${x / 1e6:,.0f} M: {int((reparto['inversion_usd'] > 1).sum())} ciudades, "
-             f"+US${reparto['contribucion_extra_usd'].sum() / 1e6:,.2f} M al anio, "
-             f"recuperacion en {x / max(reparto['contribucion_extra_usd'].sum(), 1):,.1f} anios")
+             f"+US${extra / 1e6:,.2f} M al anio, recuperacion en {x / max(extra, 1):,.1f} anios")
     for _, fila in reparto.head(5).iterrows():
         log.info(f"   {fila.metropoli:28s} US${fila.inversion_usd / 1e6:6.2f} M "
                  f"-> +US${fila.contribucion_extra_usd / 1e6:5.2f} M/anio "
                  f"({fila.anios_recuperacion:4.1f} anios)")
-    log.info(f"Rentabilidad (escenario) de {len(resumen)} metropolis en "
-             f"{time.perf_counter() - inicio:.1f} s -> {SALIDAS['excel']}")
-    cerrar_spark(spark)
+    log.info(f"Escenario en {time.perf_counter() - inicio:.1f} s -> {FIGURAS / 'mapa_potencial.html'}")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(escenario() if "--solo-escenario" in sys.argv[1:] else main())

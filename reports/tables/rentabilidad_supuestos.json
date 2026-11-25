@@ -1,0 +1,67 @@
+{
+  "generales": {
+    "precio_lista_usd_kg": 2.2,
+    "costo_producto_usd_kg": 1.2988222800184195,
+    "costo_importacion_usd_kg": 0.2,
+    "participacion_por_ciudad": {},
+    "kg_importados": 354097499.0,
+    "anio_importaciones": 2025,
+    "kg_por_unidad": 2166.163196865923
+  },
+  "segmentos": [
+    {
+      "segmento": "cadenas",
+      "nombre": "Cadenas (cuenta nacional)",
+      "locales_pais": 774,
+      "consumo_relativo": 6.0,
+      "descuento": 0.25,
+      "costo_servir_usd_kg": 0.05,
+      "participacion": 0.5,
+      "kg_por_local": 12996.979181195538,
+      "precio_neto": 1.6500000000000001,
+      "margen_usd_kg": 0.10117771998158064,
+      "margen_pct": 0.06131983029186705
+    },
+    {
+      "segmento": "comida_rapida_ind",
+      "nombre": "Comida rápida independiente",
+      "locales_pais": 79520,
+      "consumo_relativo": 1.0,
+      "descuento": 0.0,
+      "costo_servir_usd_kg": 0.25,
+      "participacion": 0.25,
+      "kg_por_local": 2166.163196865923,
+      "precio_neto": 2.2,
+      "margen_usd_kg": 0.45117771998158074,
+      "margen_pct": 0.2050807818098094
+    },
+    {
+      "segmento": "a_la_carta_ind",
+      "nombre": "A la carta independiente",
+      "locales_pais": 71848,
+      "consumo_relativo": 0.7,
+      "descuento": 0.0,
+      "costo_servir_usd_kg": 0.3,
+      "participacion": 0.25,
+      "kg_por_local": 1516.3142378061461,
+      "precio_neto": 2.2,
+      "margen_usd_kg": 0.40117771998158075,
+      "margen_pct": 0.1823535090825367
+    },
+    {
+      "segmento": "hoteles",
+      "nombre": "Hoteles (contrato)",
+      "locales_pais": 19340,
+      "consumo_relativo": 1.5,
+      "descuento": 0.15,
+      "costo_servir_usd_kg": 0.15,
+      "participacion": 0.3,
+      "kg_por_local": 3249.2447952988846,
+      "precio_neto": 1.87,
+      "margen_usd_kg": 0.22117771998158062,
+      "margen_pct": 0.11827685560512331
+    }
+  ],
+  "modelo_ganador": "compartido",
+  "escenario": "simulado"
+}
